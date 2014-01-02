@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>Lists</title>
+
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="async: true, parseOnLoad: false"></script>
+
+	<script type="text/javascript">
+		var entries = 
+		require([
+			"dojo/on",
+			"delite/register",
+			"deliteful/List",
+			"deliteful/List/DefaultEntryRenderer",
+		], function (on, register, List, DefaultEntryRenderer) {
+  			var i, list;
+  			
+    		list = new List({id: "list-prog-1", pageLength: 20});
+ 			for (i = 0; i < 100; i++) {
+				list.addEntryRenderer(new DefaultEntryRenderer({entry: {label: "Programmatic entry of order " + i}}));
+			}
+			list.style.height = "200px";
+//			list.startup();
+			list.placeAt("list1Placeholder");
+
+  			list = new List({id: "list-prog-2"});
+			list.style.height = "200px";
+//			list.startup();
+			list.placeAt("list2Placeholder");
+
+ 			register.parse();
+
+  			for (i = 0; i < 100; i++) {
+				list.addEntryRenderer(new DefaultEntryRenderer({entry: {label: "Programmatic entry of order " + i}}));
+			}
+
+			document.getElementById("addButton").onclick = function () {
+				var list = document.getElementById(document.getElementById("idInput").value);
+				var label = document.getElementById("labelInput").value;
+				var rightText = document.getElementById("rightTextInput").value;
+				var entry = {label: label, rightText: rightText};
+				var index = document.getElementById("indexInput").value;
+				index = index ? parseInt(index) : null;
+				
+				list.addEntryRenderer(new DefaultEntryRenderer({entry: entry}), index);
+			};
+
+			document.getElementById("removeButton").onclick = function () {
+				var list = document.getElementById(document.getElementById("idInput").value);
+				var index = document.getElementById("indexInput").value;
+				index = index ? parseInt(index) : null;
+				list.removeEntryRenderer(list.getEntryCellByIndex(index));
+			};
+
+			document.getElementById("removeAtIndexButton").onclick = function () {
+				var list = document.getElementById(document.getElementById("idInput").value);
+				var index = document.getElementById("indexInput").value;
+				index = index ? parseInt(index) : null;
+				list.removeEntryRenderer(index);
+			};
+ 
+		});
+	</script>
+	<style>
+		html {
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		
+		body {
+			font-family: Helvetica;
+			font-size: 17px;
+			background-color: #c5ccd3;
+		}
+	</style>
+</head>
+<body>
+ 	<input type="text" autofocus>
+ 	<br>
+ 	<h1>Programmatic list with 100 entries added using addChild before startup (id: list-prog-1)</h1>
+ 	<div id="list1Placeholder"></div>
+	<br>
+ 	<h1>Programmatic list with 100 entries added using addChild after startup (id: list-prog-2)</h1>
+ 	<div id="list2Placeholder"></div>
+	<br>
+    <h1>Markup list with 10 entries declared as markup, and selectionMode set to "multiple" (id: list-mark-3)</h1>
+	<d-list id="list-mark-3" style="height: 200px" selectionMode="multiple">
+		<d-list-entry entry="{label: 'list entry 0', rightText: 'right text 1'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 1', rightText: 'right text 2'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 2', rightText: 'right text 3'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 3', rightText: 'right text 4'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 4', rightText: 'right text 5'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 5', rightText: 'right text 6'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 6', rightText: 'right text 7'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 7', rightText: 'right text 8'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 8', rightText: 'right text 9'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 9', rightText: 'right text 10'}"></d-list-entry>
+	</d-list>
+	<br>
+   	<h1>Markup list with 10 entries declared as markup, categorized (id: list-mark-4)</h1>
+	<d-list id="list-mark-4" style="height: 200px" categoryAttribute="rightText">
+		<d-list-entry entry="{label: 'list entry 0', rightText: 'A'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 1', rightText: 'A'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 2', rightText: 'A'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 3', rightText: 'A'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 4', rightText: 'A'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 5', rightText: 'B'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 6', rightText: 'B'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 7', rightText: 'B'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 8', rightText: 'B'}"></d-list-entry>
+		<d-list-entry entry="{label: 'list entry 9', rightText: 'B'}"></d-list-entry>
+	</d-list>
+	<h1>Call list methods:</h1>
+	<table>
+		<tr>
+			<td>List id:</td><td><input id="idInput" type="text" value="list-mark-4"></td>
+		</tr>
+		<tr>
+			<td>New entry label / right text (category):</td><td><input id="labelInput" type="text" value="new entry A"> / <input id="rightTextInput" type="text" value="Category 1"></td>
+		</tr>
+		<tr>
+			<td>Index:</td><td><input id="indexInput" type="number"></td>
+		</tr>
+		<tr>
+			<td></td><td><button id="addButton">addChild()</button></td>
+		</tr>
+		<tr>
+			<td></td><td><button id="removeButton">removeChild(widget)</button></td>
+		</tr>
+		<tr>
+			<td></td><td><button id="removeAtIndexButton">removeChild(index)</button></td>
+		</tr>
+	</table>
+</body>
+</html>

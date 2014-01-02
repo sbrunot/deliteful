@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+	<title>A form to create an instance of a List widget</title>
+
+	<!--  following needed by Editable -->
+	<link rel="stylesheet" type="text/css" href="../../mobile/themes/common/domButtons/DomButtonRedCircleMinus.css">
+	<link rel="stylesheet" type="text/css" href="../../mobile/themes/common/domButtons/DomButtonGrayKnob.css">
+	<script type="text/javascript" src="../../../dojo/dojo.js"
+		data-dojo-config="async: true, parseOnLoad: true"></script>
+
+	<script type="text/javascript">
+		require([
+			"delite/register",
+			"dojo/_base/lang",
+			"dojo/domReady",
+			"dojo/on",
+			"deliteful/List",
+			"deliteful/List/Editable",
+			"deliteful/List/StoreModel",
+			"dojo/dom",
+			"dojo/store/Memory",
+			"dojo/store/Observable"
+		], function(register, lang, domReady, on, List, Editable, StoreModel, dom, Memory, Observable){
+			domReady(function () {
+				document.body.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
+			});
+			// List mixins
+			var StoreList = register("d-slist", [List, StoreModel], {});
+			var EditableStoreList = register("d-eslist", [List, Editable, StoreModel], {});
+			// List model
+			var useIcon, useRightText, useRightIcon, useRightIcon2;
+			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2) {
+				var i = 0, data = [];
+				for (; i < entriesCount; i++) {
+					data.push({category: 'category ' + Math.floor(i / 10),
+							  id: 'ref' + i,
+							  label: 'this is list entry ' + i,
+							  icon: useIcon ? '../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+							  rightText: useRightText ? 'id: ref' + i : null,
+							  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
+							  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
+				}
+				return new Observable(new Memory({data: data, idProperty: 'id'}));
+			};
+			// List
+			var list = null;
+			// Builder
+			var buildList = function(event){
+				if(list){
+					list.destroy();
+				}
+				var listParams = {
+					domNode: dom.byId("listNode"),
+					selectionMode: 	dom.byId("selectionMode").value,
+					pageLength: parseInt(dom.byId("pageLength").value),
+					maxPages: parseInt(dom.byId("maxPages").value),
+					baseClass: dom.byId("listStyle").value,
+					autoLoad: dom.byId("autoLoad").value,
+					scrollDisabled: !dom.byId("scrollable").value,
+					useMaskingPanel: dom.byId("useMaskingPanel").value
+				};
+				var editable = dom.byId("editable").value;
+				var editButton = dom.byId("editButton");
+				if(dom.byId("useCategory").value){
+					listParams.categoryAttribute = "category";
+				};
+				if(dom.byId("renderIcon").value){
+					useIcon = true;
+				}else{
+					useIcon = false;
+				};
+				if(dom.byId("renderRightText").value){
+					useRightText = true;
+				}else{
+					useRightText = false;
+				};
+				if(dom.byId("renderRightIcon").value){
+					useRightIcon = true;
+				}else{
+					useRightIcon = false;
+				};
+				if(dom.byId("renderRightIcon2").value){
+					useRightIcon2 = true;
+				}else{
+					useRightIcon2 = false;
+				};
+				if(editable){
+					list = new EditableStoreList(listParams);
+				}else{
+					list = new StoreList(listParams);
+				}
+				list.style.height = parseInt(dom.byId("height").value) + "px";
+				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2);
+				list.placeAt(dom.byId("list"));
+				list.startup();
+				if(editable){
+					editButton.innerHTML = list.deleteable ? "Stop editing" : "Edit";
+					editButton.style.display = "";
+					editButton.onclick = function () {
+						list.deleteable = !list.deleteable;
+						editButton.innerHTML = list.deleteable ? "Stop editing" : "Edit";
+					};
+				}else{
+					editButton.style.display = "none";
+				}
+				dom.byId("editPanel").style.display = "";
+			};
+			// Remove entry
+			var removeEntry = function () {
+				list.store.remove(dom.byId("entryIdInput").value);
+			};
+			// Add entry
+			var addEntry = function () {
+				var newEntry = {category: dom.byId("newEntryCategory").value,
+								  id: dom.byId("newEntryId").value,
+								  label: 'this is a new list entry with id ' + dom.byId("newEntryId").value,
+								  icon: useIcon ? '../../mobile/tests/images/i-icon-1.png' : null,
+								  rightText: useRightText ? 'id: ' + dom.byId("newEntryId").value : null,
+								  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
+								  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-1.png' : null};
+				var addOptions = {id: newEntry.id};
+				var before = dom.byId("newEntryBeforeId").value;
+				if (before) {
+					addOptions.before = before;
+				}
+				list.store.add(newEntry);
+				// TODO: APPARENTLY, THE MEMORY STORE ONLY SUPPORT ADDING AN ITEM TO THE END OF THE LIST (!!!)
+//				list.store.add(newEntry, addOptions);
+			};
+			// Update list style
+			var updateStyle = function () {
+				if (list) {
+					list.baseClass = dom.byId("listStyle").value;
+				}
+			}
+			// Update list selection mode
+			var updateSelectionMode = function () {
+				if (list) {
+					list.selectionMode = dom.byId("selectionMode").value;
+				}
+			}
+			// Update list height
+			var updateHeight = function () {
+				if (list) {
+					list.style.height = parseInt(dom.byId("height").value) + "px";
+				}
+			}
+			// Events
+			on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
+			on(dom.byId("removeEntry"), 'click', lang.hitch(this, removeEntry));
+			on(dom.byId("addEntry"), 'click', lang.hitch(this, addEntry));
+			on(dom.byId("listStyle"), 'change', lang.hitch(this, updateStyle));
+			on(dom.byId("selectionMode"), 'change', lang.hitch(this, updateSelectionMode));
+			on(dom.byId("height"), 'change', lang.hitch(this, updateHeight));
+		});
+	</script>
+	<style>
+		html {
+			width: 100%;
+			margin: 0;
+			padding: 0;
+		}
+		
+		body {
+			font-family: Helvetica;
+			font-size: 17px;
+			background-color: #c5ccd3;
+		}
+		/* TODO: styling of scrollbars is here only temporarily */
+		/*
+		::-webkit-scrollbar {
+			width: 12px;
+		}
+		::-webkit-scrollbar-track {
+			background-color: #eaeaea;
+			border-left: 1px solid #ccc;
+		}
+ 		::-webkit-scrollbar-thumb {
+			background-color: #ccc;
+		}
+		::-webkit-scrollbar-thumb:hover {
+			background-color: #aaa;
+		}
+		*/
+	</style>
+</head>
+<body>
+	<div id="listBuilder">
+		<h1>List builder</h1>
+		<p>Select the attributes of the list and then click the Build button to create it.</p>
+		<label for="scrollable">Scrollable:</label>
+		<select id="scrollable">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="height">Height in px:</label>
+		<input id="height" type="number" value="200">
+		<label for="listStyle">Style:</label>
+		<select id="listStyle">
+			<option value="d-round-rect-list">Round rect</option>
+			<option value="d-edge-to-edge-list">Edge to edge</option>
+		</select>
+		<br>
+		<label for="editable">Editable:</label>
+		<select id="editable">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<label for="renderIcon">Render icon:</label>
+		<select id="renderIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightText">, right text:</label>
+		<select id="renderRightText">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon">, right icon:</label>
+		<select id="renderRightIcon">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<label for="renderRightIcon2">, right icon 2:</label>
+		<select id="renderRightIcon2">
+			<option value="true">Yes</option>
+			<option value="">No</option>
+		</select>
+		<br>
+		<label for="entriesCount">Nb of entries:</label>
+		<input id="entriesCount" type="number" value="500">
+		<br>
+		<label for="useCategory">Categorized entries:</label>
+		<select id="useCategory">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<label for="selectionMode">Selection mode:</label>
+		<select id="selectionMode">
+			<option value="none">none</option>
+			<option value="single">single</option>
+			<option value="multiple">multiple</option>
+		</select>
+		<br>
+		<label for="pageLength">Page length:</label>
+		<input id="pageLength" type="number" value="20">
+		<br>
+		<label for="maxPages">Max nb of pages:</label>
+		<input id="maxPages" type="number" value="2">
+		<br>
+		<label for="useMaskingPanel">Mask on page update:</label>
+		<select id="useMaskingPanel">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<label for="autoLoad">Auto load:</label>
+		<select id="autoLoad">
+			<option value="">No</option>
+			<option value="true">Yes</option>
+		</select>
+		<br>
+		<button id="buildButton">Build</button>
+	</div>
+	<p>
+	<button id="editButton" style='display: none; margin-bottom: 15px;' disabled="disabled"></button>
+	<br>
+	<div id="list"></div>
+	<p>
+	<div id="editPanel" style="display: none;">
+		<h2>Store updater</h2>
+		<h3>Removal</h3>
+		<label for="entryIdInput">Entry id:</label> <input id="entryIdInput" type="text" value="ref0"><button id="removeEntry">Remove from store</button>
+		<h3>Addition</h3>
+		<table>
+			<tr>
+				<td>Id:</td>
+				<td><input id="newEntryId" type="text"></td>
+			</tr>
+			<tr>
+				<td>Category:</td>
+				<td><input id="newEntryCategory" type="text"></td>
+			</tr>
+			<tr>
+				<td>Add before entry with id:</td>
+				<td><input id="newEntryBeforeId" type="text"></td>
+			</tr>
+			<tr>
+				<td></td>
+				<td><button id="addEntry">Add to store</button></td>
+			</tr>
+		</table>
+	</div>
+</body>
+</html>
