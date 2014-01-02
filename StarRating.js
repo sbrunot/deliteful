@@ -3,12 +3,9 @@ define([
 	"dojo/_base/lang",
 	"dojo/string",
 	"dojo/has",
-	"dojo/on",
-	"dojo/touch",
 	"dojo/keys",
 	"dojo/dom-construct",
 	"dojo/dom-class",
-	"dojo/dom-geometry",
 	"delite/register",
 	"delite/Widget",
 	"delite/Invalidating",
@@ -16,42 +13,51 @@ define([
 	"dojo/i18n!./StarRating/nls/StarRating",
 	"delite/themes/load!./StarRating/themes/{{theme}}/StarRating_css",
 	"dojo/has!dojo-bidi?delite/themes/load!./StarRating/themes/{{theme}}/StarRating_rtl_css"
-], function (dcl, lang, string, has, on, touch, keys, domConstruct, domClass, domGeometry,
+], function (dcl, lang, string, has, keys, domConstruct, domClass,
 			register, Widget, Invalidating, BidiStarRating, messages) {
 
 	// module:
 	//		deliteful/StarRating
-
 	var StarRating = dcl([Widget, Invalidating], {
 		// summary:
 		//		A widget that displays a rating, usually with stars, and that allows setting a different rating value
 		//		by touching the stars.
 		// description:
-		//		This widget shows the rating using an image sprite that contains full stars, half stars and
-		//		empty stars.
-		//		The star displayed can be fully customized by redefining the following css classes in
-		//		your application:
-		//		- .d-star-rating-star-icon:before {content: url(url_to_the_stars_sprite);}
-		//		- .d-star-rating-disabled .d-star-rating-star-icon:before
-		//        {content: url(url_to_the_disabled_stars_sprite);}
-		//		If the custom stars are not 40px height and width images, you also have to redefine the
-		//		following CSS classes:
-		//		- .d-star-rating-star-icon {height: iconSize; width: iconSize;}
-		//		- .d-star-rating-empty-star:before {margin-left: -iconSize}
-		//		- .d-star-rating-half-star:before {margin-left: -2*iconSize}
-		//		- .d-star-rating.d-rtl .d-star-rating-full-star:before {margin-left: 0px; margin-right: -3*iconSize}
-		//		- .d-star-rating.d-rtl .d-star-rating-empty-star:before {margin-left: 0px; margin-right: -2*iconSize}
-		//		- .d-star-rating.d-rtl .d-star-rating-half-star:before {margin-left: 0px;}
-		//		Note that if your using a different baseClass than the default one "duiStarRating",
-		//		you should replace 'duiStarRating' in the previous css class names with your
+		//		This widget shows the rating using an image sprite that contains a full star and an empty star.
+		//		When the widget is disabled, it uses an alternate image sprite that also contains a full star.
+		//		The sprite that the widget use to display stars when it is not in the disabled states has the following
+		//		properties:
+		//		- its height is the height of a star, its width is twice the width of a star
+		//		- in its left half, it displays a full star
+		//		- in its right half, it displays an empty star
+		//		The default sprite that the widget use can be found at TODO: ADD A LINK HERE
+		//		The sprite that the widget use to display stars when it is in the disabled states has the following
+		//		properties:
+		//		- it has the same size than the previous sprite
+		//		- in its left half, it displays a disabled full star
+		//		- in its right half, it displays a disabled empty star
+		//		The default sprite that the widget use can be found at TODO: ADD A LINK HERE
+		//		To use custom sprites for the widget, the following css rules must be added to the stylesheet of
+		//		the application:
+		//		- .d-star-rating > div {
+		//				width: half_star_width;
+		//				height: star_height;
+		//				background-image: url("path/to/your/custom/image/for/enabled/widget");
+		//				}
+		//		- .d-star-rating[disabled] > div {
+		//				background-image: url("path/to/your/custom/image/for/disabled/widget");
+		//				}
+		//		- TO BE CONTINUED (ALMOST ALL THE CSS RULES MUST BE REDEFINED WHEN USING A CUSTOM STAR IMAGE IF IT DOES NOT HAVE THE SAME
+		//		  SIZE THAN THE DEFAULT ONE !!!!)
+		//		Note that if your using a different baseClass than the default one "d-star-rating",
+		//		you should replace 'd-star-rating' in the previous css rules with your
 		//		baseClass value.
 		//
-		//		The widget can be used in read-only or in editable mode. In editable mode, the widget allows
-		//		to set the rating to 0 stars or not using the zeroAreaWidth property. In this mode, it also allows
-		//		to set half values or not using the editHalfValues property.
+		//		The widget can be used in read-only or in editable mode. In editable mode, it allows
+		//		to set half values or not using the editHalfValues property, and allows to set the value zero or not using
+		//		the editZero property.
 		//
 		//		This widget supports right to left direction.
-
 
 		// baseClass: String
 		//		The name of the CSS class of this widget.
@@ -66,45 +72,35 @@ define([
 		value: 0,
 
 		// readOnly: Boolean
-		//		If false, the widget is editable and allows editing the value of the Rating
+		//		If false, the widget is editable and allows editing the value of the widget
 		//		by touching / clicking the stars
 		readOnly: false,
 
 		// name: String
-		//		mandatory if using the star rating widget in a form, in order to have it value submited
+		//		mandatory if using the star rating widget in a form, in order to have it value submitted
 		name: "",
 
 		// disabled: Boolean
-		//		if true, the widget is disabled (its value will not be submited if it is included in a form)
+		//		if true, the widget is disabled (its value will not be submitted if it is included in a form)
 		disabled: false,
 
 		// editHalfValues: Boolean
-		//		If the Rating is not read only, define if the user allowed to edit half values (0.5, 1.5, ...)
+		//		If the widget is not read only, define if the user is allowed to edit half values (0.5, 1.5, ...)
 		editHalfValues: false,
 
-		// zeroAreaWidth: Number
-		//		The number of pixel to add to the left of the widget (or right if the direction is rtl) to allow
-		//		setting the value to 0 when readOnly is set to falsy. Default value is 0 if the widget is read only,
-		//		20 if the widget is not read only.
-		//		Set this value to 0 to forbid the user from setting the value to zero during edition.
-		//		Setting this attribute to a negative value is not supported.
-		zeroAreaWidth: -1,
-
-		_getZeroAreaWidthAttr: function () {
-			var val = this._get("zeroAreaWidth");
-			return val === -1 ? (this.readOnly ? 0 : 20) : val;
-		},
+		// editZero: Boolean
+		//		If the widget is not read only, define if the user is allowed to set the value to zero
+		editZero: true,
 
 		/* internal properties */
 
-		_enterValue: null,
-		_hovering: false,
-		_hoveredValue: null,
-		_startHandles: null,
-		_otherEventsHandles: [],
-		_keyDownHandle: null,
 		_incrementKeyCodes: [keys.RIGHT_ARROW, keys.UP_ARROW, keys.NUMPAD_PLUS], // keys to press to increment value
 		_decrementKeyCodes: [keys.LEFT_ARROW, keys.DOWN_ARROW, keys.NUMPAD_MINUS], // keys to press to decrement value
+		_cssSuffixes: {valueMarker: "-value-marker",
+			noHalfValue: "-no-half-value",
+			editing: "-editing",
+			mouseHovered: "-mouse-hovered",
+			},
 
 		preCreate: function () {
 			this.addInvalidatingProperties("max",
@@ -113,7 +109,7 @@ define([
 					"readOnly",
 					"disabled",
 					"editHalfValues",
-					"zeroAreaWidth");
+					"editZero");
 		},
 
 		buildRendering: function () {
@@ -127,134 +123,89 @@ define([
             if (!this.hasAttribute("tabindex")) {
                 this.setAttribute("tabindex", "0");
             }
+            
+            // Input node
+			this.valueNode = this.getElementsByTagName("input")[0];
+			if (!this.valueNode) {
+				this.valueNode = domConstruct.create("input",
+						{type: "number",
+						name: this.name,
+						readOnly: this.readOnly,
+						disabled: this.disabled,
+						value: this.value},
+						this);
+			} else {
+				this.value = this.valueNode.value;
+			}
 
 			this.refreshRendering(this);
+			
+			// event handlers
+			this.on("keydown", lang.hitch(this, "_onKeyDown"));
+			this.on("mouseover", lang.hitch(this, "_onEnter"));
+			this.on("mouseout", lang.hitch(this, "_onLeave"));
+			this.on("click", lang.hitch(this, "_onClick"));
+			if (has("touch")) {
+				this.on("touchstart", lang.hitch(this, "_onTouchStart"));
+				this.on("touchmove", lang.hitch(this, "_onTouchMove"));
+			}
 		},
 
 		refreshRendering: function (props) {
-			var passive;
-			if (props.disabled !== undefined) {
-				if (this.disabled) {
-					domClass.add(this, this.baseClass + "-disabled");
-				} else {
-					domClass.remove(this, this.baseClass + "-disabled");
-				}
-			}
+			var i, divChildren;
 			if (props.max !== undefined) {
 				this.setAttribute("aria-valuemax", this.max);
 			}
 			if (props.max !== undefined || props.value !== undefined) {
-				var createChildren = this.children.length - 1 !== this.max;
-				if (createChildren) {
-					domConstruct.empty(this);
+				if (this.children.length !== (this.max * 2) + 2) {
+					divChildren = this.getElementsByTagName("div");
+					while (divChildren.length) {
+						this.removeChild(divChildren[0]);
+					}
+					for (i = 0; i < (2 * this.max) + 1; i++) {
+						domConstruct.create("div", {value: ((2 * this.max) - i) * 0.5}, this, "first");
+					}
+					this.children[0].style.width = this.editZero ? "" : "0px";
 				}
-				this._updateStars(this.value, createChildren);
+				domClass.remove(this.children[this.valueNode.value * 2],
+						this.baseClass + this._cssSuffixes.valueMarker);
+				domClass.add(this.children[this.value * 2],
+						this.baseClass + this._cssSuffixes.valueMarker);
 			}
 			if (props.value !== undefined) {
 				this.setAttribute("aria-valuenow", this.value);
 				this.setAttribute("aria-valuetext", string.substitute(messages["aria-valuetext"], this));
-				this.valueNode.value = this.value;
+				this.valueNode.value = String(this.value);
 			}
 			if (props.name !== undefined) {
 				this.valueNode.name = this.name;
 			}
+			if (props.disabled !== undefined) {
+				if (this.disabled) {
+					this.setAttribute("disabled", "");
+				} else {
+					this.removeAttribute("disabled");
+				}
+				this.valueNode.disabled = this.disabled;
+			}
+			if (props.readOnly !== undefined) {
+				this.valueNode.readOnly = this.readOnly;
+			}
 			if (props.readOnly !== undefined || props.disabled !== undefined) {
-				passive = this.disabled ? true : this.readOnly;
-				this.setAttribute("aria-disabled", passive);
-				if (!passive && !this._keyDownHandle) {
-					this._keyDownHandle = this.on("keydown", lang.hitch(this, "_keyDownHandler"));
-				} else if (passive && this._keyDownHandle) {
-					this._keyDownHandle.remove();
-					this._keyDownHandle = null;
-				}
-				if (!passive && !this._startHandles) {
-					this._startHandles = [this.on(touch.enter, lang.hitch(this, "_touchEnterHandler")),
-										   this.on(touch.press, lang.hitch(this, "_wireHandlers"))];
-				} else if (passive && this._startHandles) {
-					while (this._startHandles.length) {
-						this._startHandles.pop().remove();
-					}
-					this._startHandles = null;
-				}
+				this.setAttribute("aria-disabled", this._isPassive());
 			}
-			if (props.readOnly !== undefined || props.disabled !== undefined || props.zeroAreaWidth !== undefined) {
-				this._updateZeroArea();
+			if (props.readOnly !== undefined || props.disabled !== undefined || props.editHalfValues !== undefined) {
+				domClass.toggle(this,
+						this.baseClass + this._cssSuffixes.noHalfValue,
+						!this._isPassive() && !this.editHalfValues);
+			}
+			if (props.editZero !== undefined) {
+				this.children[0].style.width = this.editZero ? "" : "0px";
 			}
 		},
 
-		_removeEventsHandlers: function () {
-			while (this._otherEventsHandles.length) {
-				this._otherEventsHandles.pop().remove();
-			}
-		},
-
-		_wireHandlers: function (/*Event*/ event) {
-			event.preventDefault();
-			if (!this._otherEventsHandles.length) {
-				// handle move on the stars strip
-				this._otherEventsHandles.push(this.on(touch.move, lang.hitch(this, "_touchMoveHandler")));
-				// handle the end of the value editing
-				this._otherEventsHandles.push(this.on(touch.release, lang.hitch(this, "_touchReleaseHandler")));
-				this._otherEventsHandles.push(this.on(touch.leave, lang.hitch(this, "_touchLeaveHandler")));
-				this._otherEventsHandles.push(this.on(touch.cancel, lang.hitch(this, "_touchLeaveHandler")));
-			}
-		},
-
-		_touchEnterHandler: function (/*Event*/ event) {
-			this._wireHandlers(event);
-
-			// Note: this will be replaced by a test on event.pointerType
-			// when we'll implement the pointer event spec in dojo.
-			if (event.type !== "dojotouchover") {
-				this._hovering = true;
-				domClass.add(this, this.baseClass + "-hovered");
-			}
-
-			this._enterValue = this.value;
-		},
-
-		_touchMoveHandler: function (/*Event*/ event) {
-			var newValue = this._coordToValue(event);
-			if (this._hovering) {
-				if (newValue !== this._hoveredValue) {
-					domClass.add(this, this.baseClass + "-hovered");
-					this._updateStars(newValue, false);
-					this._hoveredValue = newValue;
-				}
-			} else {
-				this.value = newValue;
-			}
-		},
-
-		_touchReleaseHandler: function (/*Event*/ event) {
-			this.value = this._coordToValue(event);
-			this._enterValue = this.value;
-			if (!this._hovering) {
-				this._removeEventsHandlers();
-			} else {
-				domClass.remove(this, this.baseClass + "-hovered");
-			}
-		},
-
-		/*jshint unused:false */
-		_touchLeaveHandler: function (/*Event*/ event) {
-			if (this._hovering) {
-				this._hovering = false;
-				this._hoveredValue = null;
-				domClass.remove(this, this.baseClass + "-hovered");
-				this.value = this._enterValue;
-			}
-			this._removeEventsHandlers();
-		},
-
-		_keyDownHandler: function (/*Event*/ event) {
-			if (this._incrementKeyCodes.indexOf(event.keyCode) !== -1) {
-				event.preventDefault();
-				this._incrementValue();
-			} else if (this._decrementKeyCodes.indexOf(event.keyCode) !== -1) {
-				event.preventDefault();
-				this._decrementValue();
-			}
+		_isPassive: function () {
+			return this.disabled || this.readOnly;
 		},
 
 		_incrementValue: function () {
@@ -264,86 +215,102 @@ define([
 		},
 
 		_decrementValue: function () {
-			if (this.value > (this.zeroAreaWidth ? 0 : (this.editHalfValues ? 0.5 : 1))) {
+			if (this.value > (this.editZero ? 0: (this.editHalfValues ? 0.5 : 1))) {
 				this.value = this.value - (this.editHalfValues ? 0.5 : 1);
 			}
 		},
 
-		_coordToValue: function (/*Event*/event) {
-			var box = domGeometry.position(this, false);
-			var xValue = event.clientX - box.x;
-			var rawValue = null, discreteValue;
-			// fix off values observed on leave event
-			if (xValue < 0) {
-				xValue = 0;
-			} else if (xValue > box.w) {
-				xValue = box.w;
+		///////////////////////////
+		// Event handlers
+		///////////////////////////
+
+		_onKeyDown: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
 			}
-			if (this._inZeroSettingArea(xValue, box.w)) {
-				return 0;
-			} else {
-				rawValue = this._xToRawValue(xValue, box.w);
-			}
-			if (rawValue != null) {
-				if (rawValue === 0) {
-					rawValue = 0.1; // do not allow setting the value to 0 when clicking on a star
-				}
-				discreteValue = Math.ceil(rawValue);
-				if (this.editHalfValues && (discreteValue - rawValue) > 0.5) {
-					discreteValue -= 0.5;
-				}
-				return discreteValue;
+			if (this._incrementKeyCodes.indexOf(event.keyCode) !== -1) {
+				event.preventDefault();
+				this._incrementValue();
+			} else if (this._decrementKeyCodes.indexOf(event.keyCode) !== -1) {
+				event.preventDefault();
+				this._decrementValue();
 			}
 		},
 
-		/*jshint unused:false */
-		_inZeroSettingArea: function (/*Number*/x, /*Number*/domNodeWidth) {
-			return x < this.zeroAreaWidth;
+		_onEnter: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
+			}
+			event.preventDefault();
+			domClass.add(this, this.baseClass + this._cssSuffixes.editing);
+			domClass.add(event.target, this.baseClass + this._cssSuffixes.mouseHovered);
 		},
 
-		_xToRawValue: function (/*Number*/x, /*Number*/domNodeWidth) {
-			var starStripLength = domNodeWidth - this.zeroAreaWidth;
-			return (x - this.zeroAreaWidth) / (starStripLength / this.max);
+		_onLeave: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
+			}
+			event.preventDefault();
+			domClass.remove(this, this.baseClass + this._cssSuffixes.editing);
+			domClass.remove(event.target, this.baseClass + this._cssSuffixes.mouseHovered);
 		},
 
-		_updateStars: function (/*Number*/value, /*Boolean*/create) {
-			var i, parent, starClass;
-			for (i = 0; i < this.max; i++) {
-				if (i <= value - 1) {
-					starClass = this.baseClass + "-full-star";
-				} else if (i >= value) {
-					starClass = this.baseClass + "-empty-star";
-				} else {
-					starClass = this.baseClass + "-half-star";
+		_onClick: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
+			}
+			event.preventDefault();
+			domClass.remove(event.target, this.baseClass + this._cssSuffixes.mouseHovered);
+			domClass.remove(this, this.baseClass + this._cssSuffixes.editing);
+			this.value = this._valueFromNode(event.target);
+		},
+
+		_onTouchStart: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
+			}
+			// When entering this, onTouchEnter may have been executed (example: on Android)
+			event.preventDefault();
+			var valueFromNode;
+			domClass.remove(this, this.baseClass + this._cssSuffixes.editing);
+			valueFromNode = this._valueFromNode(event.target);
+			if (this.value !== valueFromNode) {
+				this.value = valueFromNode;
+				// make sure that the widget is repainted on android
+				this._forceRepaint();
+			}
+		},
+
+		_onTouchMove: function (/*Event*/ event) {
+			if (this._isPassive()) {
+				return;
+			}
+			event.preventDefault();
+			var target = document.elementFromPoint(
+					event.touches[0].pageX - window.scrollX, event.touches[0].pageY - window.scrollY),
+				valueFromNode;
+			if (target && target.parentNode === this) {
+				valueFromNode = this._valueFromNode(target);
+				if (this.value !== valueFromNode) {
+					this.value = valueFromNode;
+					// make sure that the widget is repainted on android
+					this._forceRepaint();
 				}
-				if (create) {
-					parent = domConstruct.create("div", {
-						style: "float: left; overflow: hidden;"
-					}, this);
-				} else {
-					parent = this.children[i];
-				}
-				parent.className = this.baseClass + "-star-icon " + starClass;
-			}
-			if (create) {
-	            this.valueNode = domConstruct.create("input",
-	                                                 {type: "number",
-	                                                  name: this.name,
-	                                                  readOnly: this.readOnly,
-	                                                  disabled: this.disabled,
-	                                                  value: this.value,
-	                                                  style: "display: none;"},
-	                                                 this, "last");
 			}
 		},
 
-		_updateZeroArea: function () {
-			if (this.readOnly) {
-				this.style.paddingLeft = "0px";
-			} else {
-				this.style.paddingLeft = this.zeroAreaWidth + "px";
-			}
+		_forceRepaint: function () {
+			var that = this;
+			domClass.add(this, "forceRepaint");
+			this.defer(function () {
+				domClass.remove(that, "forceRepaint");
+			});
+		},
+
+		_valueFromNode: function (node) {
+			return this.editHalfValues ? node.value : Math.ceil(node.value);
 		}
+
 	});
 
 	return register("d-star-rating",
