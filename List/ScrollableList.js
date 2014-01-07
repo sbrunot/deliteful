@@ -15,14 +15,6 @@ define(["dcl/dcl",
 		scrollDisabled: false,
 
 		/////////////////////////////////
-		// Private attributes
-		/////////////////////////////////
-
-		// _scroll: Number
-		//		The scroll amount on the y axis at time of the latest "scroll" event. 
-		_scroll: 0, // TODO: review/redesign
-
-		/////////////////////////////////
 		// Public methods
 		/////////////////////////////////
 
@@ -37,7 +29,7 @@ define(["dcl/dcl",
 			//		Returns the scroll amount on the y axis at the time of the latest
 			//		"scroll" event.
 			// returns: Number
-			return this._scroll;
+			return this.scrollTop;
 		},
 		
 		isTopScroll: function () {
@@ -51,7 +43,7 @@ define(["dcl/dcl",
 			// |	}
 			// | }
 			// returns: Boolean
-			return this.scrollTop === 0;
+			return this.getScroll() === 0;
 		},
 		
 		isBottomScroll: function () {
@@ -65,7 +57,7 @@ define(["dcl/dcl",
 			// |	}
 			// | }
 			// returns: Boolean
-			return this.offsetHeight + this.scrollTop >= this.scrollHeight;
+			return this.offsetHeight + this.getScroll() >= this.scrollHeight;
 		},
 
 		isBelowTop: function (node) {
@@ -111,7 +103,6 @@ define(["dcl/dcl",
 		refreshRendering: function(){
 			if (!this.scrollDisabled) {
 				domClass.add(this, "d-scrollable");
-				this.on("scroll", this._scrollListHandler);
 			}
 		},
 		
@@ -149,12 +140,5 @@ define(["dcl/dcl",
 			};
 		}),
 
-		/////////////////////////////////
-		// Event handlers
-		/////////////////////////////////
-
-		_scrollListHandler: dcl.before(function () {
-			this._scroll = this.scrollTop;
-		})
 	});
 });

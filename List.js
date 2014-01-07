@@ -149,6 +149,7 @@ define(["dcl/dcl",
 
 		/*jshint unused:false */
 		// TODO: REPLACE BY addEntry METHOD !!!???
+		// CANNOT use addChild here because it is used by widget.placeAt
 		addEntryRenderer: function (widget, insertIndex) {
 			var cellAtIndex, options = {};
 			if (this._started) { // If widget is not started, the child will be processed later by the start method
@@ -578,6 +579,7 @@ define(["dcl/dcl",
 					child = cell;
 				}
 				this.focusChild(child);
+				return child;
 			}
 		},
 

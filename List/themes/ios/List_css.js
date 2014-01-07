@@ -93,7 +93,7 @@ define(function(){ return '\
 }\
 .d-list-loading-panel {\
   position: absolute;\
-  color: grey;\
+  color: #808080;\
   font-size: xx-large;\
   font-style: italic;\
   text-align: center;\
@@ -102,7 +102,7 @@ define(function(){ return '\
 }\
 .d-list-loader-node-loading {\
   padding: 0 8px;\
-  color: gray;\
+  color: #808080;\
   cursor: wait;\
   height: 43px;\
   line-height: 43px;\
@@ -118,7 +118,7 @@ define(function(){ return '\
   content: "Loading...";\
   font-size: large;\
   font-style: italic;\
-  color: gray;\
+  color: #808080;\
 }\
 /*******************************/\
 /* iOS theme for RoundRectList */\

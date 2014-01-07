@@ -77,7 +77,6 @@ define(["dcl/dcl",
 					console.log((error.message ? error.message : error) + ". See stack below.");
 					console.error(error);
 				}));
-
 			}));
 		}
 	})]);
@@ -131,6 +130,7 @@ define(["dcl/dcl",
 				this.beforeLoadingMessage = this.autoLoad ? "Loading ${pageLength} more entries..."
 						: "Click to load ${pageLength} more entries";
 			}
+			this.on("scroll", this._scrollHandler);
 		}),
 
 		destroy: dcl.after(function () {
@@ -303,8 +303,8 @@ define(["dcl/dcl",
 		},
 
 		_onPreviousPageReady: function (/*array*/ entries) {
-			var firstCellBeforeUpdate = this._getFirst();
 			var def = new Deferred();
+			var firstCellBeforeUpdate = this._getFirst(), focused;
 			try {
 				if (firstCellBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstCellBeforeUpdate);
@@ -322,19 +322,17 @@ define(["dcl/dcl",
 					this._previousPageLoader.placeAt(this.containerNode, "first");
 				}
 				if (this._getFocusedCell()) {
-					this._focusNextChild(-1);
+					focused = this._focusNextChild(-1);
+					if (focused) {
+						// scroll the focused node to the top of the screen.
+						// To avoid flickering, we do not wait for a focus event
+						// to confirm that the child has indeed been focused.
+						this.scrollBy(this.getTopDistance(focused));
+					}
 				} else {
 					this.focusChild(this._getLastCell());
 				}
-				this.defer(lang.hitch(this, function () {
-					try {
-						// scroll the currently focused child so that it is at the top of the screen
-						this.scrollBy(this.getTopDistance(this._getFocusedCell()));
-						def.resolve();
-					} catch (error) {
-						def.reject(error);
-					}
-				}));
+				def.resolve();
 			} catch (error) {
 				def.reject(error);
 			}
@@ -343,7 +341,7 @@ define(["dcl/dcl",
 
 		_onNextPageReady: function (/*array*/ entries) {
 			var def = new Deferred();
-			var lastChild = this._getLast(), firstCell;
+			var lastChild = this._getLast(), firstCell, focused;
 			try {
 				if (lastChild) {
 					this.focusChild(lastChild);
@@ -366,26 +364,20 @@ define(["dcl/dcl",
 					}
 				}
 				if (this._getFocusedCell()) {
-					this._focusNextChild(1);
+					focused = this._focusNextChild(1);
+					if (focused) {
+						// scroll the focused node to the bottom of the screen.
+						// To avoid flickering, we do not wait for a focus event
+						// to confirm that the child has indeed been focused.
+						this.scrollBy(this.getBottomDistance(focused));
+					}
 				} else {
 					firstCell = this._getFirstCell();
 					if (firstCell) {
 						this.focusChild(firstCell);
 					}
 				}
-				this.defer(lang.hitch(this, function () {
-					var focusedCell;
-					try {
-						// scroll the currently focused child so that it is at the bottom of the screen
-						focusedCell = this._getFocusedCell();
-						if (focusedCell) {
-							this.scrollBy(this.getBottomDistance(focusedCell));
-						}
-						def.resolve();
-					} catch (error) {
-						def.reject(error);
-					}
-				}), 5);
+				def.resolve();
 			} catch (error) {
 				def.reject(error);
 			}
@@ -396,7 +388,7 @@ define(["dcl/dcl",
 		// Event handlers
 		/////////////////////////////////
 
-		_scrollListHandler: dcl.after(function () {
+		_scrollHandler: function () {
 			if (this.autoLoad) {
 				if (this.isTopScroll()) {
 					if (this._noExtremity && this._previousPageLoader) {
@@ -412,7 +404,7 @@ define(["dcl/dcl",
 					this._noExtremity = true;
 				}
 			}
-		}),
+		},
 
 		/////////////////////////////////
 		// Page loaders & loading panel

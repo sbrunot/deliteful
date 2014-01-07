@@ -5,13 +5,13 @@ define(function(){ return '\
   padding-right: 8px;\
 }\
 .d-list-entry-right-edit {\
-  color: grey;\
+  color: #808080;\
   padding-top: 6px;\
   padding-left: 8px;\
 }\
 .d-list-entry-dragged {\
   position: absolute;\
-  border: 1px solid gray;\
+  border: 1px solid #808080;\
   opacity: 0.5;\
   -webkit-box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);\
   box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.5);\
