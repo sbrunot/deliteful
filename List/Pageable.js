@@ -263,7 +263,9 @@ define(["dcl/dcl",
 			var page, i;
 			if (pos === "first") {
 				page = this._pages.shift();
-				this._pageObserverHandles.shift().remove();
+				if (this._pageObserverHandles.length) {
+					this._pageObserverHandles.shift().remove();
+				}
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
 					this._entryDeletedHandler(page[i], true);
@@ -277,7 +279,9 @@ define(["dcl/dcl",
 				}
 			} else if (pos === "last") {
 				page = this._pages.pop();
-				this._pageObserverHandles.pop().remove();
+				if (this._pageObserverHandles.length) {
+					this._pageObserverHandles.pop().remove();
+				}
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
 					this._entryDeletedHandler(page[i], true);

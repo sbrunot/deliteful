@@ -14,6 +14,7 @@
 
 	<script type="text/javascript">
 		require([
+			"dcl/dcl",
 			"delite/register",
 			"dojo/_base/lang",
 			"dojo/domReady",
@@ -23,8 +24,9 @@
 			"deliteful/List/Pageable",
 			"dojo/dom",
 			"dojo/store/Memory",
-			"dojo/store/Observable"
-		], function(register, lang, domReady, on, List, Editable, StoreModel, dom, Memory, Observable){
+			"dojo/store/Observable",
+			"dojo/Deferred"
+		], function(dcl, register, lang, domReady, on, List, Editable, StoreModel, dom, Memory, Observable, Deferred){
 			domReady(function () {
 				document.body.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			});
@@ -32,8 +34,21 @@
 			var StoreList = register("d-slist", [List, StoreModel], {});
 			var EditableStoreList = register("d-eslist", [List, Editable, StoreModel], {});
 			// List model
+			var CustomMemoryStore = dcl([Memory], {
+				latency: 1000,
+				query: dcl.superCall(function (sup) {
+					return function (query, options) {
+						var def = new Deferred;
+						var that = this;
+						setTimeout(function () {
+							def.resolve(sup.call(that, query, options));
+						}, this.latency);
+						return def;
+					};
+				})
+			});
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
-			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2) {
+			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2, latency) {
 				var i = 0, data = [];
 				for (; i < entriesCount; i++) {
 					data.push({category: 'category ' + Math.floor(i / 10),
@@ -44,7 +59,7 @@
 							  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
 							  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
 				}
-				return new Observable(new Memory({data: data, idProperty: 'id'}));
+				return new Observable(new CustomMemoryStore({latency: latency, data: data, idProperty: 'id'}));
 			};
 			// List
 			var list = null;
@@ -94,7 +109,7 @@
 					list = new StoreList(listParams);
 				}
 				list.style.height = parseInt(dom.byId("height").value) + "px";
-				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2);
+				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2, parseInt(dom.byId("storeLatency").value));
 				list.placeAt(dom.byId("list"));
 				list.startup();
 				if(editable){
@@ -266,6 +281,9 @@
 			<option value="true">Yes</option>
 		</select>
 		<br>
+		<label for="storeLatency" title="Time it takes for a request to complete.">Store latency (ms):</label>
+		<input id="storeLatency" type="number" value="0">
+		<br>
 		<button id="buildButton">Build</button>
 	</div>
 	<p>
@@ -275,6 +293,9 @@
 	<p>
 	<div id="editPanel" style="display: none;">
 		<h2>Store updater</h2>
+		<p style="color: red;">
+		WARNING: cannot work at the moment, as the store we're using is not Observable (because its query method returns a Promise ?).
+		</p>
 		<h3>Removal</h3>
 		<label for="entryIdInput">Entry id:</label> <input id="entryIdInput" type="text" value="ref0"><button id="removeEntry">Remove from store</button>
 		<h3>Addition</h3>
