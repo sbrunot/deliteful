@@ -8,7 +8,7 @@ define(["dcl/dcl",
 	return dcl([Widget, Measurable], {
 
 		// The category to render
-		category: null,
+		category: "",
 		_setCategoryAttr: function (value) {
 			this._set("category", value);
 			this.renderCategory(value);

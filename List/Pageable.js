@@ -87,12 +87,6 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		store: null,
-
-		query: null,
-
-		queryOptions: null,
-
 		pageLength: 0, // if > 0 define paging with the number of entries to display per page.
 		
 		maxPages: 0, // the maximum number of pages to display
@@ -160,7 +154,6 @@ define(["dcl/dcl",
 			if (this._dataLoaded) {
 				return;
 			}
-			this._store = this.store;
 			this._pages = [];
 			this._pageObserverHandles = [];
 			this._toggleListLoadingStyle();
@@ -174,7 +167,7 @@ define(["dcl/dcl",
 			});
 		},
 
-		_observePage: function (object, removedFrom, insertedInto) {
+		_pageObserver: function (object, removedFrom, insertedInto) {
 //			console.log("Observation:");
 //			console.log(object);
 //			console.log("removed from " + removedFrom);
@@ -223,7 +216,7 @@ define(["dcl/dcl",
 				this._lastLoaded = this._queryOptions.start + page.length - 1;
 				this._pages.push(page);
 				if (page.observe) {
-					this._pageObserverHandles.push(page.observe(lang.hitch(this, "_observePage"), true));
+					this._pageObserverHandles.push(page.observe(lang.hitch(this, "_pageObserver"), true));
 				}
 				when(lang.hitch(this, onDataReadyHandler)(page), function () {
 					def.resolve();
@@ -250,7 +243,7 @@ define(["dcl/dcl",
 					this._firstLoaded = this._queryOptions.start;
 					this._pages.unshift(page);
 					if (page.observe) {
-						this._pageObserverHandles.unshift(page.observe(lang.hitch(this, "_observePage"), true));
+						this._pageObserverHandles.unshift(page.observe(lang.hitch(this, "_pageObserver"), true));
 					}
 					when(lang.hitch(this, onDataReadyHandler)(page), function () {
 						def.resolve();

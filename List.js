@@ -19,12 +19,20 @@ define(["dcl/dcl",
 ], function (dcl, register, lang, when, on, query, dom, domConstruct, domClass, keys, Widget,
 		Selection, KeyNav, Invalidating, DefaultEntryRenderer, DefaultCategoryRenderer, ScrollableList) {
 
-	// FIXME: The List is only a container of list entries, I don't think it should inherit from Container
 	var List = dcl([Widget, Selection, KeyNav, Invalidating], {
 
 		/////////////////////////////////
 		// Public attributes
 		/////////////////////////////////
+
+		// The dojo object store that contains the list entries
+		store: null,
+
+		// The query to use to retrieve list entries from the store
+		query: null,
+
+		// Options for the query
+		queryOptions: null,
 
 		 // Name of the list entry attribute that define the category of a list entry.
 		//  If falsy, the list is not categorized.
@@ -70,29 +78,15 @@ define(["dcl/dcl",
 			this.containerNode = this;
 		},
 
-		enteredViewCallback: function () {
-			// FIXME: THIS IS A WORKAROUND, BECAUSE Widget.enteredViewCallback IS RESETING THE TAB INDEX TO -1.
-			// => WITH THIS WORKAROUND, ANY CUSTOM TABINDEX SET ON A WIDGET NODE IS IGNORED AND REPLACED WITH 0
-			this._enteredView = true;
-			this.setAttribute("tabindex", "0");
-			this.tabIndex = "0";
-			domClass.add(this, this.baseClass);
-			// END OF WORKAROUND
-
-			// This is not a workaround and should be defined here,
-			// when we have the real initial value for this.selectionMode
-			// FIXME: WHEN REMOVING THE WORKAROUND, enteredViewCallback must be a dcl.after method
-			if (this.selectionMode !== "none") {
-				this.on("click", lang.hitch(this, "_handleSelection"));
-			}
-		},
-
-		startup: function () {
-			var i, len, cell, list = this;
-			this._store = {
+		createdCallback: dcl.after(function () {
+			var list = this;
+			// Init the store with a default value if none has already been defined
+			if (!this.store) {
+				this.store = {
 					data: [],
 					_queried: false,
 					query: function (query, options) {
+						// TODO: support pagination
 						this._queried = true;
 						return this.data.slice();
 					},
@@ -124,66 +118,59 @@ define(["dcl/dcl",
 							return true;
 						}
 					}
-			    };
-			if (this.childNodes.length > 1) {
-				len = this.childNodes.length;
-				for (i = 0; i < len; i++) {
-					cell = this.firstChild;
-					if (cell) {
-						if (cell.startup) {
-							cell.startup();
-						}
-						if (cell.entry) {
-							this._store.add(cell.entry);
-						}
-						this._removeNode(cell);
+				};
+			};
+			// FIXME: SHOULD BE MOVED IN THE selectionMode SETTER
+			if (this.selectionMode !== "none") {
+				this.on("click", lang.hitch(this, "_handleSelection"));
+			}			
+		}),
+
+		enteredViewCallback: function () {
+			// FIXME: THIS IS A WORKAROUND, BECAUSE Widget.enteredViewCallback IS RESETING THE TAB INDEX TO -1.
+			// => WITH THIS WORKAROUND, ANY CUSTOM TABINDEX SET ON A WIDGET NODE IS IGNORED AND REPLACED WITH 0
+			this._enteredView = true;
+			this.setAttribute("tabindex", "0");
+			this.tabIndex = "0";
+			domClass.add(this, this.baseClass);
+			// END OF WORKAROUND
+		},
+
+		startup: function () {
+			// Parse content to retrieve store entries and remove nodes
+			this._processNodeContent(this, {"D-LIST-STORE": function (node) {
+				this._processNodeContent(node, {"D-LIST-STORE-ENTRY": function (node) {
+					var entryAttribute = node.getAttribute("entry");
+					if (entryAttribute) {
+						// Reusing the widget mechanism to extract attribute value.
+						// FIXME: should not have to manipulate node._propCaseMap but use a "more public" method ?
+						node._propCaseMap = {entry: "entry"};
+						node.entry = {};
+						this.store.add(this.mapAttributes.call(node).entry);
 					}
-				}
-			}
+				}});
+			}});
 			this._initContent();
 		},
 
-		_initContent: function () {
-			this._addEntryCells(this._store.query(), "last");
-		},
-
-		/*jshint unused:false */
-		// TODO: REPLACE BY addEntry METHOD !!!???
-		// CANNOT use addChild here because it is used by widget.placeAt
-		addEntryRenderer: function (widget, insertIndex) {
-			var cellAtIndex, options = {};
-			if (this._started) { // If widget is not started, the child will be processed later by the start method
-				if (insertIndex === "first") {
-					insertIndex = 0;
-				}
-				// TODO: support negative indexes (counting from the last element, where -1 is the last, -2 is the one before that, ...) and "last" ("last" === -1)
-				if (insertIndex >= 0) {
-					cellAtIndex = this.getEntryCellByIndex(insertIndex);
-					if (cellAtIndex) {
-						options.before = cellAtIndex.entry;
+		_processNodeContent: function (node, tagHandlers) {
+			var i, len, child, tagName;
+			// Process the content of the node and remove it
+			if (node.childNodes.length > 1) {
+				len = node.childNodes.length;
+				for (i = 0; i < len; i++) {
+					child = node.firstChild;
+					if (child) {
+						tagName = child.tagName;
+						if (tagName && tagHandlers[tagName]) {
+							tagHandlers[tagName].call(this, child);
+						}
+						this._removeNode(child);
 					}
 				}
-				if (widget && widget.entry) {
-					this._store.add(widget.entry, options);
-					// TODO: destroy the widget ?
-				}
-			} else {
-				widget.placeAt(this, insertIndex);
 			}
 		},
-
-		// TODO: REPLACE BY removeEntry METHOD !!!???
-		removeEntryRenderer: function (/*Widget|int*/ widget) {
-			var cell = widget;
-			if (typeof widget === "number") {
-				// TODO: Support negative index (counting from the last element, where -1 is the last, -2 is the one before that, ...) and "first" / "last" ?
-				cell = this.getEntryCellByIndex(widget);
-			}
-			if (cell && cell.entry) {
-				this._store.remove(this._store.getIdentity(cell.entry));
-			}
-		},
-
+		
 		/////////////////////////////////
 		// Public methods
 		/////////////////////////////////
@@ -279,6 +266,24 @@ define(["dcl/dcl",
 		/////////////////////////////////
 		// Private methods
 		/////////////////////////////////
+
+		_initContent: function () {
+			var queryResult = this.store.query(this.query, this.queryOptions);
+			if (queryResult.observe) {
+				// FIXME: SHOULD WE STORE THE HANDLE AND CLOSE IT WHEN THE WIDGET IS DESTROYED ?
+				queryResult.observe(lang.hitch(this, "_observer"), true);
+			}
+			this._addEntryCells(queryResult, "last");
+		},
+
+		_observer: function (object, removedFrom, insertedInto) {
+			if (removedFrom >= 0 && insertedInto < 0) { // entry removed
+				this._entryDeletedHandler(object, false);
+			}
+			if (removedFrom < 0 && insertedInto >= 0) { // entry added
+				this._entryAddedHandler(object, insertedInto);
+			}
+		},
 
 		_toggleListLoadingStyle: function () {
 			domClass.toggle(this, this._cssClasses.loading);
@@ -607,4 +612,5 @@ define(["dcl/dcl",
 	});
 
 	return register("d-list", [HTMLElement, List, ScrollableList]);
+
 });
