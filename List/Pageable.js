@@ -100,7 +100,7 @@ define(["dcl/dcl",
 		//		the scrolling reaches the bottom or the top of the list content.
 		autoLoad: false,
 
-		useMaskingPanel: true, // not needed on desktop / high performance devices
+		useMaskingPanel: false, // not needed on desktop / high performance devices
 
 		/////////////////////////////////
 		// Private attributes
