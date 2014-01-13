@@ -318,7 +318,6 @@ define(["dcl/dcl",
 		// Private methods for cell life cycle
 		/////////////////////////////////
 
-		// FIXME: CATEGORY HEADERS ARE NOT CORRECTLY POSITIONNED WITH THIS ALGORITHM
 		_addEntryCells: function (/*Array*/ entries, pos) {
 			if (!this.containerNode.firstElementChild) {
 				this.containerNode.appendChild(this._createCells(entries, 0, entries.length, null));
@@ -379,7 +378,7 @@ define(["dcl/dcl",
 				}
 				if (cellAtIndex && !cellAtIndex._isCategoryCell) {
 					if (cellAtIndex.entry[this.categoryAttribute] !== cellCategory) {
-						newCategoryCell = this._createCategoryCell(cellCategory);
+						newCategoryCell = this._createCategoryCell(cellAtIndex.entry[this.categoryAttribute]);
 						this.insertBefore(newCategoryCell, cellAtIndex);
 						cellAtIndex = newCategoryCell;
 					}
@@ -403,6 +402,13 @@ define(["dcl/dcl",
 					nextCell = this._getNextCell(cell);
 					if (!nextCell || (nextCell && nextCell._isCategoryCell)) {
 						this._removeCell(previousCell);
+						if (nextCell && nextCell._isCategoryCell) {
+							previousCell = this._getPreviousCell(cell);
+							// remove this category cell if it is not needed anymore
+							if (previousCell && nextCell.category === previousCell.entry[this.categoryAttribute]) {
+								this._removeCell(nextCell);
+							}
+						}
 					}
 				}
 			}
