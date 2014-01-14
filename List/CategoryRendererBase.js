@@ -1,11 +1,10 @@
 define(["dcl/dcl",
         "dojo/dom-class",
         "dojo/dom-construct",
-        "delite/Widget",
-        "./Measurable"
-], function (dcl, domClass, domConstruct, Widget, Measurable) {
+        "delite/Widget"
+], function (dcl, domClass, domConstruct, Widget) {
 
-	return dcl([Widget, Measurable], {
+	return dcl([Widget], {
 
 		// The category to render
 		category: "",

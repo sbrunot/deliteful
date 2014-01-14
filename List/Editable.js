@@ -252,7 +252,7 @@ define(["dcl/dcl",
 				this._dropPosition = rendererItemIndex;
 				this._placeHolder = domConstruct.create("div",
 						{className: this._cssClasses.item});
-				this._placeHolder.style.height = this._draggedRenderer.getHeight() + "px";
+				this._placeHolder.style.height = this._draggedRenderer.offsetHeight + "px";
 				this._placePlaceHolder(this._draggedRenderer, "after");
 				this._setDraggable(this._draggedRenderer, true);
 				this._touchStartY = event.touches ? event.touches[0].pageY : event.pageY;

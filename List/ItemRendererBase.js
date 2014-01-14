@@ -2,11 +2,10 @@ define(["dcl/dcl",
         "delite/register",
         "dojo/dom-class",
         "dojo/dom-construct",
-        "delite/Widget",
-        "./Measurable"
-], function (dcl, register, domClass, domConstruct, Widget, Measurable) {
+        "delite/Widget"
+], function (dcl, register, domClass, domConstruct, Widget) {
 
-	return dcl([Widget, Measurable], {
+	return dcl([Widget], {
 
 		_focusableChildren: null,
 		_focusedChild: null,
