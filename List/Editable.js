@@ -96,7 +96,7 @@ define(["dcl/dcl",
 		// List methods
 		/////////////////////////////////
 
-		/*jshint unused:false */
+		/*jshint unused:vars */
 		_handleSelection: dcl.superCall(function (sup) {
 			return function (event) {
 				if (!this.deleteable) { // cannot select / unselect entries while entries are deleteable
@@ -104,63 +104,6 @@ define(["dcl/dcl",
 				}
 			};
 		}),
-
-		_deleteAtIndex: function (entryIndex) {
-			var cell = this.getEntryCellByIndex(entryIndex),
-				entry = cell.entry;
-			if (this.onEntryDelete(entry, entryIndex) !== false) {
-				if (this.store) {
-					this.store.remove(this.store.getIdentity(entry));
-				} else {
-					this._removeCell(cell);
-				}
-			}
-		},
-
-		/////////////////////////////////
-		// Private methods
-		/////////////////////////////////
-
-		_showDeleteButton: function (entryIndex) {
-			// TODO: USE i18n string
-			this._setRightEditNodeInnerHTML(entryIndex,
-					"<div class='d-list-delete-button'>delete</div>");
-		},
-
-		_hideDeleteButton: function (entryIndex) {
-			var innerHTML = this.moveable
-					? "<div class='duiDomButtonGrayKnob' style='cursor: move;'>"
-					  + "<div><div><div></div></div></div></div></div>"
-					: "<div></div>";
-			this._setRightEditNodeInnerHTML(entryIndex, innerHTML);
-		},
-
-		_setRightEditNodeInnerHTML: function (entryIndex, innerHTML) {
-			var cell = this.getEntryCellByIndex(entryIndex);
-			if (cell) {
-				cell.children[2].innerHTML = innerHTML;
-			}
-		},
-
-		_isRightEditNodeDescendant: function (node) {
-			var currentNode = node;
-			while (currentNode) {
-				if (domClass.contains(currentNode, "d-list-entry-right-edit")) {
-					return true;
-				}
-				currentNode = currentNode.parentNode;
-			}
-			return false;
-		},
-
-		////////////////////////////////////
-		// TODO: SUPPORT DELETETION / ADDITIONS AT THE STORE LEVEL
-		//       (HERE OR IN StoreModel ?)
-		////////////////////////////////////
-
-		////////////////////////////////////
-		// TODO: KEYBOARD NAVIGATION !!!
-		////////////////////////////////////
 
 		_createEntryCell: dcl.superCall(function (sup) {
 			return function (entry) {
@@ -182,6 +125,58 @@ define(["dcl/dcl",
 				return cell;
 			};
 		}),
+
+		/////////////////////////////////
+		// Private methods
+		/////////////////////////////////
+
+		_showDeleteButton: function (entryIndex) {
+			// TODO: USE i18n string
+			this._setRightEditNodeInnerHTML(entryIndex,
+					"<div class='d-list-delete-button'>delete</div>");
+		},
+
+		_hideDeleteButton: function (entryIndex) {
+			var innerHTML = this.moveable
+					? "<div class='duiDomButtonGrayKnob' style='cursor: move;'>"
+					  + "<div><div><div></div></div></div></div></div>"
+					: "<div></div>";
+			this._setRightEditNodeInnerHTML(entryIndex, innerHTML);
+		},
+
+		_deleteAtIndex: function (entryIndex) {
+			var cell = this.getEntryCellByIndex(entryIndex),
+				entry = cell.entry;
+			if (this.onEntryDelete(entry, entryIndex) !== false) {
+				if (this.store) {
+					this.store.remove(this.store.getIdentity(entry));
+				} else {
+					this._removeCell(cell);
+				}
+			}
+		},
+
+		_setRightEditNodeInnerHTML: function (entryIndex, innerHTML) {
+			var cell = this.getEntryCellByIndex(entryIndex);
+			if (cell) {
+				cell.children[2].innerHTML = innerHTML;
+			}
+		},
+
+		_isRightEditNodeDescendant: function (node) {
+			var currentNode = node;
+			while (currentNode) {
+				if (domClass.contains(currentNode, "d-list-entry-right-edit")) {
+					return true;
+				}
+				currentNode = currentNode.parentNode;
+			}
+			return false;
+		},
+
+		////////////////////////////////////
+		// TODO: KEYBOARD NAVIGATION !!!
+		////////////////////////////////////
 
 		_onCellClick: function (evt, entryIndex) {
 			var node = evt.target;

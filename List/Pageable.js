@@ -8,9 +8,8 @@ define(["dcl/dcl",
 		"dojo/dom-construct",
 		"dojo/dom-class",
 		"dojo/sniff",
-		"dojo/store/Observable",
 		"delite/Widget"
-], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Observable, Widget) {
+], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Widget) {
 
 	// TODO: SHOULD THIS WIDGET BE DEFINED IN ITS OWN SOURCE FILE (IN THIS CASE, A MORE GENERIC "ActionCell" WIDGET) ?
 	var LoaderWidget = register("d-list-loader", [HTMLElement, dcl([Widget], {
