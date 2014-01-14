@@ -26,15 +26,15 @@ define(["dcl/dcl",
 		// Private attributes
 		/////////////////////////////////
 
-		_indexOfDeleteableEntry: -1,
+		_indexOfDeleteableItem: -1,
 		_touchHandlersRefs: null,
 		_placeHolder: null,
 		_placeHolderClientRect: null,
-		_draggedCell: null,
+		_draggedRenderer: null,
 		_touchStartY: null,
 		_startTop: null,
-		_draggedCellTop: null,
-		_draggedEntryIndex: null,
+		_draggedRendererTop: null,
+		_draggedItemIndex: null,
 		_dropPosition: -1,
 
 		/////////////////////////////////
@@ -47,17 +47,17 @@ define(["dcl/dcl",
 			// TODO: EVENT HANDLERS, RENDERING, ETC...
 		},
 
-		// Called before the deletion of an entry through the UI delete action.
-		// If it returns false, the entry is not deleted. The entry is deleted
+		// Called before the deletion of an item through the UI delete action.
+		// If it returns false, the item is not deleted. The item is deleted
 		// if it returns any other value.
-		// TODO: RENAME "beforeEntryDelete" or "beforeEntryDeletion" ?
+		// TODO: RENAME "beforeItemDelete" or "beforeItemDeletion" ?
 		/*jshint unused:false */
-		onEntryDelete: function (entry, entryIndex) {
+		onItemDelete: function (item, itemIndex) {
 			// to be implemented
 		},
 
 		/*jshint unused:false */
-		onEntryMove: function (entry, originalIndex, newIndex) {
+		onItemMove: function (item, originalIndex, newIndex) {
 			// to be immplemented
 		},
 
@@ -71,16 +71,16 @@ define(["dcl/dcl",
 
 		enteredViewCallback: dcl.after(function () {
 			if (this.categoryAttribute || (this.pageLength && this.autoLoad)) {
-				// moving entries not yet supported on categorized lists or on paginated lists with auto loading
+				// moving items not yet supported on categorized lists or on paginated lists with auto loading
 				this.moveable = false;
 			}
 			if (this.deleteable) {
-				this.onCellEvent("click", lang.hitch(this, "_onCellClick"));
+				this.onRendererEvent("click", lang.hitch(this, "_onRendererClick"));
 			}
 			if (this.moveable) {
 				this.on(touch.press, lang.hitch(this, "_onEditableTouchPress"));
 			}
-			this.onCellEvent("keydown", lang.hitch(this, "_onCellKeydown"));
+			this.onRendererEvent("keydown", lang.hitch(this, "_onRendererKeydown"));
 		}),
 
 		destroy: dcl.after(function () {
@@ -99,30 +99,30 @@ define(["dcl/dcl",
 		/*jshint unused:vars */
 		_handleSelection: dcl.superCall(function (sup) {
 			return function (event) {
-				if (!this.deleteable) { // cannot select / unselect entries while entries are deleteable
+				if (!this.deleteable) { // cannot select / unselect items while items are deleteable
 					return sup.apply(this, arguments);
 				}
 			};
 		}),
 
-		_createEntryCell: dcl.superCall(function (sup) {
-			return function (entry) {
-				var cell = sup.apply(this, arguments);
-				// This is a new cell
+		_createItemRenderer: dcl.superCall(function (sup) {
+			return function (item) {
+				var renderer = sup.apply(this, arguments);
+				// This is a new renderer
 				if (this.deleteable || this.moveable) {
 					domConstruct.create("div", {innerHTML: this.moveable
 						? "<div class='duiDomButtonGrayKnob' style='cursor: move;'>"
 						  + "<div><div><div></div></div></div></div></div>"
 						: "<div></div>",
-						className: "d-list-entry-right-edit"}, cell);
+						className: "d-list-item-right-edit"}, renderer);
 				}
 				if (this.deleteable) {
 					domConstruct.create("div", {innerHTML:
 						"<div class='duiDomButtonRedCircleMinus' style='cursor: pointer;'>"
 						+ "<div><div><div></div></div></div></div></div>",
-						className: "d-list-entry-left-edit"}, cell, 0);
+						className: "d-list-item-left-edit"}, renderer, 0);
 				}
-				return cell;
+				return renderer;
 			};
 		}),
 
@@ -130,43 +130,43 @@ define(["dcl/dcl",
 		// Private methods
 		/////////////////////////////////
 
-		_showDeleteButton: function (entryIndex) {
+		_showDeleteButton: function (itemIndex) {
 			// TODO: USE i18n string
-			this._setRightEditNodeInnerHTML(entryIndex,
+			this._setRightEditNodeInnerHTML(itemIndex,
 					"<div class='d-list-delete-button'>delete</div>");
 		},
 
-		_hideDeleteButton: function (entryIndex) {
+		_hideDeleteButton: function (itemIndex) {
 			var innerHTML = this.moveable
 					? "<div class='duiDomButtonGrayKnob' style='cursor: move;'>"
 					  + "<div><div><div></div></div></div></div></div>"
 					: "<div></div>";
-			this._setRightEditNodeInnerHTML(entryIndex, innerHTML);
+			this._setRightEditNodeInnerHTML(itemIndex, innerHTML);
 		},
 
-		_deleteAtIndex: function (entryIndex) {
-			var cell = this.getEntryCellByIndex(entryIndex),
-				entry = cell.entry;
-			if (this.onEntryDelete(entry, entryIndex) !== false) {
+		_deleteAtIndex: function (itemIndex) {
+			var renderer = this.getItemRendererByIndex(itemIndex),
+				item = renderer.item;
+			if (this.onItemDelete(item, itemIndex) !== false) {
 				if (this.store) {
-					this.store.remove(this.store.getIdentity(entry));
+					this.store.remove(this.store.getIdentity(item));
 				} else {
-					this._removeCell(cell);
+					this._removeRenderer(renderer);
 				}
 			}
 		},
 
-		_setRightEditNodeInnerHTML: function (entryIndex, innerHTML) {
-			var cell = this.getEntryCellByIndex(entryIndex);
-			if (cell) {
-				cell.children[2].innerHTML = innerHTML;
+		_setRightEditNodeInnerHTML: function (itemIndex, innerHTML) {
+			var renderer = this.getItemRendererByIndex(itemIndex);
+			if (renderer) {
+				renderer.children[2].innerHTML = innerHTML;
 			}
 		},
 
 		_isRightEditNodeDescendant: function (node) {
 			var currentNode = node;
 			while (currentNode) {
-				if (domClass.contains(currentNode, "d-list-entry-right-edit")) {
+				if (domClass.contains(currentNode, "d-list-item-right-edit")) {
 					return true;
 				}
 				currentNode = currentNode.parentNode;
@@ -178,56 +178,56 @@ define(["dcl/dcl",
 		// TODO: KEYBOARD NAVIGATION !!!
 		////////////////////////////////////
 
-		_onCellClick: function (evt, entryIndex) {
+		_onRendererClick: function (evt, itemIndex) {
 			var node = evt.target;
-			var resetDeleteableEntry = true;
+			var resetDeleteableItem = true;
 			if (this.deleteable) {
 				while (node && !domClass.contains(node, this.baseClass)) {
-					if (domClass.contains(node, "d-list-entry-left-edit")) {
-						if (this._indexOfDeleteableEntry === entryIndex) {
+					if (domClass.contains(node, "d-list-item-left-edit")) {
+						if (this._indexOfDeleteableItem === itemIndex) {
 							// do nothing
-							resetDeleteableEntry = false;
+							resetDeleteableItem = false;
 							break;
-						} else if (this._indexOfDeleteableEntry >= 0) {
-							this._hideDeleteButton(this._indexOfDeleteableEntry);
+						} else if (this._indexOfDeleteableItem >= 0) {
+							this._hideDeleteButton(this._indexOfDeleteableItem);
 						}
-						this._showDeleteButton(entryIndex);
-						this._indexOfDeleteableEntry = entryIndex;
-						resetDeleteableEntry = false;
-						this.focusChild(this.getEntryCellByIndex(entryIndex));
+						this._showDeleteButton(itemIndex);
+						this._indexOfDeleteableItem = itemIndex;
+						resetDeleteableItem = false;
+						this.focusChild(this.getItemRendererByIndex(itemIndex));
 						break;
-					} else if (domClass.contains(node, "d-list-entry-right-edit")) {
-						if (this._indexOfDeleteableEntry === entryIndex) {
-							this._hideDeleteButton(entryIndex);
-							this._indexOfDeleteableEntry = -1;
-							this._deleteAtIndex(entryIndex);
+					} else if (domClass.contains(node, "d-list-item-right-edit")) {
+						if (this._indexOfDeleteableItem === itemIndex) {
+							this._hideDeleteButton(itemIndex);
+							this._indexOfDeleteableItem = -1;
+							this._deleteAtIndex(itemIndex);
 						}
 						break;
 					}
 					node = node.parentNode;
 				}
 			}
-			if (resetDeleteableEntry && this._indexOfDeleteableEntry >= 0) {
-				this._hideDeleteButton(this._indexOfDeleteableEntry);
-				this._indexOfDeleteableEntry = -1;
+			if (resetDeleteableItem && this._indexOfDeleteableItem >= 0) {
+				this._hideDeleteButton(this._indexOfDeleteableItem);
+				this._indexOfDeleteableItem = -1;
 			}
 		},
 
-		_onCellKeydown: function (evt, entryIndex) {
-			if (entryIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
-				if (this._indexOfDeleteableEntry >= 0) {
-					if (this._indexOfDeleteableEntry === entryIndex) {
-						this._hideDeleteButton(entryIndex);
-						this._indexOfDeleteableEntry = -1;
-						this._deleteAtIndex(entryIndex);
+		_onRendererKeydown: function (evt, itemIndex) {
+			if (itemIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
+				if (this._indexOfDeleteableItem >= 0) {
+					if (this._indexOfDeleteableItem === itemIndex) {
+						this._hideDeleteButton(itemIndex);
+						this._indexOfDeleteableItem = -1;
+						this._deleteAtIndex(itemIndex);
 					} else {
-						this._hideDeleteButton(this._indexOfDeleteableEntry);
-						this._showDeleteButton(entryIndex);
-						this._indexOfDeleteableEntry = entryIndex;
+						this._hideDeleteButton(this._indexOfDeleteableItem);
+						this._showDeleteButton(itemIndex);
+						this._indexOfDeleteableItem = itemIndex;
 					}
 				} else {
-					this._showDeleteButton(entryIndex);
-					this._indexOfDeleteableEntry = entryIndex;
+					this._showDeleteButton(itemIndex);
+					this._indexOfDeleteableItem = itemIndex;
 				}
 			}
 			// TODO: implement moving item using keyboard
@@ -238,25 +238,25 @@ define(["dcl/dcl",
 		///////////////////////////////
 		
 		_onEditableTouchPress: function (event) {
-			if (this._draggedCell) {
+			if (this._draggedRenderer) {
 				return;
 			}
-			var cell = this.getParentCell(event.target),
-				cellEntryIndex = this.getEntryCellIndex(cell);
-			if (cell && this._isRightEditNodeDescendant(event.target)) {
-				if (cellEntryIndex === this._indexOfDeleteableEntry) {
+			var renderer = this.getEnclosingRenderer(event.target),
+				rendererItemIndex = this.getItemRendererIndex(renderer);
+			if (renderer && this._isRightEditNodeDescendant(event.target)) {
+				if (rendererItemIndex === this._indexOfDeleteableItem) {
 					return;
 				}
-				this._draggedCell = cell;
-				this._draggedEntryIndex = cellEntryIndex;
-				this._dropPosition = cellEntryIndex;
+				this._draggedRenderer = renderer;
+				this._draggedItemIndex = rendererItemIndex;
+				this._dropPosition = rendererItemIndex;
 				this._placeHolder = domConstruct.create("div",
-						{className: this._cssClasses.entry});
-				this._placeHolder.style.height = this._draggedCell.getHeight() + "px";
-				this._placePlaceHolder(this._draggedCell, "after");
-				this._setDraggable(this._draggedCell, true);
+						{className: this._cssClasses.item});
+				this._placeHolder.style.height = this._draggedRenderer.getHeight() + "px";
+				this._placePlaceHolder(this._draggedRenderer, "after");
+				this._setDraggable(this._draggedRenderer, true);
 				this._touchStartY = event.touches ? event.touches[0].pageY : event.pageY;
-				this._startTop = domGeometry.getMarginBox(this._draggedCell).t;
+				this._startTop = domGeometry.getMarginBox(this._draggedRenderer).t;
 				this._touchHandlersRefs.push(this.own(on(document, touch.release,
 						lang.hitch(this, "_onEditableTouchRelease")))[0]);
 				this._touchHandlersRefs.push(this.own(on(document, touch.move,
@@ -272,32 +272,32 @@ define(["dcl/dcl",
 			///////////////////////////////////////////////////////////
 			var	pageY = event.touches ? event.touches[0].pageY : event.pageY,
 				clientY = event.touches ? event.touches[0].clientY : event.clientY;
-			this._draggedCellTop = this._startTop + (pageY - this._touchStartY);
+			this._draggedRendererTop = this._startTop + (pageY - this._touchStartY);
 			this._stopEditableAutoScroll();
-			this._draggedCell.style.top = this._draggedCellTop + "px";
+			this._draggedRenderer.style.top = this._draggedRendererTop + "px";
 			this._updatePlaceholderPosition(clientY);
 			event.preventDefault();
 			event.stopPropagation();
 		},
 
 		_updatePlaceholderPosition: function (clientY) {
-			var nextCell, previousCell;
+			var nextRenderer, previousRenderer;
 			if (clientY < this._placeHolderClientRect.top) {
-				previousCell = this._getPreviousCell(this._placeHolder);
-				if (previousCell === this._draggedCell) {
-					previousCell = this._getPreviousCell(previousCell);
+				previousRenderer = this._getPreviousRenderer(this._placeHolder);
+				if (previousRenderer === this._draggedRenderer) {
+					previousRenderer = this._getPreviousRenderer(previousRenderer);
 				}
-				if (previousCell) {
-					this._placePlaceHolder(previousCell, "before");
+				if (previousRenderer) {
+					this._placePlaceHolder(previousRenderer, "before");
 					this._dropPosition--;
 				}
 			} else if (clientY > this._placeHolderClientRect.bottom) {
-				nextCell = this._getNextCell(this._placeHolder);
-				if (nextCell === this._draggedCell) {
-					nextCell = this._getNextCell(nextCell);
+				nextRenderer = this._getNextRenderer(this._placeHolder);
+				if (nextRenderer === this._draggedRenderer) {
+					nextRenderer = this._getNextRenderer(nextRenderer);
 				}
-				if (nextCell) {
-					this._placePlaceHolder(nextCell, "after");
+				if (nextRenderer) {
+					this._placePlaceHolder(nextRenderer, "after");
 					this._dropPosition++;
 				}
 			}
@@ -321,8 +321,8 @@ define(["dcl/dcl",
 						if (this._placeHolder) {
 							this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
 							this._startTop += realRate;
-							this._draggedCellTop += realRate;
-							this._draggedCell.style.top = this._draggedCellTop + "px";
+							this._draggedRendererTop += realRate;
+							this._draggedRenderer.style.top = this._draggedRendererTop + "px";
 							this._updatePlaceholderPosition(clientY);
 						}
 					}
@@ -338,22 +338,22 @@ define(["dcl/dcl",
 		},
 
 		_onEditableTouchRelease: function (event) {
-			if (this._draggedCell) {
+			if (this._draggedRenderer) {
 				if (this._dropPosition >= 0) {
-					if (this._dropPosition !== this._draggedEntryIndex) {
+					if (this._dropPosition !== this._draggedItemIndex) {
 						// TODO: ADD A HANDLER THAT IS ABLE TO CANCEL THE MOVE !!!
 						if (this.store) {
-							console.log("TODO: MOVE ENTRY IN THE STORE (from index " + this._draggedEntryIndex + " to " + this._dropPosition + ")");
+							console.log("TODO: MOVE ITEM IN THE STORE (from index " + this._draggedItemIndex + " to " + this._dropPosition + ")");
 						} else {
-							this._moveCell(this.getEntryCellByIndex(this._draggedEntryIndex), this._dropPosition)
+							this._moveRenderer(this.getItemRendererByIndex(this._draggedItemIndex), this._dropPosition)
 						}
 					}
-					this._draggedEntryIndex = null;
+					this._draggedItemIndex = null;
 					this._dropPosition = -1;
 				}
 				this.defer(function () { // iPhone needs setTimeout (via defer)
-					this._setDraggable(this._draggedCell, false);
-					this._draggedCell = null;
+					this._setDraggable(this._draggedRenderer, false);
+					this._draggedRenderer = null;
 				});
 				array.forEach(this._touchHandlersRefs, function (handlerRef) {
 					handlerRef.remove();
@@ -374,9 +374,9 @@ define(["dcl/dcl",
 					width: domGeometry.getContentBox(node).w + "px",
 					top: node.offsetTop + "px"
 				});
-				domClass.add(node, "d-list-entry-dragged");
+				domClass.add(node, "d-list-item-dragged");
 			} else {
-				domClass.remove(node, "d-list-entry-dragged");
+				domClass.remove(node, "d-list-item-dragged");
 				domStyle.set(node, {
 					width: "",
 					top: ""

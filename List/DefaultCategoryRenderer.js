@@ -1,9 +1,9 @@
 define(["dcl/dcl",
         "delite/register",
-        "./AbstractCategoryRenderer"
-], function (dcl, register, AbstractCategoryRenderer) {
+        "./CategoryRendererBase"
+], function (dcl, register, CategoryRendererBase) {
 	
-	var DefaultCategoryRenderer = dcl([AbstractCategoryRenderer], {
+	var DefaultCategoryRenderer = dcl([CategoryRendererBase], {
 
 		baseClass: "d-list-category",
 

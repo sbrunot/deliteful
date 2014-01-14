@@ -12,12 +12,12 @@ define(["dcl/dcl",
 	"delite/Selection",
 	"delite/KeyNav",
 	"delite/Invalidating",
-	"./List/DefaultEntryRenderer",
+	"./List/DefaultItemRenderer",
 	"./List/DefaultCategoryRenderer",
 	"./List/ScrollableList",
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
 ], function (dcl, register, lang, when, on, query, dom, domConstruct, domClass, keys, Widget,
-		Selection, KeyNav, Invalidating, DefaultEntryRenderer, DefaultCategoryRenderer, ScrollableList) {
+		Selection, KeyNav, Invalidating, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {
 
 	var List = dcl([Widget, Selection, KeyNav, Invalidating], {
 
@@ -25,31 +25,31 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		// The dojo object store that contains the list entries
+		// The dojo object store that contains the list items
 		store: null,
 
-		// The query to use to retrieve list entries from the store
+		// The query to use to retrieve list items from the store
 		query: null,
 
 		// Options for the query
 		queryOptions: null,
 
-		 // Name of the list entry attribute that define the category of a list entry.
+		 // Name of the list item attribute that define the category of a list item.
 		//  If falsy, the list is not categorized.
 		categoryAttribute: "",
 
-		// The widget class to use to render list entries. It MUST extend the deliteful/List/AbstractEntryRenderer class.
-		entriesRenderer: DefaultEntryRenderer,
+		// The widget class to use to render list items. It MUST extend the deliteful/List/ItemRendererBase class.
+		itemsRenderer: DefaultItemRenderer,
 
-		// The widget class to use to render category headers when the list entries are categorized.
-		// It MUST extend the deliteful/List/AbstractEntryRenderer class.
+		// The widget class to use to render category headers when the list items are categorized.
+		// It MUST extend the deliteful/List/CategoryRendererBase class.
 		categoriesRenderer: DefaultCategoryRenderer,
 
 		// The base class that defines the style of the list.
 		// Available values are:
-		// - "d-round-rect-list" (default), that render a list with rounded corners and left and right margins;
-		// - "d-edge-to-edge-list", that render a list with no rounded corners and no left and right margins.
-		baseClass: "d-round-rect-list",
+		// - "d-list" (default), that render a list with no rounded corners and no left and right margins.
+		// - "d-round-rect-list", that render a list with rounded corners and left and right margins;
+		baseClass: "d-list",
 		_setBaseClassAttr: function (value) {
 			if (this.baseClass !== value) {
 				domClass.replace(this, value, this.baseClass);
@@ -57,16 +57,16 @@ define(["dcl/dcl",
 			}
 		},
 
-		// The selection mode for list entries (see delite/Selection).
+		// The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
 
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
 
-		_cssClasses: {entry: "d-list-entry",
-					   category: "d-list-category",
-					   loading: "d-list-loading"},
+		_cssClasses: {item: "d-list-item",
+					  category: "d-list-category",
+					  loading: "d-list-loading"},
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -104,7 +104,7 @@ define(["dcl/dcl",
 							this.data.push(item);
 						}
 						if (this._queried) {
-							list._entryAddedHandler(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
+							list._itemAddedHandler(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
 						}
 						return item;
 					},
@@ -113,7 +113,7 @@ define(["dcl/dcl",
 						if (index >= 0 && index < this.data.length) {
 							item = this.data.splice(index, 1)[0];
 							if (this._queried) {
-								list._entryDeletedHandler(item, false);
+								list._itemDeletedHandler(item, false);
 							}
 							return true;
 						}
@@ -137,23 +137,23 @@ define(["dcl/dcl",
 		},
 
 		startup: function () {
-			// Parse content to retrieve store entries and remove nodes
-			this._processNodeContent(this, {"D-LIST-STORE": function (node) {
-				this._processNodeContent(node, {"D-LIST-STORE-ENTRY": function (node) {
-					var entryAttribute = node.getAttribute("entry");
-					if (entryAttribute) {
+			// Parse content to remove it / retrieve items to add to the store
+			this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
+				this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
+					var itemAttribute = node.getAttribute("item");
+					if (itemAttribute) {
 						// Reusing the widget mechanism to extract attribute value.
 						// FIXME: should not have to manipulate node._propCaseMap but use a "more public" method ?
-						node._propCaseMap = {entry: "entry"};
-						node.entry = {};
-						this.store.add(this.mapAttributes.call(node).entry);
+						node._propCaseMap = {item: "item"};
+						node.item = {};
+						this.store.add(this.mapAttributes.call(node).item);
 					}
 				}});
 			}});
 			this._initContent();
 		},
 
-		_processNodeContent: function (node, tagHandlers) {
+		_processAndRemoveContent: function (node, tagHandlers) {
 			var i, len, child, tagName;
 			// Process the content of the node and remove it
 			if (node.childNodes.length > 1) {
@@ -175,58 +175,58 @@ define(["dcl/dcl",
 		// Public methods
 		/////////////////////////////////
 
-		// Register a handler for a type of events generated in any of the list cells.
+		// Register a handler for a type of events generated in any of the renderers.
 		// Parameters:
 		//		event: the type of events ("click", ...)
 		//		handler: the event handler
 		// When the event handler is called, it receive the list as its first parameter, the event
-		// as its second and the index of the list entry displayed in the cell.
-		// TODO: WHAT IF THE CELL IS A CATEGORY HEADER ???
-		onCellEvent: function (event, handler) {
+		// as its second and the index of the list item displayed in the renderer.
+		// TODO: WHAT IF THE RENDERER IS A CATEGORY HEADER ???
+		onRendererEvent: function (event, handler) {
 			var that = this;
 			return this.on(event, function (e) {
-				var parentCell;
+				var parentRenderer;
 				if (domClass.contains(e.target, this.baseClass)) {
 					return;
 				} else {
-					parentCell = that.getParentCell(e.target);
-					if (parentCell) {
-						// TODO: Pass the parentCell too ?
-						// Or run the handler in the parentCell context and pass the list ?
-						// TODO: Pass the parentCell INSTEAD of the entry index,
-						// as it contains itself the entry index and the entry ?
-						return handler.call(that, e, that.getEntryCellIndex(parentCell));
+					enclosingRenderer = that.getEnclosingRenderer(e.target);
+					if (enclosingRenderer) {
+						// TODO: Pass the enclosingRenderer too ?
+						// Or run the handler in the enclosingRenderer context and pass the list ?
+						// TODO: Pass the enclosingRenderer INSTEAD of the item index,
+						// as it contains itself the item index and the item ?
+						return handler.call(that, e, that.getItemRendererIndex(enclosingRenderer));
 					}
 				}
 			});
 		},
 
-		getCellByEntry: function (entry) {
-			var cells = query("." + this._cssClasses.entry, this.containerNode);
-			var cellIndex = cells.map(function (cell) {
-									return cell.entry;
+		getRendererByItem: function (item) {
+			var renderers = query("." + this._cssClasses.item, this.containerNode);
+			var rendererIndex = renderers.map(function (renderer) {
+									return renderer.item;
 								})
-								.indexOf(entry);
-			if (cellIndex >= 0) {
-				return cells[cellIndex];
+								.indexOf(item);
+			if (rendererIndex >= 0) {
+				return renderers[rendererIndex];
 			}
 		},
 
-		getEntryCellByIndex: function (index) {
-			var entryCells = query("." + this._cssClasses.entry, this.containerNode);
+		getItemRendererByIndex: function (index) {
+			var itemRenderers = query("." + this._cssClasses.item, this.containerNode);
 			var returned = null;
-			if (index < entryCells.length) {
-				returned = query("." + this._cssClasses.entry, this.containerNode)[index];
+			if (index < itemRenderers.length) {
+				returned = query("." + this._cssClasses.item, this.containerNode)[index];
 			}
 			return returned;
 		},
 
-		getEntryCellIndex: function (cell) {
-			var index = query("." + this._cssClasses.entry, this.containerNode).indexOf(cell);
+		getItemRendererIndex: function (renderer) {
+			var index = query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
 			return index < 0 ? null : index;
 		},
 
-		getParentCell: function (node) {
+		getEnclosingRenderer: function (node) {
 			var currentNode = dom.byId(node);
 			while (currentNode) {
 				if (currentNode.parentNode && domClass.contains(currentNode.parentNode,
@@ -246,18 +246,18 @@ define(["dcl/dcl",
 		// Selection implementation
 		/////////////////////////////////
 
-		getIdentity: function (entry) {
-			return entry;
+		getIdentity: function (item) {
+			return item;
 		},
 
-		updateRenderers: function (entries) {
-			var i = 0, currentEntry, cell;
+		updateRenderers: function (items) {
+			var i = 0, currentItem, renderer;
 			if (this.selectionMode !== "none") {
-				for (; i < entries.length; i++) {
-					currentEntry = entries[i];
-					cell = this.getCellByEntry(currentEntry);
-					if (cell) {
-						domClass.toggle(cell, "d-selected", this.isSelected(currentEntry));
+				for (; i < items.length; i++) {
+					currentItem = items[i];
+					renderer = this.getRendererByItem(currentItem);
+					if (renderer) {
+						domClass.toggle(renderer, "d-selected", this.isSelected(currentItem));
 					}
 				}
 			}
@@ -273,15 +273,15 @@ define(["dcl/dcl",
 				// FIXME: SHOULD WE STORE THE HANDLE AND CLOSE IT WHEN THE WIDGET IS DESTROYED ?
 				queryResult.observe(lang.hitch(this, "_observer"), true);
 			}
-			this._addEntryCells(queryResult, "last");
+			this._addItemRenderers(queryResult, "last");
 		},
 
 		_observer: function (object, removedFrom, insertedInto) {
-			if (removedFrom >= 0 && insertedInto < 0) { // entry removed
-				this._entryDeletedHandler(object, false);
+			if (removedFrom >= 0 && insertedInto < 0) { // item removed
+				this._itemDeletedHandler(object, false);
 			}
-			if (removedFrom < 0 && insertedInto >= 0) { // entry added
-				this._entryAddedHandler(object, insertedInto);
+			if (removedFrom < 0 && insertedInto >= 0) { // item added
+				this._itemAddedHandler(object, insertedInto);
 			}
 		},
 
@@ -297,196 +297,196 @@ define(["dcl/dcl",
 		// Model updates handler
 		/////////////////////////////////
 
-		_entryDeletedHandler: function (entry, keepSelection) {
-			var cell = this.getCellByEntry(entry);
-			if (cell) {
-				this._removeCell(cell, keepSelection);
+		_itemDeletedHandler: function (item, keepSelection) {
+			var renderer = this.getRendererByItem(item);
+			if (renderer) {
+				this._removeRenderer(renderer, keepSelection);
 			}
 		},
 
-		_entryAddedHandler: function (entry, atIndex) {
-			var newCell = this._createEntryCell(entry);
+		_itemAddedHandler: function (item, atIndex) {
+			var newRenderer = this._createItemRenderer(item);
 			// FIXME: WHAT ABOUT CATEGORIZED LISTS ???
-			this._addEntryCell(newCell, atIndex);
+			this._addItemRenderer(newRenderer, atIndex);
 		},
 
-		_entryMovedHandler: function (entry, fromIndex, toIndex) {
-			console.log("TODO: Entry " + entry + " moved from index " + fromIndex + " to " + toIndex);
+		_itemMovedHandler: function (item, fromIndex, toIndex) {
+			console.log("TODO: Item " + item + " moved from index " + fromIndex + " to " + toIndex);
 		},
 
 		/////////////////////////////////
-		// Private methods for cell life cycle
+		// Private methods for renderer life cycle
 		/////////////////////////////////
 
-		_addEntryCells: function (/*Array*/ entries, pos) {
+		_addItemRenderers: function (/*Array*/ items, pos) {
 			if (!this.containerNode.firstElementChild) {
-				this.containerNode.appendChild(this._createCells(entries, 0, entries.length, null));
+				this.containerNode.appendChild(this._createRenderers(items, 0, items.length, null));
 			} else {
 				if (pos === "first") {
-					this.containerNode.insertBefore(this._createCells(entries, 0, entries.length, null),
+					this.containerNode.insertBefore(this._createRenderers(items, 0, items.length, null),
 							this.containerNode.firstElementChild);
 				} else if (pos === "last") {
-					this.containerNode.appendChild(this._createCells(entries, 0, entries.length,
-							this._getLastCell().entry));
+					this.containerNode.appendChild(this._createRenderers(items, 0, items.length,
+							this._getLastRenderer().item));
 				} else {
-					console.log("_addEntryCells: only first and last positions are supported.");
+					console.log("_addItemRenderers: only first and last positions are supported.");
 				}
 			}
 		},
 
-		_createCells: function (/*Array*/ entries, fromIndex, count, previousEntry) {
+		_createRenderers: function (/*Array*/ items, fromIndex, count, previousItem) {
 			var currentIndex = fromIndex,
-				currentEntry, toIndex = fromIndex + count - 1;
+				currentItem, toIndex = fromIndex + count - 1;
 			var documentFragment = document.createDocumentFragment();
 			for (; currentIndex <= toIndex; currentIndex++) {
-				currentEntry = entries[currentIndex];
+				currentItem = items[currentIndex];
 				if (this.categoryAttribute) {
-					if (!previousEntry
-							|| currentEntry[this.categoryAttribute] !== previousEntry[this.categoryAttribute]) {
-						documentFragment.appendChild(this._createCategoryCell(currentEntry[this.categoryAttribute]));
+					if (!previousItem
+							|| currentItem[this.categoryAttribute] !== previousItem[this.categoryAttribute]) {
+						documentFragment.appendChild(this._createCategoryRenderer(currentItem[this.categoryAttribute]));
 					}
 				}
-				documentFragment.appendChild(this._createEntryCell(currentEntry));
-				previousEntry = currentEntry;
+				documentFragment.appendChild(this._createItemRenderer(currentItem));
+				previousItem = currentItem;
 			}
 			return documentFragment;
 		},
 
-		_addEntryCell: function (cell, atEntryIndex) {
-			var cellAtIndex = atEntryIndex >= 0 ? this.getEntryCellByIndex(atEntryIndex) : null;
-			var previousCell = null, cellCategory, newCategoryCell;
+		_addItemRenderer: function (renderer, atItemIndex) {
+			var rendererAtIndex = atItemIndex >= 0 ? this.getItemRendererByIndex(atItemIndex) : null;
+			var previousRenderer = null, rendererCategory, newCategoryRenderer;
 			if (this.categoryAttribute) {
-				cellCategory = cell.entry[this.categoryAttribute];
-				previousCell = cellAtIndex ? this._getPreviousCell(cellAtIndex) : this._getLastCell();
-				if (previousCell) {
-					if (previousCell._isCategoryCell) {
-						if (cellCategory !== previousCell.category) {
-							cellAtIndex = previousCell;
-							previousCell = this._getPreviousCell(previousCell);
+				rendererCategory = renderer.item[this.categoryAttribute];
+				previousRenderer = rendererAtIndex ? this._getPreviousRenderer(rendererAtIndex) : this._getLastRenderer();
+				if (previousRenderer) {
+					if (previousRenderer._isCategoryRenderer) {
+						if (rendererCategory !== previousRenderer.category) {
+							rendererAtIndex = previousRenderer;
+							previousRenderer = this._getPreviousRenderer(previousRenderer);
 						}
 					}
-					if (!previousCell || (!previousCell._isCategoryCell && previousCell.entry[this.categoryAttribute] !== cellCategory)) {
-						this.insertBefore(this._createCategoryCell(cellCategory), cellAtIndex);
+					if (!previousRenderer || (!previousRenderer._isCategoryRenderer && previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
+						this.insertBefore(this._createCategoryRenderer(rendererCategory), rendererAtIndex);
 					}
 				} else {
-					newCategoryCell = this._createCategoryCell(cellCategory);
-					if (cellAtIndex) {
-						this.insertBefore(newCategoryCell, cellAtIndex);
+					newCategoryRenderer = this._createCategoryRenderer(rendererCategory);
+					if (rendererAtIndex) {
+						this.insertBefore(newCategoryRenderer, rendererAtIndex);
 					} else {
-						this.appendChild(newCategoryCell);
+						this.appendChild(newCategoryRenderer);
 					}
 				}
-				if (cellAtIndex && !cellAtIndex._isCategoryCell) {
-					if (cellAtIndex.entry[this.categoryAttribute] !== cellCategory) {
-						newCategoryCell = this._createCategoryCell(cellAtIndex.entry[this.categoryAttribute]);
-						this.insertBefore(newCategoryCell, cellAtIndex);
-						cellAtIndex = newCategoryCell;
+				if (rendererAtIndex && !rendererAtIndex._isCategoryRenderer) {
+					if (rendererAtIndex.item[this.categoryAttribute] !== rendererCategory) {
+						newCategoryRenderer = this._createCategoryRenderer(rendererAtIndex.item[this.categoryAttribute]);
+						this.insertBefore(newCategoryRenderer, rendererAtIndex);
+						rendererAtIndex = newCategoryRenderer;
 					}
 				}
 			}
-			if (cellAtIndex) {
-				this.insertBefore(cell, cellAtIndex);
+			if (rendererAtIndex) {
+				this.insertBefore(renderer, rendererAtIndex);
 			} else {
-				this.appendChild(cell);
+				this.appendChild(renderer);
 			}
 		},
 
-		_removeCell: function (cell, keepSelection) {
-			// Update category headers before removing the cell, if necessary
-			var cellIsCategoryHeader = cell._isCategoryCell,
-				nextCell, previousCell, nextFocusCell;
-			if (this.categoryAttribute && !cellIsCategoryHeader) {
-				previousCell = this._getPreviousCell(cell);
+		_removeRenderer: function (renderer, keepSelection) {
+			// Update category headers before removing the renderer, if necessary
+			var rendererIsCategoryHeader = renderer._isCategoryRenderer,
+				nextRenderer, previousRenderer, nextFocusRenderer;
+			if (this.categoryAttribute && !rendererIsCategoryHeader) {
+				previousRenderer = this._getPreviousRenderer(renderer);
 				// remove the previous category header if necessary
-				if (previousCell && previousCell._isCategoryCell) {
-					nextCell = this._getNextCell(cell);
-					if (!nextCell || (nextCell && nextCell._isCategoryCell)) {
-						this._removeCell(previousCell);
-						if (nextCell && nextCell._isCategoryCell) {
-							previousCell = this._getPreviousCell(cell);
-							// remove this category cell if it is not needed anymore
-							if (previousCell && nextCell.category === previousCell.entry[this.categoryAttribute]) {
-								this._removeCell(nextCell);
+				if (previousRenderer && previousRenderer._isCategoryRenderer) {
+					nextRenderer = this._getNextRenderer(renderer);
+					if (!nextRenderer || (nextRenderer && nextRenderer._isCategoryRenderer)) {
+						this._removeRenderer(previousRenderer);
+						if (nextRenderer && nextRenderer._isCategoryRenderer) {
+							previousRenderer = this._getPreviousRenderer(renderer);
+							// remove this category renderer if it is not needed anymore
+							if (previousRenderer && nextRenderer.category === previousRenderer.item[this.categoryAttribute]) {
+								this._removeRenderer(nextRenderer);
 							}
 						}
 					}
 				}
 			}
 			// Update focus if necessary
-			if (this._getFocusedCell() === cell) {
-				nextFocusCell = this._getNext(cell, 1) || this._getNext(cell, -1);
-				if (nextFocusCell) {
-					this.focusChild(nextFocusCell);
+			if (this._getFocusedRenderer() === renderer) {
+				nextFocusRenderer = this._getNext(renderer, 1) || this._getNext(renderer, -1);
+				if (nextFocusRenderer) {
+					this.focusChild(nextFocusRenderer);
 				}
 			}
-			if (!keepSelection && !cell._isCategoryCell && this.isSelected(cell.entry)) {
-				// deselected the entry before removing the cell
-				this.setSelected(cell.entry, false);
+			if (!keepSelection && !renderer._isCategoryRenderer && this.isSelected(renderer.item)) {
+				// deselected the item before removing the renderer
+				this.setSelected(renderer.item, false);
 			}
-			// remove and destroy the cell
-			this._removeNode(cell);
-			cell.destroy();
+			// remove and destroy the renderer
+			this._removeNode(renderer);
+			renderer.destroy();
 		},
 
-		_moveCell: function (cell, toIndex) { // This is the same as _addCell !!!
-			console.log("TODO: category management for _moveCell ?");
-			var cellAtIndex = getEntryCellByIndex(toIndex);
-			if (cellAtIndex != null) {
-				this.insertBefore(cell, cellAtIndex);
+		_moveRenderer: function (renderer, toIndex) { // This is the same as _addRenderer !!!
+			console.log("TODO: category management for _moveRenderer ?");
+			var rendererAtIndex = getItemRendererByIndex(toIndex);
+			if (rendererAtIndex != null) {
+				this.insertBefore(renderer, rendererAtIndex);
 			} else {
-				this.appendChild(cell);
+				this.appendChild(renderer);
 			}
 		},
 
-		_createEntryCell: function (entry) {
-			var cell = new this.entriesRenderer({tabindex: "-1"});
-			cell.startup();
-			cell.entry = entry;
+		_createItemRenderer: function (item) {
+			var renderer = new this.itemsRenderer({tabindex: "-1"});
+			renderer.startup();
+			renderer.item = item;
 			if (this.selectionMode !== "none") {
-				domClass.toggle(cell, "d-selected", this.isSelected(entry));
+				domClass.toggle(renderer, "d-selected", this.isSelected(item));
 			}
-			return cell;
+			return renderer;
 		},
 
-		_createCategoryCell: function (category) {
-			var cell = new this.categoriesRenderer({category: category, tabindex: "-1"});
-			cell.startup();
-			return cell;
+		_createCategoryRenderer: function (category) {
+			var renderer = new this.categoriesRenderer({category: category, tabindex: "-1"});
+			renderer.startup();
+			return renderer;
 		},
 
-		_getNextCell: function (cell) {
-			return cell.nextElementSibling;
+		_getNextRenderer: function (renderer) {
+			return renderer.nextElementSibling;
 		},
 
-		_getPreviousCell: function (cell) {
-			return cell.previousElementSibling;
+		_getPreviousRenderer: function (renderer) {
+			return renderer.previousElementSibling;
 		},
 
-		_getFirstCell: function () {
-			var firstCell = this.getEntryCellByIndex(0);
+		_getFirstRenderer: function () {
+			var firstRenderer = this.getItemRendererByIndex(0);
 			if (this.categoryAttribute) {
-				var previousCell = null;
-				if (firstCell) {
-					previousCell = firstCell.previousElementSibling;
-					if (previousCell && domClass.contains(previousCell, this._cssClasses.category)) {
-						firstCell = previousCell;
+				var previousRenderer = null;
+				if (firstRenderer) {
+					previousRenderer = firstRenderer.previousElementSibling;
+					if (previousRenderer && domClass.contains(previousRenderer, this._cssClasses.category)) {
+						firstRenderer = previousRenderer;
 					}
 				}
 			}
-			return firstCell;
+			return firstRenderer;
 		},
 
-		_getLastCell: function () {
-			var children = this.getChildren(), lastCell = null;
+		_getLastRenderer: function () {
+			var children = this.getChildren(), lastRenderer = null;
 			if (children.length) {
-				lastCell = children[children.length - 1];
-				while (lastCell
-						&& !domClass.contains(lastCell, this._cssClasses.category)
-						&& !domClass.contains(lastCell, this._cssClasses.entry)) {
-					lastCell = lastCell.previousElementSibling;
+				lastRenderer = children[children.length - 1];
+				while (lastRenderer
+						&& !domClass.contains(lastRenderer, this._cssClasses.category)
+						&& !domClass.contains(lastRenderer, this._cssClasses.item)) {
+					lastRenderer = lastRenderer.previousElementSibling;
 				}
 			}
-			return lastCell;
+			return lastRenderer;
 		},
 
 		/////////////////////////////////
@@ -495,10 +495,10 @@ define(["dcl/dcl",
 
 		// Handle keydown events
 		_onContainerKeydown: dcl.before(function (evt) {
-			var continueProcessing = true, cell = this._getFocusedCell();
-			if (cell && cell.onKeydown) {
+			var continueProcessing = true, renderer = this._getFocusedRenderer();
+			if (renderer && renderer.onKeydown) {
 				// onKeydown implementation can return false to cancel the default action
-				continueProcessing = cell.onKeydown(evt);
+				continueProcessing = renderer.onKeydown(evt);
 			}
 			if (continueProcessing !== false) {
 				if ((evt.keyCode === keys.SPACE && !this._searchTimer) || evt.keyCode === keys.ENTER) {
@@ -520,29 +520,29 @@ define(["dcl/dcl",
 		},
 
 		_getFirst: function () {
-			return this._getFirstCell();
+			return this._getFirstRenderer();
 		},
 
 		_getLast: function () {
-			return this._getLastCell();
+			return this._getLastRenderer();
 		},
 
 		_getNext: function (child, dir) {
-			var focusedCell, refChild, returned = null;
+			var focusedRenderer, refChild, returned = null;
 			if (this.focusedChild) {
-				focusedCell = this._getFocusedCell();
-				if (focusedCell === this.focusedChild) {
-					// The cell itself has the focus
+				focusedRenderer = this._getFocusedRenderer();
+				if (focusedRenderer === this.focusedChild) {
+					// The renderer itself has the focus
 					refChild = child || this.focusedChild;
 					if (refChild) {
-						// do not use _nextCell and _previousCell as we want to include the pageloader
+						// do not use _nextRenderer and _previousRenderer as we want to include the pageloader
 						// if it exists
 						returned = refChild[(dir === 1) ? "nextElementSibling" : "previousElementSibling"];
 					}
 				} else {
-					// A descendant of the cell has the focus
+					// A descendant of the renderer has the focus
 					// FIXME: can it be a category header, with no _getNextFocusableChild method ?
-					returned = focusedCell._getNextFocusableChild(child, dir);
+					returned = focusedRenderer._getNextFocusableChild(child, dir);
 				}
 			} else {
 				returned = (dir === 1 ? this._getFirst() : this._getLast());
@@ -552,8 +552,8 @@ define(["dcl/dcl",
 
 		_onLeftArrow: function () {
 			var nextChild;
-			if (this._getFocusedCell()._getNextFocusableChild) {
-				nextChild = this._getFocusedCell()._getNextFocusableChild(null, -1);
+			if (this._getFocusedRenderer()._getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, -1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
@@ -562,8 +562,8 @@ define(["dcl/dcl",
 
 		_onRightArrow: function () {
 			var nextChild;
-			if (this._getFocusedCell()._getNextFocusableChild) {
-				nextChild = this._getFocusedCell()._getNextFocusableChild(null, 1);
+			if (this._getFocusedRenderer()._getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, 1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
@@ -579,23 +579,23 @@ define(["dcl/dcl",
 		},
 
 		_focusNextChild: function (dir) {
-			var child, cell = this._getFocusedCell();
-			if (cell) {
-				if (cell === this.focusedChild) {
-					child = this._getNext(cell, dir);
+			var child, renderer = this._getFocusedRenderer();
+			if (renderer) {
+				if (renderer === this.focusedChild) {
+					child = this._getNext(renderer, dir);
 					if (!child) {
-						child = cell;
+						child = renderer;
 					}
 				} else {
-					child = cell;
+					child = renderer;
 				}
 				this.focusChild(child);
 				return child;
 			}
 		},
 
-		_getFocusedCell: function () {
-			return this.focusedChild ? this.getParentCell(this.focusedChild) : null;
+		_getFocusedRenderer: function () {
+			return this.focusedChild ? this.getEnclosingRenderer(this.focusedChild) : null;
 		},
 
 		/////////////////////////////////
@@ -603,14 +603,14 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		_handleSelection: function (event) {
-			var entry, entrySelected, eventCell;
-			eventCell = this.getParentCell(event.target || event.srcElement);
-			if (eventCell) {
-				entry = eventCell.entry;
-				if (entry) {
-					entrySelected = !this.isSelected(entry);
-					this.setSelected(entry, entrySelected);
-					this.emit(entrySelected ? "entrySelected" : "entryDeselected", {entry: entry});
+			var item, itemSelected, eventRenderer;
+			eventRenderer = this.getEnclosingRenderer(event.target || event.srcElement);
+			if (eventRenderer) {
+				item = eventRenderer.item;
+				if (item) {
+					itemSelected = !this.isSelected(item);
+					this.setSelected(item, itemSelected);
+					this.emit(itemSelected ? "itemSelected" : "itemDeselected", {item: item});
 				}
 			}
 		}

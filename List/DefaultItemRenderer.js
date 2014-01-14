@@ -2,17 +2,17 @@ define(["dcl/dcl",
         "delite/register",
         "dojo/dom-construct",
         "dojo/dom-class",
-        "./AbstractEntryRenderer"
-], function (dcl, register, domConstruct, domClass, AbstractEntryRenderer) {
+        "./ItemRendererBase"
+], function (dcl, register, domConstruct, domClass, ItemRendererBase) {
 	
-	var DefaultEntryRenderer = dcl([AbstractEntryRenderer], {
+	var DefaultItemRenderer = dcl([ItemRendererBase], {
 
-		renderEntry: function (entry) {
-			this._renderTextNode("labelNode", entry ? entry.label : null, "d-list-entry-label");
-			this._renderImageNode("iconNode", entry ? entry.icon : null, "d-list-entry-icon");
-			this._renderTextNode("rightText", entry ? entry.rightText : null, "d-list-entry-right-text");
-			this._renderImageNode("rightIcon2", entry ? entry.rightIcon2 : null, "d-list-entry-right-icon2");
-			this._renderImageNode("rightIcon", entry ? entry.rightIcon : null, "d-list-entry-right-icon");
+		renderItem: function (item) {
+			this._renderTextNode("labelNode", item ? item.label : null, "d-list-item-label");
+			this._renderImageNode("iconNode", item ? item.icon : null, "d-list-item-icon");
+			this._renderTextNode("rightText", item ? item.rightText : null, "d-list-item-right-text");
+			this._renderImageNode("rightIcon2", item ? item.rightIcon2 : null, "d-list-item-right-icon2");
+			this._renderImageNode("rightIcon", item ? item.rightIcon : null, "d-list-item-right-icon");
 			this._setFocusableChildren(["iconNode", "labelNode", "rightText", "rightIcon2", "rightIcon"]);
 		},
 
@@ -54,5 +54,5 @@ define(["dcl/dcl",
 
 	});
 
-	return register("d-list-entry", [HTMLElement, DefaultEntryRenderer]);
+	return register("d-list-item", [HTMLElement, DefaultItemRenderer]);
 });

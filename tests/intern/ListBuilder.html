@@ -48,12 +48,12 @@
 				})
 			});
 			var useIcon, useRightText, useRightIcon, useRightIcon2;
-			var createStore = function (entriesCount, useIcon, useRightText, useRightIcon, useRightIcon2, latency) {
+			var createStore = function (itemsCount, useIcon, useRightText, useRightIcon, useRightIcon2, latency) {
 				var i = 0, data = [];
-				for (; i < entriesCount; i++) {
+				for (; i < itemsCount; i++) {
 					data.push({category: 'category ' + Math.floor(i / 10),
 							  id: 'ref' + i,
-							  label: 'this is list entry ' + i,
+							  label: 'this is list item ' + i,
 							  icon: useIcon ? '../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
 							  rightText: useRightText ? 'id: ref' + i : null,
 							  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
@@ -109,7 +109,7 @@
 					list = new StoreList(listParams);
 				}
 				list.style.height = parseInt(dom.byId("height").value) + "px";
-				list.store = createStore(parseInt(dom.byId("entriesCount").value), useIcon, useRightText, useRightIcon, useRightIcon2, parseInt(dom.byId("storeLatency").value));
+				list.store = createStore(parseInt(dom.byId("itemsCount").value), useIcon, useRightText, useRightIcon, useRightIcon2, parseInt(dom.byId("storeLatency").value));
 				list.placeAt(dom.byId("list"));
 				list.startup();
 				if(editable){
@@ -124,27 +124,27 @@
 				}
 				dom.byId("editPanel").style.display = "";
 			};
-			// Remove entry
-			var removeEntry = function () {
-				list.store.remove(dom.byId("entryIdInput").value);
+			// Remove item
+			var removeItem = function () {
+				list.store.remove(dom.byId("itemIdInput").value);
 			};
-			// Add entry
-			var addEntry = function () {
-				var newEntry = {category: dom.byId("newEntryCategory").value,
-								  id: dom.byId("newEntryId").value,
-								  label: 'this is a new list entry with id ' + dom.byId("newEntryId").value,
+			// Add item
+			var addItem = function () {
+				var newItem = {category: dom.byId("newItemCategory").value,
+								  id: dom.byId("newItemId").value,
+								  label: 'this is a new list item with id ' + dom.byId("newItemId").value,
 								  icon: useIcon ? '../../mobile/tests/images/i-icon-1.png' : null,
-								  rightText: useRightText ? 'id: ' + dom.byId("newEntryId").value : null,
+								  rightText: useRightText ? 'id: ' + dom.byId("newItemId").value : null,
 								  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
 								  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-1.png' : null};
-				var addOptions = {id: newEntry.id};
-				var before = dom.byId("newEntryBeforeId").value;
+				var addOptions = {id: newItem.id};
+				var before = dom.byId("newItemBeforeId").value;
 				if (before) {
 					addOptions.before = before;
 				}
-				list.store.add(newEntry);
+				list.store.add(newItem);
 				// TODO: APPARENTLY, THE MEMORY STORE ONLY SUPPORT ADDING AN ITEM TO THE END OF THE LIST (!!!)
-//				list.store.add(newEntry, addOptions);
+//				list.store.add(newItem, addOptions);
 			};
 			// Update list style
 			var updateStyle = function () {
@@ -166,8 +166,8 @@
 			}
 			// Events
 			on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
-			on(dom.byId("removeEntry"), 'click', lang.hitch(this, removeEntry));
-			on(dom.byId("addEntry"), 'click', lang.hitch(this, addEntry));
+			on(dom.byId("removeItem"), 'click', lang.hitch(this, removeItem));
+			on(dom.byId("addItem"), 'click', lang.hitch(this, addItem));
 			on(dom.byId("listStyle"), 'change', lang.hitch(this, updateStyle));
 			on(dom.byId("selectionMode"), 'change', lang.hitch(this, updateSelectionMode));
 			on(dom.byId("height"), 'change', lang.hitch(this, updateHeight));
@@ -216,8 +216,8 @@
 		<input id="height" type="number" value="200">
 		<label for="listStyle">Style:</label>
 		<select id="listStyle">
+			<option value="d-list">Edge to edge</option>
 			<option value="d-round-rect-list">Round rect</option>
-			<option value="d-edge-to-edge-list">Edge to edge</option>
 		</select>
 		<br>
 		<label for="editable">Editable:</label>
@@ -247,10 +247,10 @@
 			<option value="">No</option>
 		</select>
 		<br>
-		<label for="entriesCount">Nb of entries:</label>
-		<input id="entriesCount" type="number" value="500">
+		<label for="itemsCount">Nb of items:</label>
+		<input id="itemsCount" type="number" value="500">
 		<br>
-		<label for="useCategory">Categorized entries:</label>
+		<label for="useCategory">Categorized items:</label>
 		<select id="useCategory">
 			<option value="">No</option>
 			<option value="true">Yes</option>
@@ -297,24 +297,24 @@
 		WARNING: cannot work at the moment, as the store we're using is not Observable (because its query method returns a Promise ?).
 		</p>
 		<h3>Removal</h3>
-		<label for="entryIdInput">Entry id:</label> <input id="entryIdInput" type="text" value="ref0"><button id="removeEntry">Remove from store</button>
+		<label for="itemIdInput">Item id:</label> <input id="itemIdInput" type="text" value="ref0"><button id="removeItem">Remove from store</button>
 		<h3>Addition</h3>
 		<table>
 			<tr>
 				<td>Id:</td>
-				<td><input id="newEntryId" type="text"></td>
+				<td><input id="newItemId" type="text"></td>
 			</tr>
 			<tr>
 				<td>Category:</td>
-				<td><input id="newEntryCategory" type="text"></td>
+				<td><input id="newItemCategory" type="text"></td>
 			</tr>
 			<tr>
-				<td>Add before entry with id:</td>
-				<td><input id="newEntryBeforeId" type="text"></td>
+				<td>Add before item with id:</td>
+				<td><input id="newItemBeforeId" type="text"></td>
 			</tr>
 			<tr>
 				<td></td>
-				<td><button id="addEntry">Add to store</button></td>
+				<td><button id="addItem">Add to store</button></td>
 			</tr>
 		</table>
 	</div>

@@ -2,7 +2,7 @@ define(function(){ return '\
 /********************************/\
 /* iOS theme for all Lists      */\
 /*                              */\
-/* IMPORTANT: a cell MUST       */\
+/* IMPORTANT: a renderer MUST       */\
 /* have the same height (inc.   */\
 /* borders) whatever its index  */\
 /* in the list !                */\
@@ -26,7 +26,7 @@ define(function(){ return '\
   line-height: 22px;\
   text-shadow: rgba(0, 0, 0, 0.6) 0 -1px 0;\
 }\
-.d-list-entry {\
+.d-list-item {\
   overflow: hidden;\
   /* for focus frame */\
   padding: 0 8px;\
@@ -40,14 +40,14 @@ define(function(){ return '\
   display: -webkit-flex;\
   display: flex;\
 }\
-.d-list-entry-node {\
+.d-list-item-node {\
   -webkit-box-flex: 1;\
   -moz-box-flex: 1;\
   -webkit-flex: 1;\
   -ms-flex: 1;\
   flex: 1;\
 }\
-.d-list-entry-label {\
+.d-list-item-label {\
   position: relative;\
   overflow: hidden;\
   white-space: nowrap;\
@@ -56,7 +56,7 @@ define(function(){ return '\
   height: 43px;\
   line-height: 43px;\
 }\
-.d-list-entry-right-text {\
+.d-list-item-right-text {\
   position: relative;\
   float: right;\
   line-height: normal;\
@@ -65,7 +65,7 @@ define(function(){ return '\
   color: #324f85;\
   margin-top: 12px;\
 }\
-.d-list-entry-icon {\
+.d-list-item-icon {\
   position: relative;\
   float: left;\
   line-height: normal;\
@@ -74,8 +74,8 @@ define(function(){ return '\
   margin-right: 11px;\
   vertical-align: top;\
 }\
-.d-list-entry-right-icon,\
-.d-list-entry-right-icon2 {\
+.d-list-item-right-icon,\
+.d-list-item-right-icon2 {\
   position: relative;\
   float: right;\
   line-height: normal;\
@@ -123,7 +123,7 @@ define(function(){ return '\
 /*******************************/\
 /* iOS theme for RoundRectList */\
 /*                             */\
-/* IMPORTANT: a cell MUST      */\
+/* IMPORTANT: a renderer MUST      */\
 /* have the same height (inc.  */\
 /* borders) whatever its index */\
 /* in the list !               */\
@@ -153,23 +153,23 @@ define(function(){ return '\
 /********************************/\
 /* iOS theme for EdgeToEdgeList */\
 /*                              */\
-/* IMPORTANT: a cell MUST       */\
+/* IMPORTANT: a renderer MUST       */\
 /* have the same height (inc.   */\
 /* borders) whatever its index  */\
 /* in the list !                */\
 /********************************/\
-.d-edge-to-edge-list {\
+.d-list {\
   position: relative;\
   /* needed for moving list items in editable mode */\
   padding: 0;\
   margin: 0 !important;\
 }\
-.d-edge-to-edge-list > *:last-child {\
+.d-list > *:last-child {\
   border-bottom-width: 0;\
   padding-bottom: 1px;\
   /* to compensate the fact that the bottom width is 0 instead of 1 */\
 }\
-.d-edge-to-edge-list > .d-selected {\
+.d-list > .d-selected {\
   color: #ffffff;\
   background-image: -webkit-gradient(linear, left top, left bottom, from(#048bf4), to(#005ce5));\
   background-image: linear-gradient(to bottom, #048bf4 0%, #005ce5 100%);\

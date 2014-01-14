@@ -11,23 +11,23 @@ define(["dcl/dcl",
 		_focusableChildren: null,
 		_focusedChild: null,
 
-		baseClass: "d-list-entry",
+		baseClass: "d-list-item",
 
-		// The entry to render
-		entry: null,
-		_setEntryAttr: function (value) {
-			this._set("entry", value);
-			this.renderEntry(value);
+		// The item to render
+		item: null,
+		_setItemAttr: function (value) {
+			this._set("item", value);
+			this.renderItem(value);
 			this.label = value.label; // For text search in keyboard navigation
 		},
 
 		buildRendering: function () {
-			this.containerNode = domConstruct.create("div", {className: "d-list-entry-node"}, this);
+			this.containerNode = domConstruct.create("div", {className: "d-list-item-node"}, this);
 		},
 
-		// Method that render the entry in the widget GUI
-		/*jshint unused:false */
-		renderEntry: function (entry) {
+		// Method that render the item in the widget GUI
+		/*jshint unused:vars */
+		renderItem: function (item) {
 			// abstract method
 		},
 

@@ -11,12 +11,12 @@ define(["dcl/dcl",
 		"delite/Widget"
 ], function (dcl, register, lang, string, when, Deferred, dom, domConstruct, domClass, has, Widget) {
 
-	// TODO: SHOULD THIS WIDGET BE DEFINED IN ITS OWN SOURCE FILE (IN THIS CASE, A MORE GENERIC "ActionCell" WIDGET) ?
+	// TODO: SHOULD THIS WIDGET BE DEFINED IN ITS OWN SOURCE FILE (IN THIS CASE, A MORE GENERIC "ActionRenderer" WIDGET) ?
 	var LoaderWidget = register("d-list-loader", [HTMLElement, dcl([Widget], {
 
-		clickToLoadMessage: "Click to load more entries",
+		clickToLoadMessage: "Click to load more items",
 
-		loadingMessage: "Loading more entries...",
+		loadingMessage: "Loading more items...",
 
 		_loading: false,
 
@@ -86,13 +86,13 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		pageLength: 0, // if > 0 define paging with the number of entries to display per page.
+		pageLength: 0, // if > 0 define paging with the number of items to display per page.
 		
 		maxPages: 0, // the maximum number of pages to display
 
 		beforeLoadingMessage: "",
 
-		loadingMessage: "Loading ${pageLength} more entries...",
+		loadingMessage: "Loading ${pageLength} more items...",
 		
 		// autoLoad: Boolean
 		//		If true, automatically loads the next or previous page when
@@ -120,8 +120,8 @@ define(["dcl/dcl",
 
 		enteredViewCallback: dcl.after(function () {
 			if (!this.beforeLoadingMessage) {
-				this.beforeLoadingMessage = this.autoLoad ? "Loading ${pageLength} more entries..."
-						: "Click to load ${pageLength} more entries";
+				this.beforeLoadingMessage = this.autoLoad ? "Loading ${pageLength} more items..."
+						: "Click to load ${pageLength} more items";
 			}
 			this.on("scroll", this._scrollHandler);
 		}),
@@ -141,8 +141,8 @@ define(["dcl/dcl",
 		// Public methods from List
 		/////////////////////////////////
 
-		getIdentity: function (entry) {
-			return this.store.getIdentity(entry);
+		getIdentity: function (item) {
+			return this.store.getIdentity(item);
 		},
 
 		/////////////////////////////////
@@ -172,28 +172,28 @@ define(["dcl/dcl",
 //			console.log("removed from " + removedFrom);
 //			console.log("insertedInto " + insertedInto);
 //			console.log(this._pages);
-			if (removedFrom >= 0 && insertedInto < 0) { // entry removed
-				this._entryDeletedHandler(object, false);
+			if (removedFrom >= 0 && insertedInto < 0) { // item removed
+				this._itemDeletedHandler(object, false);
 				this._lastLoaded--;
 			}
-			if (removedFrom < 0 && insertedInto >= 0) { // entry added
+			if (removedFrom < 0 && insertedInto >= 0) { // item added
 				this._lastLoaded++;
-				this._entryAddedHandler(object, this._getIndexOfEntry(object));
+				this._itemAddedHandler(object, this._getIndexOfItem(object));
 			}
 		},
 
-		_getIndexOfEntry: function (entry) {
-			var entryIndex = -1, pageIndex, page, indexInPage;
-			for (pageIndex = 0; pageIndex < this._pages.length; pageIndex++, entryIndex++) {
+		_getIndexOfItem: function (item) {
+			var itemIndex = -1, pageIndex, page, indexInPage;
+			for (pageIndex = 0; pageIndex < this._pages.length; pageIndex++, itemIndex++) {
 				page = this._pages[pageIndex];
-				indexInPage = page.indexOf(entry);
+				indexInPage = page.indexOf(item);
 				if (indexInPage < 0) {
-					entryIndex += page.length;
+					itemIndex += page.length;
 				} else {
-					entryIndex += indexInPage;
+					itemIndex += indexInPage;
 				}
 			}
-			return entryIndex;
+			return itemIndex;
 		},
 
 		_loadNextPage: function (/*Function*/onDataReadyHandler) {
@@ -267,7 +267,7 @@ define(["dcl/dcl",
 				}
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
-					this._entryDeletedHandler(page[i], true);
+					this._itemDeletedHandler(page[i], true);
 				}
 				if (page.length && !this._previousPageLoader) {
 					this._createPreviousPageLoader();
@@ -283,7 +283,7 @@ define(["dcl/dcl",
 				}
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
-					this._entryDeletedHandler(page[i], true);
+					this._itemDeletedHandler(page[i], true);
 				}
 				if (page.length && !this._nextPageLoader) {
 					this._createNextPageLoader();
@@ -298,14 +298,14 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onPreviousPageReady: function (/*array*/ entries) {
+		_onPreviousPageReady: function (/*array*/ items) {
 			var def = new Deferred();
-			var firstCellBeforeUpdate = this._getFirst(), focused;
+			var firstRendererBeforeUpdate = this._getFirst(), focused;
 			try {
-				if (firstCellBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
-					this.focusChild(firstCellBeforeUpdate);
+				if (firstRendererBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
+					this.focusChild(firstRendererBeforeUpdate);
 				}
-				this._addEntryCells(entries, "first");
+				this._addItemRenderers(items, "first");
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("last");
 				}
@@ -317,7 +317,7 @@ define(["dcl/dcl",
 				} else {
 					this._previousPageLoader.placeAt(this.containerNode, "first");
 				}
-				if (this._getFocusedCell()) {
+				if (this._getFocusedRenderer()) {
 					focused = this._focusNextChild(-1);
 					if (focused) {
 						// scroll the focused node to the top of the screen.
@@ -326,7 +326,7 @@ define(["dcl/dcl",
 						this.scrollBy(this.getTopDistance(focused));
 					}
 				} else {
-					this.focusChild(this._getLastCell());
+					this.focusChild(this._getLastRenderer());
 				}
 				def.resolve();
 			} catch (error) {
@@ -335,19 +335,19 @@ define(["dcl/dcl",
 			return def;
 		},
 
-		_onNextPageReady: function (/*array*/ entries) {
+		_onNextPageReady: function (/*array*/ items) {
 			var def = new Deferred();
-			var lastChild = this._getLast(), firstCell, focused;
+			var lastChild = this._getLast(), firstRenderer, focused;
 			try {
 				if (lastChild) {
 					this.focusChild(lastChild);
 				}
-				this._addEntryCells(entries, "last");
+				this._addItemRenderers(items, "last");
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("first");
 				}
 				if (this._nextPageLoader) {
-					if (entries.length !== this._queryOptions.count) {
+					if (items.length !== this._queryOptions.count) {
 						// no more next page
 						this._nextPageLoader.destroy();
 						this._nextPageLoader = null;
@@ -355,11 +355,11 @@ define(["dcl/dcl",
 						this._nextPageLoader.placeAt(this.containerNode);
 					}
 				} else {
-					if (entries.length === this._queryOptions.count) {
+					if (items.length === this._queryOptions.count) {
 						this._createNextPageLoader();
 					}
 				}
-				if (this._getFocusedCell()) {
+				if (this._getFocusedRenderer()) {
 					focused = this._focusNextChild(1);
 					if (focused) {
 						// scroll the focused node to the bottom of the screen.
@@ -368,9 +368,9 @@ define(["dcl/dcl",
 						this.scrollBy(this.getBottomDistance(focused));
 					}
 				} else {
-					firstCell = this._getFirstCell();
-					if (firstCell) {
-						this.focusChild(firstCell);
+					firstRenderer = this._getFirstRenderer();
+					if (firstRenderer) {
+						this.focusChild(firstRenderer);
 					}
 				}
 				def.resolve();
@@ -470,8 +470,8 @@ define(["dcl/dcl",
 		// List methods overriding
 		/////////////////////////////////
 
-		_getNextCell: dcl.superCall(function (sup) {
-			return function (cell) {
+		_getNextRenderer: dcl.superCall(function (sup) {
+			return function (renderer) {
 				var value = sup.apply(this, arguments);
 				if (this._nextPageLoader && value === this._nextPageLoader) {
 					value = null;
@@ -480,8 +480,8 @@ define(["dcl/dcl",
 			};
 		}),
 
-		_getPreviousCell: dcl.superCall(function (sup) {
-			return function (cell) {
+		_getPreviousRenderer: dcl.superCall(function (sup) {
+			return function (renderer) {
 				var value = sup.apply(this, arguments);
 				if (this._previousPageLoader && value === this._previousPageLoader) {
 					value = null;

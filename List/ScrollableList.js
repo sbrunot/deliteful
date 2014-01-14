@@ -116,27 +116,27 @@ define(["dcl/dcl",
 
 		_getFirst: dcl.superCall(function (sup) {
 			return function () {
-				var cell = sup.apply(this, arguments);
-				while (cell) {
-					if (this.isBelowTop(cell)) {
+				var renderer = sup.apply(this, arguments);
+				while (renderer) {
+					if (this.isBelowTop(renderer)) {
 						break;
 					}
-					cell = cell.nextElementSibling;
+					renderer = renderer.nextElementSibling;
 				}
-				return cell;
+				return renderer;
 			};
 		}),
 
 		_getLast: dcl.superCall(function (sup) {
 			return function () {
-				var cell = sup.apply(this, arguments);
-				while (cell) {
-					if (this.isAboveBottom(cell)) {
+				var renderer = sup.apply(this, arguments);
+				while (renderer) {
+					if (this.isAboveBottom(renderer)) {
 						break;
 					}
-					cell = cell.previousElementSibling;
+					renderer = renderer.previousElementSibling;
 				}
-				return cell;
+				return renderer;
 			};
 		}),
 

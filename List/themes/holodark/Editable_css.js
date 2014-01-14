@@ -1,15 +1,15 @@
 define(function(){ return '\
-.d-list-entry-left-edit {\
+.d-list-item-left-edit {\
   color: red;\
   padding-top: 6px;\
   padding-right: 8px;\
 }\
-.d-list-entry-right-edit {\
+.d-list-item-right-edit {\
   color: #808080;\
   padding-top: 6px;\
   padding-left: 8px;\
 }\
-.d-list-entry-dragged {\
+.d-list-item-dragged {\
   position: absolute;\
   border: 1px solid #808080;\
   opacity: 0.5;\

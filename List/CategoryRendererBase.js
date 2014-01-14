@@ -16,7 +16,7 @@ define(["dcl/dcl",
 
 		buildRendering: function () {
 			this.style.display = "block";
-			this._isCategoryCell = true;
+			this._isCategoryRenderer = true;
 		},
 
 		// Method that render the category in the widget GUI

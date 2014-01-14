@@ -10,54 +10,53 @@
 		data-dojo-config="async: true, parseOnLoad: false"></script>
 
 	<script type="text/javascript">
-		var entries = 
+		var items = 
 		require([
 			"dojo/on",
 			"dojo/store/Memory",
 			"dojo/store/Observable",
 			"delite/register",
-			"deliteful/List",
-			"deliteful/List/DefaultEntryRenderer",
-		], function (on, MemoryStore, Observable, register, List, DefaultEntryRenderer) {
+			"deliteful/List"
+		], function (on, MemoryStore, Observable, register, List, DefaultItemRenderer) {
   			var i, list;
 
   			globalStore = new Observable(MemoryStore({data: []}));
  
-  			// Programmatic list: default store, entries added before adding the list to the document and before startup
+  			// Programmatic list: default store, items added before adding the list to the document and before startup
 			list = register.createElement("d-list");
 			list.id = "list-prog-1";
 			list.pageLength = 20;
 			list.style.height = "200px";
  			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic entry of order " + i});
+				list.store.add({label: "Programmatic item of order " + i});
 			}
 			document.getElementById("list1Placeholder").appendChild(list);
 			list.startup();
 
-  			// Programmatic list: default store, entries added after the list startup and after adding the list to the document
+  			// Programmatic list: default store, items added after the list startup and after adding the list to the document
 			list = register.createElement("d-list");
 			list.id = "list-prog-2";
 			list.style.height = "200px";
 			list.startup();
 			document.getElementById("list2Placeholder").appendChild(list);
   			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic entry of order " + i});
+				list.store.add({label: "Programmatic item of order " + i});
 			}
 
-  			// Programmatic list: memory store, entries added before adding the list to the document and before startup
+  			// Programmatic list: memory store, items added before adding the list to the document and before startup
 			list = register.createElement("d-list");
 			list.id = "list-prog-3";
 			list.pageLength = 20;
 			list.style.height = "200px";
 			list.store = new Observable(new MemoryStore({data: [], idProperty: "label"}));
  			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic entry of order " + i});
+				list.store.add({label: "Programmatic item of order " + i});
 			}
 			document.getElementById("list3Placeholder").appendChild(list);
 			list.startup();
 			
 
-  			// Programmatic list: observable memory store, entries added after the list startup and after adding the list to the document
+  			// Programmatic list: observable memory store, items added after the list startup and after adding the list to the document
 			list = register.createElement("d-list");
 			list.id = "list-prog-4";
 			list.style.height = "200px";
@@ -65,36 +64,36 @@
 			list.startup();
 			document.getElementById("list4Placeholder").appendChild(list);
   			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic entry of order " + i});
+				list.store.add({label: "Programmatic item of order " + i});
 			}
 
  			register.parse();
 
 
 			document.getElementById("addButton").onclick = function () {
-				var options = {}, beforeCell;
+				var options = {}, beforeRenderer;
 				var list = document.getElementById(document.getElementById("listId").value);
 				var label = document.getElementById("labelInput").value;
 				var rightText = document.getElementById("rightTextInput").value;
-				var entry = {label: label, rightText: rightText};
+				var item = {label: label, rightText: rightText};
 				var index = document.getElementById("indexInput").value;
 				index = index ? parseInt(index) : null;
 				
 				if (index !== null) {
-					beforeCell = list.getEntryCellByIndex(index);
-					if (beforeCell) {
-						options.before = beforeCell.entry;
+					beforeRenderer = list.getItemRendererByIndex(index);
+					if (beforeRenderer) {
+						options.before = beforeRenderer.item;
 					}
 				}
 				
-				list.store.add(entry, options);
+				list.store.add(item, options);
 			};
 
 			document.getElementById("removeButton").onclick = function () {
 				var list = document.getElementById(document.getElementById("listId").value);
 				var index = document.getElementById("indexInput").value;
 				index = index ? parseInt(index) : null;
-				list.store.remove(list.store.getIdentity(list.getEntryCellByIndex(index).entry));
+				list.store.remove(list.store.getIdentity(list.getItemRendererByIndex(index).item));
 			};
 
 		});
@@ -117,58 +116,58 @@
  	<input type="text" autofocus>
  	<br>
  	<h1>Programmatic lists</h1>
- 	<h2>Default store, entries added before adding the list to the document and before startup (id: list-prog-1)</h2>
+ 	<h2>Default store, items added before adding the list to the document and before startup (id: list-prog-1)</h2>
  	<div id="list1Placeholder"></div>
- 	<h2>Default store, entries added after the list startup and after adding the list to the document (id: list-prog-2)</h2>
+ 	<h2>Default store, items added after the list startup and after adding the list to the document (id: list-prog-2)</h2>
  	<div id="list2Placeholder"></div>
- 	<h2>Memory store, entries added before adding the list to the document and before startup (id: list-prog-3)</h2>
+ 	<h2>Memory store, items added before adding the list to the document and before startup (id: list-prog-3)</h2>
  	<div id="list3Placeholder"></div>
- 	<h2>Observable Memory store, entries added after the list startup and after adding the list to the document (id: list-prog-4)</h2>
+ 	<h2>Observable Memory store, items added after the list startup and after adding the list to the document (id: list-prog-4)</h2>
  	<div id="list4Placeholder"></div>
     <h1>Markup lists</h1>
-    <h2>10 entries declared as markup, memory store, and selectionMode set to "multiple" (id: list-mark-1)</h2>
+    <h2>10 items declared as markup, memory store, and selectionMode set to "multiple" (id: list-mark-1)</h2>
 	<d-list id="list-mark-1" style="height: 200px" selectionMode="multiple" store="globalStore">
 		<d-list-store>
-			<d-list-store-entry entry="{label: 'list entry 0', rightText: 'right text 1'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 1', rightText: 'right text 2'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 2', rightText: 'right text 3'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 3', rightText: 'right text 4'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 4', rightText: 'right text 5'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 5', rightText: 'right text 6'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 6', rightText: 'right text 7'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 7', rightText: 'right text 8'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 8', rightText: 'right text 9'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 9', rightText: 'right text 10'}"></d-list-store-entry>
+			<d-list-store-item item="{label: 'list item 0', rightText: 'right text 1'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', rightText: 'right text 2'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', rightText: 'right text 3'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', rightText: 'right text 4'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', rightText: 'right text 5'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', rightText: 'right text 6'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', rightText: 'right text 7'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', rightText: 'right text 8'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', rightText: 'right text 9'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', rightText: 'right text 10'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
-    <h2>Non scrollable with 10 entries declared as markup, default store (id: list-mark-2)</h2>
+    <h2>Non scrollable with 10 items declared as markup, default store (id: list-mark-2)</h2>
 	<d-list id="list-mark-2" scrollDisabled=true>
 		<d-list-store>
-			<d-list-store-entry entry="{label: 'list entry 0', rightText: 'right text 1'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 1', rightText: 'right text 2'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 2', rightText: 'right text 3'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 3', rightText: 'right text 4'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 4', rightText: 'right text 5'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 5', rightText: 'right text 6'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 6', rightText: 'right text 7'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 7', rightText: 'right text 8'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 8', rightText: 'right text 9'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 9', rightText: 'right text 10'}"></d-list-store-entry>
+			<d-list-store-item item="{label: 'list item 0', rightText: 'right text 1'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', rightText: 'right text 2'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', rightText: 'right text 3'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', rightText: 'right text 4'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', rightText: 'right text 5'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', rightText: 'right text 6'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', rightText: 'right text 7'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', rightText: 'right text 8'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', rightText: 'right text 9'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', rightText: 'right text 10'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
-   	<h2>10 entries declared as markup, default store, categorized (id: list-mark-3)</h2>
+   	<h2>10 items declared as markup, default store, categorized (id: list-mark-3)</h2>
 	<d-list id="list-mark-3" style="height: 200px" categoryAttribute="rightText">
 		<d-list-store>
-			<d-list-store-entry entry="{label: 'list entry 0', rightText: 'A'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 1', rightText: 'A'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 2', rightText: 'A'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 3', rightText: 'A'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 4', rightText: 'A'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 5', rightText: 'B'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 6', rightText: 'B'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 7', rightText: 'B'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 8', rightText: 'B'}"></d-list-store-entry>
-			<d-list-store-entry entry="{label: 'list entry 9', rightText: 'B'}"></d-list-store-entry>
+			<d-list-store-item item="{label: 'list item 0', rightText: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', rightText: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', rightText: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', rightText: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', rightText: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', rightText: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', rightText: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', rightText: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', rightText: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', rightText: 'B'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
 	<div style="height: 350px;">
@@ -196,16 +195,16 @@
 				<td>List id:</td><td><input id="idInput" type="text" value="list-mark-4"></td>
 			</tr>
 			<tr>
-				<td>New entry label / right text (category):</td><td><input id="labelInput" type="text" value="new entry A"> / <input id="rightTextInput" type="text" value="Category 1"></td>
+				<td>New item label / right text (category):</td><td><input id="labelInput" type="text" value="new item A"> / <input id="rightTextInput" type="text" value="Category 1"></td>
 			</tr>
 			<tr>
 				<td>Index:</td><td><input id="indexInput" type="number"></td>
 			</tr>
 			<tr>
-				<td></td><td><button id="addButton">add entry to List.store (at index)</button></td>
+				<td></td><td><button id="addButton">add item to List.store (at index)</button></td>
 			</tr>
 			<tr>
-				<td></td><td><button id="removeButton">remove entry at index from List.store</button></td>
+				<td></td><td><button id="removeButton">remove item at index from List.store</button></td>
 			</tr>
 		</table>
 	</div>
