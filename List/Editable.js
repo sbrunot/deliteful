@@ -178,9 +178,10 @@ define(["dcl/dcl",
 		// TODO: KEYBOARD NAVIGATION !!!
 		////////////////////////////////////
 
-		_onRendererClick: function (evt, itemIndex) {
+		_onRendererClick: function (evt, renderer) {
 			var node = evt.target;
 			var resetDeleteableItem = true;
+			var itemIndex = this.getItemRendererIndex(renderer);
 			if (this.deleteable) {
 				while (node && !domClass.contains(node, this.baseClass)) {
 					if (domClass.contains(node, "d-list-item-left-edit")) {
@@ -213,7 +214,8 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onRendererKeydown: function (evt, itemIndex) {
+		_onRendererKeydown: function (evt, renderer) {
+			var itemIndex = this.getItemRendererIndex(renderer);
 			if (itemIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
 				if (this._indexOfDeleteableItem >= 0) {
 					if (this._indexOfDeleteableItem === itemIndex) {

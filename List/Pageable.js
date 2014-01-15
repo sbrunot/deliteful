@@ -149,7 +149,7 @@ define(["dcl/dcl",
 		// Private methods
 		/////////////////////////////////
 
-		_initContent: function () {
+		_populate: function () {
 			if (this._dataLoaded) {
 				return;
 			}

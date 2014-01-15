@@ -4,25 +4,58 @@ define(["dcl/dcl",
         "delite/Widget"
 ], function (dcl, domClass, domConstruct, Widget) {
 
-	return dcl([Widget], {
+	// module:
+	//		deliteful/List/CategoryRendererBase
 
-		// The category to render
+	return dcl([Widget], {
+		// summary:
+		//		Base class for a widget that render a category inside a deliteful/List widget.
+		//
+		// description:
+		//		This base class provide all the infrastructure that a deliteful/List widget
+		//		expect from a category renderer.
+		//
+		//		A concrete category renderer must extend this class an implement its render method
+		//		to render the category inside the container node of the widget (this.containerNode).
+
+		// category: String
+		//		the category to render.
 		category: "",
 		_setCategoryAttr: function (value) {
 			this._set("category", value);
-			this.renderCategory(value);
+			this.render(value);
+		},
+
+		// baseClass: [protected] String
+		//		CSS class of a category renderer. This value is expected by the deliteful/List widget
+		//		so it must not be changed.
+		baseClass: "d-list-category",
+
+		//////////// PROTECTED METHODS ///////////////////////////////////////
+
+		/* jshint unused:vars */
+		render: function (/*String*/category) {
+			// summary:
+			//		This method must be implemented by the category renderer concrete class.
+			//		It should render the category inside the renderer container node
+			//		(this.containerNode). It is called every time that the category attribute
+			//		of the renderer is assigned to a value, and might be called more than once
+			//		during the List life cycle, with a different category value each time.
+			// category: String
+			//		The category to render.
+			// tags:
+			//		protected extension
 		},
 
 		buildRendering: function () {
+			// summary:
+			//		Create the widget container node, into which a category will be rendered.
+			// tags:
+			//		protected
+			this.containerNode = this;
 			this.style.display = "block";
-			this._isCategoryRenderer = true;
-		},
-
-		// Method that render the category in the widget GUI
-		/*jshint unused:false */
-		renderCategory: function (category) {
-			// abstract method
-		},
+			this._isCategoryRenderer = true; // used by List to identify category renderers
+		}
 
 	});
 });

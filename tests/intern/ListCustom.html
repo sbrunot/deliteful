@@ -41,7 +41,7 @@
 
 				templateString2: '<div><div class="itemContainer"><div class="itemHeader"><img height="50px" class="itemIcon" src="${item.img}"><span class="itemTitle">${item.title}</span></div><div class="itemDetails hidden"><span class="itemDescription">${item.description}</span><a class="addToCart" href="javascript:;">Add to Cart</a></div></div></div>',
 
-				renderItem: function (item) {
+				render: function (item) {
 					this.containerNode.innerHTML = string.substitute(this.templateString2, this);
 					this.addToCartLink = query(".addToCart", this.containerNode)[0];
 					on(this, on.selector(".addToCart", "click"), lang.hitch(this, "addToCart"));

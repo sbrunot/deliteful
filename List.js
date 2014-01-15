@@ -1,54 +1,75 @@
 define(["dcl/dcl",
 	"delite/register",
 	"dojo/_base/lang",
+	"dojo/query", // TODO: what if the user wants to use jquery ? Should we provide a wrapper for one or the other ?
 	"dojo/when",
-	"dojo/on",
-	"dojo/query",
-	"dojo/dom",
-	"dojo/dom-construct",
 	"dojo/dom-class",
 	"dojo/keys",
 	"delite/Widget",
 	"delite/Selection",
 	"delite/KeyNav",
-	"delite/Invalidating",
 	"./List/DefaultItemRenderer",
 	"./List/DefaultCategoryRenderer",
-	"./List/ScrollableList",
+	"./List/ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
-], function (dcl, register, lang, when, on, query, dom, domConstruct, domClass, keys, Widget,
-		Selection, KeyNav, Invalidating, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {
+], function (dcl, register, lang, query, when, domClass, keys, Widget,
+		Selection, KeyNav, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {
 
-	var List = dcl([Widget, Selection, KeyNav, Invalidating], {
+	// module:
+	//		deliteful/List
 
-		/////////////////////////////////
-		// Public attributes
-		/////////////////////////////////
+	var List = dcl([Widget, Selection, KeyNav], {
+		// summary:
+		//		A widget that renders a list of items.
+		//
+		// description:
+		//		TO BE DONE.
+		//		Store
+		//			Default Store
+		//			Observable vs. non observable store
+		//
+		//		Categorized lists
+		//
+		//		Markup definition
+		//
+		//		Selection
 
-		// The dojo object store that contains the list items
+		// store: dojo/store/Store
+		//		Dojo object store that contains the items to render in the list.
+		//		If no value is provided for this attribute, the List will initialize
+		//		it with an internal store implementation. Note that this internal store
+		//		implementation ignore any query options and return all the items from
+		//		the store, in the order they were added to the store.
 		store: null,
 
-		// The query to use to retrieve list items from the store
+		// query: Object
+		//		Query to pass to the store to retrieve the items to render in the list.
 		query: null,
 
-		// Options for the query
+		// queryOptions: dojo/store/api/Store.QueryOptions?
+		//		Options to be applied when querying the store.
 		queryOptions: null,
 
-		 // Name of the list item attribute that define the category of a list item.
-		//  If falsy, the list is not categorized.
+		// categoryAttribute: String
+		//		Name of the list item attribute that define the category of a list item.
+		//		If falsy, the list is not categorized.
 		categoryAttribute: "",
 
-		// The widget class to use to render list items. It MUST extend the deliteful/List/ItemRendererBase class.
+		// itemsRenderer: deliteful/List/ItemRendererBase subclass
+		//		The widget class to use to render list items.
+		//		It MUST extend deliteful/List/ItemRendererBase.
 		itemsRenderer: DefaultItemRenderer,
 
-		// The widget class to use to render category headers when the list items are categorized.
-		// It MUST extend the deliteful/List/CategoryRendererBase class.
+		// categoriesRenderer: deliteful/List/CategoryRendererBase subclass
+		//		The widget class to use to render category headers when the list items are categorized.
+		//		It MUST extend deliteful/List/CategoryRendererBase.
 		categoriesRenderer: DefaultCategoryRenderer,
 
-		// The base class that defines the style of the list.
-		// Available values are:
-		// - "d-list" (default), that render a list with no rounded corners and no left and right margins.
-		// - "d-round-rect-list", that render a list with rounded corners and left and right margins;
+		// baseClass: String
+		//	The base class that defines the style of the list.
+		//	Available values are:
+		//		- "d-list" (default): render a list with no rounded corners and no left and right margins;
+		//		- "d-round-rect-list": render a list with rounded corners and left and right margins.
 		baseClass: "d-list",
 		_setBaseClassAttr: function (value) {
 			if (this.baseClass !== value) {
@@ -57,36 +78,57 @@ define(["dcl/dcl",
 			}
 		},
 
-		// The selection mode for list items (see delite/Selection).
+		// selectionMode: String
+		//		The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
+		_setSelectionModeAttr: function (/*String*/value) {
+			if (this.selectionMode !== value) {
+				if (this.selectionMode === "none") {
+					this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
+				} else {
+					if (this.value === "none") {
+						this._selectionClickHandle.remove();
+						// TODO: should we deselect the currently selected items ?
+					}
+				}
+				this._set("selectionMode", value);
+			}
+		},
 
-		/////////////////////////////////
-		// Private attributes
-		/////////////////////////////////
-
+		// CSS classes internally referenced by the List widget
 		_cssClasses: {item: "d-list-item",
 					  category: "d-list-category",
 					  loading: "d-list-loading"},
 
-		/////////////////////////////////
-		// Widget lifecycle
-		/////////////////////////////////
+		// Handle for the selection click event handler 
+		_selectionClickHandle: null,
+		
+		// Handle for the observer of the store query result
+		_observerHandle: null,
+
+		//////////// Widget life cycle ///////////////////////////////////////
 
 		buildRendering: function () {
+			// summary:
+			//		Initialize the widget node and set the container node.
+			// tags:
+			//		protected
 			this.style.display = "block";
 			this.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			this.containerNode = this;
 		},
 
 		createdCallback: dcl.after(function () {
+			// summary:
+			//		Create the default store, if necessary, after all attributes values are set on the widget.
+			// tags:
+			//		protected
 			var list = this;
-			// Init the store with a default value if none has already been defined
 			if (!this.store) {
 				this.store = {
 					data: [],
 					_queried: false,
-					query: function (query, options) {
-						// TODO: support pagination
+					query: function () {
 						this._queried = true;
 						return this.data.slice();
 					},
@@ -119,11 +161,7 @@ define(["dcl/dcl",
 						}
 					}
 				};
-			};
-			// FIXME: SHOULD BE MOVED IN THE selectionMode SETTER
-			if (this.selectionMode !== "none") {
-				this.on("click", lang.hitch(this, "_handleSelection"));
-			}			
+			}
 		}),
 
 		enteredViewCallback: function () {
@@ -137,7 +175,10 @@ define(["dcl/dcl",
 		},
 
 		startup: function () {
-			// Parse content to remove it / retrieve items to add to the store
+			// summary:
+			//		Starts the widget: parse the content of the widget node to clean it,
+			//		add items to the store if specified in markup, and then load the list
+			//		items from the store.
 			this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
 				this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
 					var itemAttribute = node.getAttribute("item");
@@ -150,58 +191,54 @@ define(["dcl/dcl",
 					}
 				}});
 			}});
-			this._initContent();
+			this._populate();
 		},
 
-		_processAndRemoveContent: function (node, tagHandlers) {
-			var i, len, child, tagName;
-			// Process the content of the node and remove it
-			if (node.childNodes.length > 1) {
-				len = node.childNodes.length;
-				for (i = 0; i < len; i++) {
-					child = node.firstChild;
-					if (child) {
-						tagName = child.tagName;
-						if (tagName && tagHandlers[tagName]) {
-							tagHandlers[tagName].call(this, child);
-						}
-						this._removeNode(child);
-					}
-				}
+		destroy: function () {
+			// summary:
+			//		Destroy the widget.
+			if (this._selectionClickHandle) {
+				this._selectionClickHandle.remove();
+				this._selectionClickHandle = null;
+			}
+			if (this._observerHandle) {
+				this._observerHandle.remove();
+				this._observerHandle = null;
 			}
 		},
-		
-		/////////////////////////////////
-		// Public methods
-		/////////////////////////////////
 
-		// Register a handler for a type of events generated in any of the renderers.
-		// Parameters:
-		//		event: the type of events ("click", ...)
-		//		handler: the event handler
-		// When the event handler is called, it receive the list as its first parameter, the event
-		// as its second and the index of the list item displayed in the renderer.
-		// TODO: WHAT IF THE RENDERER IS A CATEGORY HEADER ???
-		onRendererEvent: function (event, handler) {
+		//////////// Public methods ///////////////////////////////////////
+
+		onRendererEvent: function (/*String*/event, /*Function*/func) {
+			// summary:
+			//		Call specified function when event occurs within a renderer.
+			//	event: String 
+			//		the type of events ("click", ...)
+			//	func: Function
+			//		The function to call when the event occurs within a renderer.
+			//		The function is called in the context of the List widget, and
+			//		it receives the following parameters:
+			//		- the original event;
+			//		- the renderer within which the event occurred.
 			var that = this;
 			return this.on(event, function (e) {
-				var parentRenderer;
-				if (domClass.contains(e.target, this.baseClass)) {
+				var enclosingRenderer;
+				if (e.target === this) {
 					return;
 				} else {
 					enclosingRenderer = that.getEnclosingRenderer(e.target);
 					if (enclosingRenderer) {
-						// TODO: Pass the enclosingRenderer too ?
-						// Or run the handler in the enclosingRenderer context and pass the list ?
-						// TODO: Pass the enclosingRenderer INSTEAD of the item index,
-						// as it contains itself the item index and the item ?
-						return handler.call(that, e, that.getItemRendererIndex(enclosingRenderer));
+						return func.call(that, e, enclosingRenderer);
 					}
 				}
 			});
 		},
 
-		getRendererByItem: function (item) {
+		getRendererByItem: function (/*Object*/item) {
+			// summary:
+			//		Returns the renderer currently displaying a specific item.
+			// item: Object
+			//		The item displayed by the renderer.
 			var renderers = query("." + this._cssClasses.item, this.containerNode);
 			var rendererIndex = renderers.map(function (renderer) {
 									return renderer.item;
@@ -212,7 +249,11 @@ define(["dcl/dcl",
 			}
 		},
 
-		getItemRendererByIndex: function (index) {
+		getItemRendererByIndex: function (/*int*/index) {
+			// summary:
+			//		Returns the item renderer at a specific index in the List.
+			// index: int
+			//		The index of the item renderer in the list (first item renderer index is 0).
 			var itemRenderers = query("." + this._cssClasses.item, this.containerNode);
 			var returned = null;
 			if (index < itemRenderers.length) {
@@ -221,13 +262,21 @@ define(["dcl/dcl",
 			return returned;
 		},
 
-		getItemRendererIndex: function (renderer) {
+		getItemRendererIndex: function (/*Object*/renderer) {
+			// summary:
+			//		Returns the index of an item renderer in the List.
+			// renderer: Object
+			//		The item renderer.
 			var index = query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
 			return index < 0 ? null : index;
 		},
 
-		getEnclosingRenderer: function (node) {
-			var currentNode = dom.byId(node);
+		getEnclosingRenderer: function (/*DOMNode*/node) {
+			// summary:
+			//		Returns the renderer enclosing a dom node.
+			// node: DOMNode
+			//		The dom node.
+			var currentNode = node;
 			while (currentNode) {
 				if (currentNode.parentNode && domClass.contains(currentNode.parentNode,
 						this.baseClass)) {
@@ -242,15 +291,25 @@ define(["dcl/dcl",
 			}
 		},
 
-		/////////////////////////////////
-		// Selection implementation
-		/////////////////////////////////
+		//////////// delite/Selection implementation ///////////////////////////////////////
 
-		getIdentity: function (item) {
+		getIdentity: function (/*Object*/item) {
+			// summary:
+			//		Returns the identity of an item for the Selection.
+			// item: Object
+			//		The item.
+			// tags:
+			//		protected
 			return item;
 		},
 
-		updateRenderers: function (items) {
+		updateRenderers: function (/*Array*/items) {
+			// summary:
+			//		Update renderers when the selection has changed.
+			// items: Array
+			//		The items which renderers must be updated.
+			// tags:
+			//		protected
 			var i = 0, currentItem, renderer;
 			if (this.selectionMode !== "none") {
 				for (; i < items.length; i++) {
@@ -263,33 +322,88 @@ define(["dcl/dcl",
 			}
 		},
 
-		/////////////////////////////////
-		// Private methods
-		/////////////////////////////////
+		//////////// Private methods ///////////////////////////////////////
 
-		_initContent: function () {
-			var queryResult = this.store.query(this.query, this.queryOptions);
-			if (queryResult.observe) {
-				// FIXME: SHOULD WE STORE THE HANDLE AND CLOSE IT WHEN THE WIDGET IS DESTROYED ?
-				queryResult.observe(lang.hitch(this, "_observer"), true);
+		_processAndRemoveContent: function (/*DomNode*/node, /*Object*/tagHandlers) {
+			// summary:
+			//		process the content of a dom node using tag handlers and remove this content. 
+			// node: Object
+			//		the dom node to process
+			// tagHandlers: Object
+			//		a map which keys are tag names and values are functions that are executed
+			//		when a node with the corresponding tag has been found under node. The
+			//		function takes one parameter, that is the node that has been found. Note
+			//		that the function is run in the context of the widget, to allow easy
+			//		recursive processing.
+			// tags:
+			//		private
+			var i, len, child, tagName;
+			if (node.childNodes.length > 1) {
+				len = node.childNodes.length;
+				for (i = 0; i < len; i++) {
+					child = node.firstChild;
+					if (child) {
+						tagName = child.tagName;
+						if (tagName && tagHandlers[tagName]) {
+							tagHandlers[tagName].call(this, child);
+						}
+						this._removeNode(child);
+					}
+				}
 			}
-			this._addItemRenderers(queryResult, "last");
 		},
 
-		_observer: function (object, removedFrom, insertedInto) {
+		_populate: function () {
+			// summary:
+			//		Populate the list using the store to retrieve items.
+			// tags:
+			//		private
+			this._toggleListLoadingStyle();
+			when(this.store.query(this.query, this.queryOptions), lang.hitch(this, function (queryResult) {
+				if (queryResult.observe) {
+					this._observerHandle = queryResult.observe(lang.hitch(this, "_observer"), true);
+				}
+				this._addItemRenderers(queryResult, "last");
+				this._toggleListLoadingStyle();
+			}), lang.hitch(this, function (error) {
+				// TODO: is this how we are supposed to report errors (this comes from delite/Store.js)?
+				this.emit("query-error", { error: error, cancelable: false, bubbles: true });
+			}));
+		},
+
+		_observer: function (/*Object*/item, /*int*/removedFrom, /*int*/insertedInto) {
+			// summary:
+			//		Observer for the list of items retrieved from the store (see dojo/store/Observable).
+			// item: Object
+			//		the item that has changed.
+			// removedFrom: int
+			//		the position that the item was removed from.
+			// insertedInto: int
+			//		the position that the item was inserted into.
+			// tags:
+			//		private
 			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._itemDeletedHandler(object, false);
+				this._itemDeletedHandler(item, false);
 			}
 			if (removedFrom < 0 && insertedInto >= 0) { // item added
-				this._itemAddedHandler(object, insertedInto);
+				this._itemAddedHandler(item, insertedInto);
 			}
 		},
 
 		_toggleListLoadingStyle: function () {
+			// summary:
+			//		Toggle the "loading" style for the list.
+			// tags:
+			//		private
 			domClass.toggle(this, this._cssClasses.loading);
 		},
 
+		// FIXME: DO WE NEED THIS METHOD ? SHOULDN'T WE DIRECTLY CALL removeChild INSTEAD ?
 		_removeNode: function (node) {
+			// summary:
+			//		Remove a node from the dom.
+			// tags:
+			//		private
 			HTMLElement.prototype.removeChild.call(node.parentNode, node);
 		},
 
@@ -319,6 +433,7 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		_addItemRenderers: function (/*Array*/ items, pos) {
+			// TODO: rename as renderNewItems ?
 			if (!this.containerNode.firstElementChild) {
 				this.containerNode.appendChild(this._createRenderers(items, 0, items.length, null));
 			} else {
@@ -541,8 +656,8 @@ define(["dcl/dcl",
 					}
 				} else {
 					// A descendant of the renderer has the focus
-					// FIXME: can it be a category header, with no _getNextFocusableChild method ?
-					returned = focusedRenderer._getNextFocusableChild(child, dir);
+					// FIXME: can it be a category header, with no getNextFocusableChild method ?
+					returned = focusedRenderer.getNextFocusableChild(child, dir);
 				}
 			} else {
 				returned = (dir === 1 ? this._getFirst() : this._getLast());
@@ -552,8 +667,8 @@ define(["dcl/dcl",
 
 		_onLeftArrow: function () {
 			var nextChild;
-			if (this._getFocusedRenderer()._getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, -1);
+			if (this._getFocusedRenderer().getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, -1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
@@ -562,8 +677,8 @@ define(["dcl/dcl",
 
 		_onRightArrow: function () {
 			var nextChild;
-			if (this._getFocusedRenderer()._getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, 1);
+			if (this._getFocusedRenderer().getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, 1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
