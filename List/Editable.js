@@ -285,18 +285,18 @@ define(["dcl/dcl",
 		_updatePlaceholderPosition: function (clientY) {
 			var nextRenderer, previousRenderer;
 			if (clientY < this._placeHolderClientRect.top) {
-				previousRenderer = this._getPreviousRenderer(this._placeHolder);
+				previousRenderer = this._getNextRenderer(this._placeHolder, -1);
 				if (previousRenderer === this._draggedRenderer) {
-					previousRenderer = this._getPreviousRenderer(previousRenderer);
+					previousRenderer = this._getNextRenderer(previousRenderer, -1);
 				}
 				if (previousRenderer) {
 					this._placePlaceHolder(previousRenderer, "before");
 					this._dropPosition--;
 				}
 			} else if (clientY > this._placeHolderClientRect.bottom) {
-				nextRenderer = this._getNextRenderer(this._placeHolder);
+				nextRenderer = this._getNextRenderer(this._placeHolder, 1);
 				if (nextRenderer === this._draggedRenderer) {
-					nextRenderer = this._getNextRenderer(nextRenderer);
+					nextRenderer = this._getNextRenderer(nextRenderer, 1);
 				}
 				if (nextRenderer) {
 					this._placePlaceHolder(nextRenderer, "after");

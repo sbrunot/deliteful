@@ -471,19 +471,10 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		_getNextRenderer: dcl.superCall(function (sup) {
-			return function (renderer) {
+			return function (renderer, /*jshint unused:vars*/dir) {
 				var value = sup.apply(this, arguments);
-				if (this._nextPageLoader && value === this._nextPageLoader) {
-					value = null;
-				}
-				return value;
-			};
-		}),
-
-		_getPreviousRenderer: dcl.superCall(function (sup) {
-			return function (renderer) {
-				var value = sup.apply(this, arguments);
-				if (this._previousPageLoader && value === this._previousPageLoader) {
+				if ((this._nextPageLoader && value === this._nextPageLoader)
+					|| (this._previousPageLoader && value === this._previousPageLoader)) {
 					value = null;
 				}
 				return value;

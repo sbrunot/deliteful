@@ -473,12 +473,12 @@ define(["dcl/dcl",
 			var previousRenderer = null, rendererCategory, newCategoryRenderer;
 			if (this.categoryAttribute) {
 				rendererCategory = renderer.item[this.categoryAttribute];
-				previousRenderer = rendererAtIndex ? this._getPreviousRenderer(rendererAtIndex) : this._getLastRenderer();
+				previousRenderer = rendererAtIndex ? this._getNextRenderer(rendererAtIndex, -1) : this._getLastRenderer();
 				if (previousRenderer) {
 					if (previousRenderer._isCategoryRenderer) {
 						if (rendererCategory !== previousRenderer.category) {
 							rendererAtIndex = previousRenderer;
-							previousRenderer = this._getPreviousRenderer(previousRenderer);
+							previousRenderer = this._getNextRenderer(previousRenderer, -1);
 						}
 					}
 					if (!previousRenderer || (!previousRenderer._isCategoryRenderer && previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
@@ -517,14 +517,14 @@ define(["dcl/dcl",
 			var rendererIsCategoryHeader = renderer._isCategoryRenderer,
 				nextRenderer, previousRenderer, nextFocusRenderer;
 			if (this.categoryAttribute && !rendererIsCategoryHeader) {
-				previousRenderer = this._getPreviousRenderer(renderer);
+				previousRenderer = this._getNextRenderer(renderer, -1);
 				// remove the previous category header if necessary
 				if (previousRenderer && previousRenderer._isCategoryRenderer) {
-					nextRenderer = this._getNextRenderer(renderer);
+					nextRenderer = this._getNextRenderer(renderer, 1);
 					if (!nextRenderer || (nextRenderer && nextRenderer._isCategoryRenderer)) {
 						this._removeRenderer(previousRenderer);
 						if (nextRenderer && nextRenderer._isCategoryRenderer) {
-							previousRenderer = this._getPreviousRenderer(renderer);
+							previousRenderer = this._getNextRenderer(renderer, -1);
 							// remove this category renderer if it is not needed anymore
 							if (previousRenderer && nextRenderer.category === previousRenderer.item[this.categoryAttribute]) {
 								this._removeRenderer(nextRenderer);
@@ -577,21 +577,19 @@ define(["dcl/dcl",
 			return renderer;
 		},
 
-		_getNextRenderer: function (/*Widget*/renderer) {
+		_getNextRenderer: function (/*Widget*/renderer, /*int*/dir) {
 			// summary:
-			//		Returns the renderer that comes just after another one.
+			//		Returns the renderer that comes immediately after of before another one.
 			// renderer: Widget
-			//		The renderer just before the one to return.
-			return renderer.nextElementSibling; // Widget
-		},
-
-		// TODO: only use one _getNextRenderer method with a dir attribute ?
-		_getPreviousRenderer: function (/*Widget*/renderer) {
-			// summary:
-			//		Returns the renderer that comes just before another one.
-			// renderer: Widget
-			//		The renderer just after the one to return.
-			return renderer.previousElementSibling; // Widget
+			//		The renderer immediately before or after the one to return.
+			// dir: int
+			//		1 to return the renderer that comes immediately after renderer, -1 to
+			//		return the one that comes immediately before.
+			if (dir >= 0) {
+				return renderer.nextElementSibling; // Widget
+			} else {
+				return renderer.previousElementSibling; // Widget
+			}
 		},
 
 		_getFirstRenderer: function () {
