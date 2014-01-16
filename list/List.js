@@ -431,7 +431,8 @@ define(["dcl/dcl",
 
 		_createRenderers: function (/*Array*/ items, /*int*/fromIndex, /*int*/count, /*Object*/previousItem) {
 			// summary:
-			//		Create renderers for a list of items (including the category renderers if the list is categorized).
+			//		Create renderers for a list of items (including the category renderers if the list
+			//      is categorized).
 			// items: Array
 			//		An array that contains the items to create renderers for.
 			// fromIndex: int
@@ -473,7 +474,9 @@ define(["dcl/dcl",
 			var previousRenderer = null, rendererCategory, newCategoryRenderer;
 			if (this.categoryAttribute) {
 				rendererCategory = renderer.item[this.categoryAttribute];
-				previousRenderer = rendererAtIndex ? this._getNextRenderer(rendererAtIndex, -1) : this._getLastRenderer();
+				previousRenderer = rendererAtIndex
+										? this._getNextRenderer(rendererAtIndex, -1)
+										: this._getLastRenderer();
 				if (previousRenderer) {
 					if (previousRenderer._isCategoryRenderer) {
 						if (rendererCategory !== previousRenderer.category) {
@@ -481,7 +484,9 @@ define(["dcl/dcl",
 							previousRenderer = this._getNextRenderer(previousRenderer, -1);
 						}
 					}
-					if (!previousRenderer || (!previousRenderer._isCategoryRenderer && previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
+					if (!previousRenderer
+							|| (!previousRenderer._isCategoryRenderer
+									&& previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
 						this.insertBefore(this._createCategoryRenderer(rendererCategory), rendererAtIndex);
 					}
 				} else {
@@ -494,7 +499,8 @@ define(["dcl/dcl",
 				}
 				if (rendererAtIndex && !rendererAtIndex._isCategoryRenderer) {
 					if (rendererAtIndex.item[this.categoryAttribute] !== rendererCategory) {
-						newCategoryRenderer = this._createCategoryRenderer(rendererAtIndex.item[this.categoryAttribute]);
+						newCategoryRenderer =
+							this._createCategoryRenderer(rendererAtIndex.item[this.categoryAttribute]);
 						this.insertBefore(newCategoryRenderer, rendererAtIndex);
 						rendererAtIndex = newCategoryRenderer;
 					}
@@ -526,7 +532,8 @@ define(["dcl/dcl",
 						if (nextRenderer && nextRenderer._isCategoryRenderer) {
 							previousRenderer = this._getNextRenderer(renderer, -1);
 							// remove this category renderer if it is not needed anymore
-							if (previousRenderer && nextRenderer.category === previousRenderer.item[this.categoryAttribute]) {
+							if (previousRenderer
+									&& nextRenderer.category === previousRenderer.item[this.categoryAttribute]) {
 								this._removeRenderer(nextRenderer);
 							}
 						}
