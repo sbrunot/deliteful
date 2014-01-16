@@ -5,14 +5,14 @@ define(["dcl/dcl",
 ], function (dcl, domClass, domConstruct, Widget) {
 
 	// module:
-	//		deliteful/List/CategoryRendererBase
+	//		deliteful/list/CategoryRendererBase
 
 	return dcl([Widget], {
 		// summary:
-		//		Base class for a widget that render a category inside a deliteful/List widget.
+		//		Base class for a widget that render a category inside a deliteful/list/List widget.
 		//
 		// description:
-		//		This base class provide all the infrastructure that a deliteful/List widget
+		//		This base class provide all the infrastructure that a deliteful/list/List widget
 		//		expect from a category renderer.
 		//
 		//		A concrete category renderer must extend this class an implement its render method
@@ -27,7 +27,7 @@ define(["dcl/dcl",
 		},
 
 		// baseClass: [protected] String
-		//		CSS class of a category renderer. This value is expected by the deliteful/List widget
+		//		CSS class of a category renderer. This value is expected by the deliteful/list/List widget
 		//		so it must not be changed.
 		baseClass: "d-list-category",
 

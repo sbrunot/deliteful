@@ -4,11 +4,11 @@ define(["dcl/dcl",
 ], function (dcl, register, CategoryRendererBase) {
 	
 	// module:
-	//		deliteful/List/DefaultCategoryRenderer
+	//		deliteful/list/DefaultCategoryRenderer
 
 	var DefaultCategoryRenderer = dcl([CategoryRendererBase], {
 		// summary:
-		//		Default category renderer for the deliteful/List widget.
+		//		Default category renderer for the deliteful/list/List widget.
 		//
 
 		//////////// PROTECTED METHODS ///////////////////////////////////////

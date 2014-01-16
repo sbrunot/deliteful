@@ -16,7 +16,7 @@ define(["dcl/dcl",
 		Selection, KeyNav, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {
 
 	// module:
-	//		deliteful/List
+	//		deliteful/list/List
 
 	var List = dcl([Widget, Selection, KeyNav], {
 		// summary:
@@ -55,14 +55,14 @@ define(["dcl/dcl",
 		//		If falsy, the list is not categorized.
 		categoryAttribute: "",
 
-		// itemsRenderer: deliteful/List/ItemRendererBase subclass
+		// itemsRenderer: deliteful/list/ItemRendererBase subclass
 		//		The widget class to use to render list items.
-		//		It MUST extend deliteful/List/ItemRendererBase.
+		//		It MUST extend deliteful/list/ItemRendererBase.
 		itemsRenderer: DefaultItemRenderer,
 
-		// categoriesRenderer: deliteful/List/CategoryRendererBase subclass
+		// categoriesRenderer: deliteful/list/CategoryRendererBase subclass
 		//		The widget class to use to render category headers when the list items are categorized.
-		//		It MUST extend deliteful/List/CategoryRendererBase.
+		//		It MUST extend deliteful/list/CategoryRendererBase.
 		categoriesRenderer: DefaultCategoryRenderer,
 
 		// baseClass: String

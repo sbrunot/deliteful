@@ -4,14 +4,14 @@ define(["dcl/dcl",
 ], function (dcl, register, Widget) {
 
 	// module:
-	//		deliteful/List/ItemRendererBase
+	//		deliteful/list/ItemRendererBase
 
 	return dcl([Widget], {
 		// summary:
-		//		Base class for a widget that render an item inside a deliteful/List widget.
+		//		Base class for a widget that render an item inside a deliteful/list/List widget.
 		//
 		// description:
-		//		This base class provide all the infrastructure that a deliteful/List widget
+		//		This base class provide all the infrastructure that a deliteful/list/List widget
 		//		expect from an item renderer, including keyboard navigation support.
 		//
 		//		A concrete item renderer must extend this class an implement its render method
@@ -30,7 +30,7 @@ define(["dcl/dcl",
 		},
 
 		// baseClass: [protected] String
-		//		CSS class of an item renderer. This value is expected by the deliteful/List widget
+		//		CSS class of an item renderer. This value is expected by the deliteful/list/List widget
 		//		so it must not be changed.
 		baseClass: "d-list-item",
 

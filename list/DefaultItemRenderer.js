@@ -6,11 +6,11 @@ define(["dcl/dcl",
 ], function (dcl, register, domConstruct, domClass, ItemRendererBase) {
 	
 	// module:
-	//		deliteful/List/DefaultItemRenderer
+	//		deliteful/list/DefaultItemRenderer
 
 	var DefaultItemRenderer = dcl([ItemRendererBase], {
 		// summary:
-		//		Default item renderer for the deliteful/List widget.
+		//		Default item renderer for the deliteful/list/List widget.
 		//
 		// description:
 		//		This renderer renders generic items that can have any of the following attributes (display

@@ -12,16 +12,17 @@
 	<script type="text/javascript">
 		var items = 
 		require([
+		    "dojo/_base/declare",
 			"dojo/on",
-			"dojo/store/Memory",
-			"dojo/store/Observable",
+			"dstore/Memory",
+			"dstore/Observable",
 			"delite/register",
 			"deliteful/list/List"
-		], function (on, MemoryStore, Observable, register, List, DefaultItemRenderer) {
+		], function (declare, on, MemoryStore, Observable, register, List) {
   			var i, list;
+			var ObservableStore = declare([MemoryStore, Observable], {});
+  			globalStore = new ObservableStore({data: []});
 
-  			globalStore = new Observable(MemoryStore({data: []}));
- 
   			// Programmatic list: default store, items added before adding the list to the document and before startup
 			list = register.createElement("d-list");
 			list.id = "list-prog-1";
@@ -48,7 +49,7 @@
 			list.id = "list-prog-3";
 			list.pageLength = 20;
 			list.style.height = "200px";
-			list.store = new Observable(new MemoryStore({data: [], idProperty: "label"}));
+			list.store = new ObservableStore({data: [], idProperty: "label"});
  			for (i = 0; i < 100; i++) {
 				list.store.add({label: "Programmatic item of order " + i});
 			}
@@ -60,7 +61,7 @@
 			list = register.createElement("d-list");
 			list.id = "list-prog-4";
 			list.style.height = "200px";
-			list.store = new Observable(new MemoryStore({data: [], idProperty: "label"}));
+			list.store = new ObservableStore({data: [], idProperty: "label"});
 			list.startup();
 			document.getElementById("list4Placeholder").appendChild(list);
   			for (i = 0; i < 100; i++) {
