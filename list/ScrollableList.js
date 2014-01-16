@@ -3,7 +3,7 @@ define(["dcl/dcl",
 		"dojo/dom-class",
 		"delite/Widget",
 		"delite/Invalidating",
-		"delite/themes/load!./themes/{{theme}}/ScrollableList_css"
+		"delite/themes/load!./List/themes/{{theme}}/ScrollableList_css"
 ], function (dcl, register, domClass, Widget, Invalidating) {
 
 	return dcl(Invalidating, {

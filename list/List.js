@@ -8,9 +8,9 @@ define(["dcl/dcl",
 	"delite/Widget",
 	"delite/Selection",
 	"delite/KeyNav",
-	"./List/DefaultItemRenderer",
-	"./List/DefaultCategoryRenderer",
-	"./List/ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
+	"./DefaultItemRenderer",
+	"./DefaultCategoryRenderer",
+	"./ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
 ], function (dcl, register, lang, query, when, domClass, keys, Widget,
 		Selection, KeyNav, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {

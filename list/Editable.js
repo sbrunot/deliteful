@@ -9,7 +9,7 @@ define(["dcl/dcl",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/touch",
-    	"delite/themes/load!./themes/{{theme}}/Editable_css"
+    	"delite/themes/load!./List/themes/{{theme}}/Editable_css"
 ], function (dcl, lang, array, on, keys, dom, domClass, domStyle, domConstruct, domGeometry, touch) {
 
 	return dcl(null, {
