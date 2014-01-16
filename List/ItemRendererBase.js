@@ -137,6 +137,8 @@ define(["dcl/dcl",
 			//		comes after in the focusable order, -1 for the child that comes before.
 			// tags:
 			//		protected
+			// returns:
+			//		the next focusable child if there is one.
 			if (this._focusableChildren) {
 				// retrieve the position of the from node
 				var nextChildIndex, fromChildIndex = -1, refNode = fromChild || this._focusedChild;
@@ -153,7 +155,7 @@ define(["dcl/dcl",
 				} else if (nextChildIndex < 0) {
 					nextChildIndex = this._focusableChildren.length - 1;
 				}
-				return this._focusableChildren[nextChildIndex];
+				return this._focusableChildren[nextChildIndex]; // Widget
 			}
 		}
 

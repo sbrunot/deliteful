@@ -146,7 +146,7 @@ define(["dcl/dcl",
 							this.data.push(item);
 						}
 						if (this._queried) {
-							list._itemAddedHandler(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
+							list._onItemAdded(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
 						}
 						return item;
 					},
@@ -155,7 +155,7 @@ define(["dcl/dcl",
 						if (index >= 0 && index < this.data.length) {
 							item = this.data.splice(index, 1)[0];
 							if (this._queried) {
-								list._itemDeletedHandler(item, false);
+								list._onItemDeleted(item, false);
 							}
 							return true;
 						}
@@ -220,6 +220,9 @@ define(["dcl/dcl",
 			//		it receives the following parameters:
 			//		- the original event;
 			//		- the renderer within which the event occurred.
+			// returns:
+			//		An object with a remove method to call to unregister the func
+			//		for the event.
 			var that = this;
 			return this.on(event, function (e) {
 				var enclosingRenderer;
@@ -231,7 +234,7 @@ define(["dcl/dcl",
 						return func.call(that, e, enclosingRenderer);
 					}
 				}
-			});
+			}); // Object
 		},
 
 		getRendererByItem: function (/*Object*/item) {
@@ -245,7 +248,7 @@ define(["dcl/dcl",
 								})
 								.indexOf(item);
 			if (rendererIndex >= 0) {
-				return renderers[rendererIndex];
+				return renderers[rendererIndex]; // Widget
 			}
 		},
 
@@ -259,7 +262,7 @@ define(["dcl/dcl",
 			if (index < itemRenderers.length) {
 				returned = query("." + this._cssClasses.item, this.containerNode)[index];
 			}
-			return returned;
+			return returned; // Widget
 		},
 
 		getItemRendererIndex: function (/*Object*/renderer) {
@@ -268,7 +271,7 @@ define(["dcl/dcl",
 			// renderer: Object
 			//		The item renderer.
 			var index = query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
-			return index < 0 ? null : index;
+			return index < 0 ? null : index; // int
 		},
 
 		getEnclosingRenderer: function (/*DOMNode*/node) {
@@ -285,7 +288,7 @@ define(["dcl/dcl",
 				currentNode = currentNode.parentNode;
 			}
 			if (currentNode) {
-				return currentNode;
+				return currentNode; // Widget
 			} else {
 				return null;
 			}
@@ -300,7 +303,7 @@ define(["dcl/dcl",
 			//		The item.
 			// tags:
 			//		protected
-			return item;
+			return item; // Object
 		},
 
 		updateRenderers: function (/*Array*/items) {
@@ -318,6 +321,25 @@ define(["dcl/dcl",
 					if (renderer) {
 						domClass.toggle(renderer, "d-selected", this.isSelected(currentItem));
 					}
+				}
+			}
+		},
+
+		_handleSelection: function (/*Event*/event) {
+			// summary:
+			//		Event handler that performs items (de)selection.
+			// event: Event
+			//		The event the handler was called for.
+			// tags:
+			//		protected
+			var item, itemSelected, eventRenderer;
+			eventRenderer = this.getEnclosingRenderer(event.target || event.srcElement);
+			if (eventRenderer) {
+				item = eventRenderer.item;
+				if (item) {
+					itemSelected = !this.isSelected(item);
+					this.setSelected(item, itemSelected);
+					this.emit(itemSelected ? "itemSelected" : "itemDeselected", {item: item});
 				}
 			}
 		},
@@ -347,7 +369,7 @@ define(["dcl/dcl",
 						if (tagName && tagHandlers[tagName]) {
 							tagHandlers[tagName].call(this, child);
 						}
-						this._removeNode(child);
+						child.parentNode.removeChild(child);
 					}
 				}
 			}
@@ -361,33 +383,14 @@ define(["dcl/dcl",
 			this._toggleListLoadingStyle();
 			when(this.store.query(this.query, this.queryOptions), lang.hitch(this, function (queryResult) {
 				if (queryResult.observe) {
-					this._observerHandle = queryResult.observe(lang.hitch(this, "_observer"), true);
+					this._observerHandle = queryResult.observe(lang.hitch(this, "_onModelUpdate"), true);
 				}
-				this._addItemRenderers(queryResult, "last");
+				this._renderNewItems(queryResult, "last");
 				this._toggleListLoadingStyle();
 			}), lang.hitch(this, function (error) {
 				// TODO: is this how we are supposed to report errors (this comes from delite/Store.js)?
 				this.emit("query-error", { error: error, cancelable: false, bubbles: true });
 			}));
-		},
-
-		_observer: function (/*Object*/item, /*int*/removedFrom, /*int*/insertedInto) {
-			// summary:
-			//		Observer for the list of items retrieved from the store (see dojo/store/Observable).
-			// item: Object
-			//		the item that has changed.
-			// removedFrom: int
-			//		the position that the item was removed from.
-			// insertedInto: int
-			//		the position that the item was inserted into.
-			// tags:
-			//		private
-			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._itemDeletedHandler(item, false);
-			}
-			if (removedFrom < 0 && insertedInto >= 0) { // item added
-				this._itemAddedHandler(item, insertedInto);
-			}
 		},
 
 		_toggleListLoadingStyle: function () {
@@ -398,42 +401,19 @@ define(["dcl/dcl",
 			domClass.toggle(this, this._cssClasses.loading);
 		},
 
-		// FIXME: DO WE NEED THIS METHOD ? SHOULDN'T WE DIRECTLY CALL removeChild INSTEAD ?
-		_removeNode: function (node) {
+		//////////// Renderers life cycle ///////////////////////////////////////
+
+		_renderNewItems: function (/*Array*/ items, /*String*/pos) {
 			// summary:
-			//		Remove a node from the dom.
+			//		Render new items within the list widget.
+			// items: Array
+			//		The new items to render.
+			// pos:
+			//		Where to render the new items. Supported values are:
+			//		- "first": render the new items at the beginning of the list
+			//		- "last": render the new items at the end of the list
 			// tags:
 			//		private
-			HTMLElement.prototype.removeChild.call(node.parentNode, node);
-		},
-
-		/////////////////////////////////
-		// Model updates handler
-		/////////////////////////////////
-
-		_itemDeletedHandler: function (item, keepSelection) {
-			var renderer = this.getRendererByItem(item);
-			if (renderer) {
-				this._removeRenderer(renderer, keepSelection);
-			}
-		},
-
-		_itemAddedHandler: function (item, atIndex) {
-			var newRenderer = this._createItemRenderer(item);
-			// FIXME: WHAT ABOUT CATEGORIZED LISTS ???
-			this._addItemRenderer(newRenderer, atIndex);
-		},
-
-		_itemMovedHandler: function (item, fromIndex, toIndex) {
-			console.log("TODO: Item " + item + " moved from index " + fromIndex + " to " + toIndex);
-		},
-
-		/////////////////////////////////
-		// Private methods for renderer life cycle
-		/////////////////////////////////
-
-		_addItemRenderers: function (/*Array*/ items, pos) {
-			// TODO: rename as renderNewItems ?
 			if (!this.containerNode.firstElementChild) {
 				this.containerNode.appendChild(this._createRenderers(items, 0, items.length, null));
 			} else {
@@ -444,12 +424,27 @@ define(["dcl/dcl",
 					this.containerNode.appendChild(this._createRenderers(items, 0, items.length,
 							this._getLastRenderer().item));
 				} else {
-					console.log("_addItemRenderers: only first and last positions are supported.");
+					console.log("_renderNewItems: only first and last positions are supported.");
 				}
 			}
 		},
 
-		_createRenderers: function (/*Array*/ items, fromIndex, count, previousItem) {
+		_createRenderers: function (/*Array*/ items, /*int*/fromIndex, /*int*/count, /*Object*/previousItem) {
+			// summary:
+			//		Create renderers for a list of items (including the category renderers if the list is categorized).
+			// items: Array
+			//		An array that contains the items to create renderers for.
+			// fromIndex: int
+			//		The index of the first item in the array of items
+			//		(no renderer will be created for the items before this index).
+			// count: int
+			//		The number of items to use from the array of items, starting from the fromIndex position
+			//		(no renderer will be created for the items that follows).
+			// previousItem: Object
+			//		The item that precede the first one for which a renderer will be created. This is only usefull for
+			//		categorized lists.
+			// returns:
+			//		A DocumentFragment that contains the renderers.
 			var currentIndex = fromIndex,
 				currentItem, toIndex = fromIndex + count - 1;
 			var documentFragment = document.createDocumentFragment();
@@ -464,11 +459,17 @@ define(["dcl/dcl",
 				documentFragment.appendChild(this._createItemRenderer(currentItem));
 				previousItem = currentItem;
 			}
-			return documentFragment;
+			return documentFragment; // DocumentFragment
 		},
 
-		_addItemRenderer: function (renderer, atItemIndex) {
-			var rendererAtIndex = atItemIndex >= 0 ? this.getItemRendererByIndex(atItemIndex) : null;
+		_addItemRenderer: function (/*Widget*/renderer, /*int*/atIndex) {
+			// summary:
+			//		Add an item renderer to the List, updating category renderers if needed.
+			// renderer: List/ItemRendererBase subclass
+			//		The renderer to add to the list.
+			// atIndex: int
+			//		The index (not counting category renderers) where to add the item renderer in the list.
+			var rendererAtIndex = atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null;
 			var previousRenderer = null, rendererCategory, newCategoryRenderer;
 			if (this.categoryAttribute) {
 				rendererCategory = renderer.item[this.categoryAttribute];
@@ -506,8 +507,13 @@ define(["dcl/dcl",
 			}
 		},
 
-		_removeRenderer: function (renderer, keepSelection) {
-			// Update category headers before removing the renderer, if necessary
+		_removeRenderer: function (/*Widget*/renderer, /*Boolean*/keepSelection) {
+			// summary:
+			//		Remove a renderer from the List, updating category renderers if needed.
+			// renderer: List/ItemRendererBase or List/CategoryRendererBase subclass
+			//		The renderer to remove from the list.
+			// keepSelection: Boolean
+			//		Set to true if the renderer item should not be removed from the list of selected items.
 			var rendererIsCategoryHeader = renderer._isCategoryRenderer,
 				nextRenderer, previousRenderer, nextFocusRenderer;
 			if (this.categoryAttribute && !rendererIsCategoryHeader) {
@@ -539,45 +545,58 @@ define(["dcl/dcl",
 				this.setSelected(renderer.item, false);
 			}
 			// remove and destroy the renderer
-			this._removeNode(renderer);
+			this.removeChild(renderer);
 			renderer.destroy();
 		},
 
-		_moveRenderer: function (renderer, toIndex) { // This is the same as _addRenderer !!!
-			console.log("TODO: category management for _moveRenderer ?");
-			var rendererAtIndex = getItemRendererByIndex(toIndex);
-			if (rendererAtIndex != null) {
-				this.insertBefore(renderer, rendererAtIndex);
-			} else {
-				this.appendChild(renderer);
-			}
-		},
-
-		_createItemRenderer: function (item) {
+		_createItemRenderer: function (/*Object*/item) {
+			// summary:
+			//		Create a renderer instance for an item.
+			// item: Object
+			//		The item to render.
+			// returns:
+			//		An instance of item renderer that renders the item.
 			var renderer = new this.itemsRenderer({tabindex: "-1"});
 			renderer.startup();
 			renderer.item = item;
 			if (this.selectionMode !== "none") {
 				domClass.toggle(renderer, "d-selected", this.isSelected(item));
 			}
-			return renderer;
+			return renderer; // Widget
 		},
 
-		_createCategoryRenderer: function (category) {
+		_createCategoryRenderer: function (/*String*/category) {
+			// summary:
+			//		Create a renderer instance for a category.
+			// category: String
+			//		The category to render.
+			// returns:
+			//		An instance of category renderer that renders the category.
 			var renderer = new this.categoriesRenderer({category: category, tabindex: "-1"});
 			renderer.startup();
 			return renderer;
 		},
 
-		_getNextRenderer: function (renderer) {
-			return renderer.nextElementSibling;
+		_getNextRenderer: function (/*Widget*/renderer) {
+			// summary:
+			//		Returns the renderer that comes just after another one.
+			// renderer: Widget
+			//		The renderer just before the one to return.
+			return renderer.nextElementSibling; // Widget
 		},
 
-		_getPreviousRenderer: function (renderer) {
-			return renderer.previousElementSibling;
+		// TODO: only use one _getNextRenderer method with a dir attribute ?
+		_getPreviousRenderer: function (/*Widget*/renderer) {
+			// summary:
+			//		Returns the renderer that comes just before another one.
+			// renderer: Widget
+			//		The renderer just after the one to return.
+			return renderer.previousElementSibling; // Widget
 		},
 
 		_getFirstRenderer: function () {
+			// summary:
+			//		Returns the first renderer in the list.
 			var firstRenderer = this.getItemRendererByIndex(0);
 			if (this.categoryAttribute) {
 				var previousRenderer = null;
@@ -588,10 +607,12 @@ define(["dcl/dcl",
 					}
 				}
 			}
-			return firstRenderer;
+			return firstRenderer; // Widget
 		},
 
 		_getLastRenderer: function () {
+			// summary:
+			//		Returns the last renderer in the list.
 			var children = this.getChildren(), lastRenderer = null;
 			if (children.length) {
 				lastRenderer = children[children.length - 1];
@@ -601,15 +622,90 @@ define(["dcl/dcl",
 					lastRenderer = lastRenderer.previousElementSibling;
 				}
 			}
-			return lastRenderer;
+			return lastRenderer; // Widget
 		},
 
-		/////////////////////////////////
-		// Keyboard navigation (KeyNav implementation)
-		/////////////////////////////////
+		//////////// Store update handlers ///////////////////////////////////////
 
-		// Handle keydown events
+		_onModelUpdate: function (/*Object*/item, /*int*/removedFrom, /*int*/insertedInto) {
+			// summary:
+			//		Called when the list of items retrieved from the store is updated (see dojo/store/Observable).
+			// item: Object
+			//		the item that has changed.
+			// removedFrom: int
+			//		the position that the item was removed from.
+			// insertedInto: int
+			//		the position that the item was inserted into.
+			// tags:
+			//		private
+			var renderer;
+			if (removedFrom >= 0 && insertedInto < 0) { // item removed
+				this._onItemDeleted(item, false);
+			} else if (removedFrom < 0 && insertedInto >= 0) { // item added
+				this._onItemAdded(item, insertedInto);
+			} else if (removedFrom >= 0 && insertedInto >= 0) { // item moved
+				this._onItemMoved(item, removedFrom, insertedInto);
+			} else { // item updated
+				renderer = this.getRendererByItem(item);
+				if (renderer) {
+					renderer.item = item;
+				}
+			}
+		},
+
+		_onItemDeleted: function (/*Object*/item, /*Boolean*/keepSelection) {
+			// summary:
+			//		Function to call when an item is removed from the store, to update
+			//		the content of the list widget accordingly.
+			// item: Object
+			//		The item that has been removed from the store.
+			// keepSelection: Boolean
+			//		Set to true if the item should not be removed from the list of selected items.
+			// tags:
+			//		private
+			var renderer = this.getRendererByItem(item);
+			if (renderer) {
+				this._removeRenderer(renderer, keepSelection);
+			}
+		},
+
+		_onItemAdded: function (/*Object*/item, /*Boolean*/atIndex) {
+			// summary:
+			//		Function to call when an item is added to the store, to update
+			//		the content of the list widget accordingly.
+			// item: Object
+			//		The item that has been added to the store.
+			// atIndex:
+			//		The index at which the item has been added to the store.
+			// tags:
+			//		private
+			var newRenderer = this._createItemRenderer(item);
+			this._addItemRenderer(newRenderer, atIndex);
+		},
+
+		_onItemMoved: function (/*Object*/item, /*int*/fromIndex, /*int*/toIndex) {
+			// summary:
+			//		Function to call when an item is moved within the store, to update
+			//		the content of the list accordingly.
+			// item: Object
+			//		The item that has been moved within the store.
+			// fromIndex:
+			//		The previous index of the item.
+			// toIndex:
+			//		The new index of the item.
+			// tags:
+			//		private
+			this._onItemDeleted(item, true);
+			this._onItemAdded(item, toIndex);
+		},
+
+		//////////// Keyboard navigation (KeyNav implementation) ///////////////////////////////////////
+
 		_onContainerKeydown: dcl.before(function (evt) {
+			// summary:
+			//		Handle keydown events
+			// tags:
+			//		private
 			var continueProcessing = true, renderer = this._getFocusedRenderer();
 			if (renderer && renderer.onKeydown) {
 				// onKeydown implementation can return false to cancel the default action
@@ -622,8 +718,11 @@ define(["dcl/dcl",
 			}
 		}),
 
-		// Handle SPACE and ENTER keys
 		_onActionKeydown: function (evt) {
+			// summary:
+			//		Handle SPACE and ENTER keys
+			// tags:
+			//		private
 			if (this.selectionMode !== "none") {
 				evt.preventDefault();
 				this._handleSelection(evt);
@@ -631,18 +730,26 @@ define(["dcl/dcl",
 		},
 
 		childSelector: function (child) {
+			// tags:
+			//		private
 			return child !== this;
 		},
 
 		_getFirst: function () {
+			// tags:
+			//		private
 			return this._getFirstRenderer();
 		},
 
 		_getLast: function () {
+			// tags:
+			//		private
 			return this._getLastRenderer();
 		},
 
 		_getNext: function (child, dir) {
+			// tags:
+			//		private
 			var focusedRenderer, refChild, returned = null;
 			if (this.focusedChild) {
 				focusedRenderer = this._getFocusedRenderer();
@@ -666,6 +773,8 @@ define(["dcl/dcl",
 		},
 
 		_onLeftArrow: function () {
+			// tags:
+			//		private
 			var nextChild;
 			if (this._getFocusedRenderer().getNextFocusableChild) {
 				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, -1);
@@ -676,6 +785,8 @@ define(["dcl/dcl",
 		},
 
 		_onRightArrow: function () {
+			// tags:
+			//		private
 			var nextChild;
 			if (this._getFocusedRenderer().getNextFocusableChild) {
 				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, 1);
@@ -686,14 +797,20 @@ define(["dcl/dcl",
 		},
 
 		_onDownArrow: function () {
+			// tags:
+			//		private
 			this._focusNextChild(1);
 		},
 
 		_onUpArrow: function () {
+			// tags:
+			//		private
 			this._focusNextChild(-1);
 		},
 
 		_focusNextChild: function (dir) {
+			// tags:
+			//		private
 			var child, renderer = this._getFocusedRenderer();
 			if (renderer) {
 				if (renderer === this.focusedChild) {
@@ -710,24 +827,12 @@ define(["dcl/dcl",
 		},
 
 		_getFocusedRenderer: function () {
-			return this.focusedChild ? this.getEnclosingRenderer(this.focusedChild) : null;
-		},
-
-		/////////////////////////////////
-		// Other event handlers
-		/////////////////////////////////
-
-		_handleSelection: function (event) {
-			var item, itemSelected, eventRenderer;
-			eventRenderer = this.getEnclosingRenderer(event.target || event.srcElement);
-			if (eventRenderer) {
-				item = eventRenderer.item;
-				if (item) {
-					itemSelected = !this.isSelected(item);
-					this.setSelected(item, itemSelected);
-					this.emit(itemSelected ? "itemSelected" : "itemDeselected", {item: item});
-				}
-			}
+			// summary:
+			//		Returns the renderer that currently got the focused or is
+			//		an ancestor of the focused node.
+			// tags:
+			//		private
+			return this.focusedChild ? this.getEnclosingRenderer(this.focusedChild) : null; /*Widget*/
 		}
 
 	});

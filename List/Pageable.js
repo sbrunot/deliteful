@@ -173,12 +173,12 @@ define(["dcl/dcl",
 //			console.log("insertedInto " + insertedInto);
 //			console.log(this._pages);
 			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._itemDeletedHandler(object, false);
+				this._onItemDeleted(object, false);
 				this._lastLoaded--;
 			}
 			if (removedFrom < 0 && insertedInto >= 0) { // item added
 				this._lastLoaded++;
-				this._itemAddedHandler(object, this._getIndexOfItem(object));
+				this._onItemAdded(object, this._getIndexOfItem(object));
 			}
 		},
 
@@ -267,7 +267,7 @@ define(["dcl/dcl",
 				}
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
-					this._itemDeletedHandler(page[i], true);
+					this._onItemDeleted(page[i], true);
 				}
 				if (page.length && !this._previousPageLoader) {
 					this._createPreviousPageLoader();
@@ -283,7 +283,7 @@ define(["dcl/dcl",
 				}
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
-					this._itemDeletedHandler(page[i], true);
+					this._onItemDeleted(page[i], true);
 				}
 				if (page.length && !this._nextPageLoader) {
 					this._createNextPageLoader();
@@ -305,7 +305,7 @@ define(["dcl/dcl",
 				if (firstRendererBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstRendererBeforeUpdate);
 				}
-				this._addItemRenderers(items, "first");
+				this._renderNewItems(items, "first");
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("last");
 				}
@@ -342,7 +342,7 @@ define(["dcl/dcl",
 				if (lastChild) {
 					this.focusChild(lastChild);
 				}
-				this._addItemRenderers(items, "last");
+				this._renderNewItems(items, "last");
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("first");
 				}
