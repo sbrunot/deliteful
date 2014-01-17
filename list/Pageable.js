@@ -149,18 +149,20 @@ define(["dcl/dcl",
 		// Private methods
 		/////////////////////////////////
 
-		_populate: function () {
+		// FIXME: THIS IS ONE SOLUTION THAT IMPLIES UPDATING delite/Store TO USE A _queryStore METHOD.
+		// INVESTIGATE OTHER SOLUTIONS TO CHOOSE THE BEST ONE.
+		_queryStore: function () {
 			if (this._dataLoaded) {
 				return;
 			}
 			this._pages = [];
 			this._pageObserverHandles = [];
-			this._toggleListLoadingStyle();
 			when(this._loadNextPage(lang.hitch(this, "_onNextPageReady")), lang.hitch(this, function () {
-				this._toggleListLoadingStyle();
+				this._setBusy(false);
 				this._dataLoaded = true;
 			}), function (error) {
-				 // WHAT TO DO WITH THE ERROR ?
+				this._setBusy(false);
+				 // WHAT TO DO WITH THE ERROR ? => emit a "query-error" event (see delite/Store)
 				console.log((error.message ? error.message : error) + ". See stack below.");
 				console.error(error);
 			});

@@ -68,20 +68,14 @@
 				},
 
 				_updateDetailRendering: function(){
-					var updated = false;
 					if(this.catalogController.detailed[this.item.title]){
 						if(domClass.contains(this.itemDetail, 'hidden')){
 							domClass.remove(this.itemDetail, 'hidden');
-							updated = true;
 						}
 					}else{
 						if(!domClass.contains(this.itemDetail, 'hidden')){
 							domClass.add(this.itemDetail, 'hidden');
-							updated = true;
 						}
-					}
-					if(updated){
-						this.invalidateHeight();
 					}
 				},
 

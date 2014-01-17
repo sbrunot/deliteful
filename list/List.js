@@ -8,32 +8,173 @@ define(["dcl/dcl",
 	"delite/Widget",
 	"delite/Selection",
 	"delite/KeyNav",
+	"delite/Store",
+	"delite/Invalidating",
 	"./DefaultItemRenderer",
 	"./DefaultCategoryRenderer",
 	"./ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
+	"dojo/i18n!./List/nls/List",
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
-], function (dcl, register, lang, query, when, domClass, keys, Widget,
-		Selection, KeyNav, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList) {
+], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
+		Invalidating, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList, messages) {
 
 	// module:
 	//		deliteful/list/List
 
-	var List = dcl([Widget, Selection, KeyNav], {
+	var List = dcl([Widget, Invalidating, Selection, KeyNav, Store], {
 		// summary:
-		//		A widget that renders a list of items.
+		//		A widget that renders a scrollable list of items.
 		//
 		// description:
-		//		TO BE DONE.
-		//		Store
-		//			Default Store
-		//			Observable vs. non observable store
+		//		The List widget renders a scrollable list of items that are retrieved from a Store.
+		//		Its custom element tag is d-list.
 		//
-		//		Categorized lists
+		//		## Scroll capabilities
 		//
-		//		Markup definition
+		//		If you do not want the list to be scrollable, you can set its scrollDisabled attribute
+		//		to true in order to remove the default scrolling capability.
 		//
-		//		Selection
+		//		## Store capabilities
+		//
+		//		If the store the items are retrieved from is observable, the widget will react to addition,
+		//		deletion, move and update of the store content to refresh its rendering accordingly.
+		//
+		//		If you do not specify the store to retrieve the items from, the widget uses a default
+		//		in memory store implementation that can be retrieved after in the store attributes, as in
+		//		the following example:
+		//
+		//			var list = register.createElement("d-list");
+		//			var defaultStore = list.store;
+		//
+		//		This default store can be populated programmatically using the add and put methods
+		//		defined by the store API, and it supports the before options in both methods to easily
+		//		order elements in the list, as in the following example:
+		//
+		//			var list = register.createElement("d-list");
+		//			var defaultStore = list.store;
+		//			var item1 = {...};
+		//			var item2 = {...};
+		//			defaultStore.add(item1);
+		//			defaultStore.add(item2, {before: item1});
+		//
+		//		Note that the default store does not support ordering and filtering, so you must use
+		//		another store implementation to do this (Memory store, for example).
+		//
+		//		When creating a list widget declaratively, it is possible to use markup to add items to
+		//		the list store using the d-list-store and d-list-store-items tags, as in the following
+		//		example:
+		//
+		//			<d-list>
+		//				<d-list-store>
+		//					<d-list-store-item item="{...}"></d-list-store-item>
+		//					<d-list-store-item item="{...}"></d-list-store-item>
+		//					<d-list-store-item item="{...}"></d-list-store-item>
+		//					...
+		//				</d-list-store>
+		//			</d-list>
+		//
+		//		Note that items are appended to the store in the order they are declared in the markup.
+		//
+		//		The actual rendering of the items in the list is performed by an item renderer widget.
+		//		The default one is deliteful/list/DefaultItemRenderer, but another one can be specified
+		//		using the itemsRenderer attribute of the list, as in the following example:
+		//
+		//			define(["delite/register", "deliteful/list/ItemRendererBase"],
+		//				function (register, ItemRendererBase) {
+		//					var myCustomRenderer = dcl([ItemRendererBase], {
+		//						render: function (item) {
+		//							// Render the item in this.containerNode
+		//							...
+		//						}
+		//				});
+		//				var list = register.createElement("d-list");
+		//				list.itemsRenderer = myCustomRenderer;
+		//			});
+		//
+		//		If you are using a custom type of items but want to render them using the default renderer,
+		//		you can redefine the itemToRenderItem method (inherited from delite/Store) so that it creates
+		//		items for the default renderer, as in the following example:
+		//
+		//			var list = register.createElement("d-list");
+		//			list.itemToRenderItem = function (myItem) {
+		//				var itemForDefaultRenderer = {};
+		//				itemForDefaultRenderer.label = myItem.title;
+		//				...
+		//				return itemForDefaultRenderer;
+		//			};
+		//
+		//		Because the List widget uses the delite/Store mixin, you can also extend it using the
+		//		delite/StoreMap mixin in order to define the mapping between your store items and the ones
+		//		expected by the renderer, as in the following example:
+		//
+		//			define([
+		//				"delite/register",
+		//				"deliteful/list/List",
+		//				"delite/StoreMap"],
+		//				function (register, List, StoreMap) {
+		//				TODO: ADD A CODE EXAMPLE HERE.
+		//			});
+		//
+		//		Errors encountered when querying the store are reported by the widget through a "query-error" event.
+		//		It should be listened to in order to react to it in the application, as in the following example:
+		//
+		//			var list = register.createElement("d-list");
+		//			list.on("query-error", function (error) {
+		//				// Report the error to the user
+		//				...
+		//			});
+		//
+		//		## Categorized items
+		//
+		//		The List widget supports categorized items, that are rendered with a category header that separates
+		//		each category of items in the list. To enable this feature, use the categoryAttribute attribute to
+		//		define the name of the item attribute that holds the category of the item, as in the following
+		//		example:
+		//
+		//			var list = register.createElement("d-list");
+		//			list.categoryAttribute = "category";
+		//			list.store.add({label: "first item", category: "Category A"});
+		//			list.store.add({label: "second item", category: "Category A"});
+		//			list.store.add({label: "third item", category: "Category B"});
+		//
+		//		## Selection support
+		//
+		//		The list uses the delite/Selection mixin to provides support for selectable items. By default, items
+		//		in the list are not selectable, but you can change this behaviour using the selectionMode attribute
+		//		of the widget:
+		//
+		//			var list = register.createElement("d-list");
+		//			list.selectionMode = "multiple";
+		//
+		//		When the selection mode is "single", a click or tap on a item (or a press on the ENTER or SPACE key
+		//		when an item got the focus) select it and deselect any previously selected item. When the selection
+		//		mode is "multiple", a click or tap on an item (or a press on the ENTER or SPACE key when an item got
+		//		the focus) toggle its selected state.
+		//
+		//		the d-selected CSS class is applied to items currently selected in the list, so you can define your
+		//		own CSS rules to easily customize how selected items are rendered.
+		//
+		//		## Keyboard navigation
+		//
+		//		The List widget uses delite/KeyNav to provide keyboard navigation. When the widget got the focus with
+		//		keyboard navigation, the first item displayed at the top of the scroll viewport got the focus.
+		//		The list items can then be navigated using the UP and DOWN arrow key, and the List will scroll
+		//		accordingly when you reach the top or the bottom of the scroll viewport. You can also search for items
+		//		by typing a word on the keyboard, and the first item which label begins with the word will get
+		//		the focus. When a List item got the focus, you can also use the LEFT and RIGHT keys to navigate
+		//		within it. Pressing the UP or ARROW key again with set the focus back to the item. While navigating
+		//		within the item, you can also type words on the keyboard to search for text labels (for example to
+		//		move from left to right label).
+		//
+		//		## Styling
+		//
+		//		The List widget comes with two different styling that are applied by setting the baseClass attribute
+		//		to one of the following values:
+		//		- "d-list" (default): the list is displayed with an edge to edge layout;
+		//		- "d-rounded-list": the list has rounded corners and both a left and right margin.
+		//
 
+		/*=====
 		// store: dojo/store/Store
 		//		Dojo object store that contains the items to render in the list.
 		//		If no value is provided for this attribute, the List will initialize
@@ -44,11 +185,12 @@ define(["dcl/dcl",
 
 		// query: Object
 		//		Query to pass to the store to retrieve the items to render in the list.
-		query: null,
+		query: {},
 
 		// queryOptions: dojo/store/api/Store.QueryOptions?
 		//		Options to be applied when querying the store.
 		queryOptions: null,
+		=====*/
 
 		// categoryAttribute: String
 		//		Name of the list item attribute that define the category of a list item.
@@ -108,6 +250,18 @@ define(["dcl/dcl",
 
 		//////////// Widget life cycle ///////////////////////////////////////
 
+		preCreate: function () {
+			// summary:
+			//		Set invalidating properties.
+			// tags:
+			//		protected
+			this.addInvalidatingProperties({
+				"categoryAttribute": "invalidateProperty",
+				"itemsRenderer": "invalidateProperty",
+				"categoriesRenderer": "invalidateProperty"
+			});
+		},
+
 		buildRendering: function () {
 			// summary:
 			//		Initialize the widget node and set the container node.
@@ -116,6 +270,9 @@ define(["dcl/dcl",
 			this.style.display = "block";
 			this.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			this.containerNode = this;
+			// Aria attributes
+			this.setAttribute("role", "list");
+			this.setAttribute("aria-label", messages["aria-label"]);
 		},
 
 		createdCallback: dcl.after(function () {
@@ -177,8 +334,8 @@ define(["dcl/dcl",
 		startup: function () {
 			// summary:
 			//		Starts the widget: parse the content of the widget node to clean it,
-			//		add items to the store if specified in markup, and then load the list
-			//		items from the store.
+			//		add items to the store if specified in markup, and start listening to
+			//		"query-success" event to populate the list with items from the store.
 			this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
 				this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
 					var itemAttribute = node.getAttribute("item");
@@ -191,8 +348,26 @@ define(["dcl/dcl",
 					}
 				}});
 			}});
-			this._populate();
+			this._setBusy(true);
+			this.on("query-success", lang.hitch(this, "_onQuerySuccess"));
+			this.on("query-error", lang.hitch(this, function () {
+				this._setBusy(false);
+			}));
 		},
+
+		refreshProperties: dcl.before(function (props) {
+			// summary:
+			//		Reload the list if necessary.
+			// tags:
+			//		protected
+			if (props.itemsRenderer
+				|| (this.categoryAttribute && (props.categoryAttribute || props.categoriesRenderer))) {
+				if (this._started) {
+					this._setBusy(true);
+					props.store = true; // to toggle a reload of the list.
+				}
+			}
+		}),
 
 		destroy: function () {
 			// summary:
@@ -369,36 +544,36 @@ define(["dcl/dcl",
 						if (tagName && tagHandlers[tagName]) {
 							tagHandlers[tagName].call(this, child);
 						}
-						child.parentNode.removeChild(child);
+						if (child.destroy) {
+							child.destroy();
+						} else {
+							child.parentNode.removeChild(child);
+						}
 					}
 				}
 			}
 		},
 
-		_populate: function () {
+		_onQuerySuccess: function (/*Event*/event) {
 			// summary:
-			//		Populate the list using the store to retrieve items.
+			//		Populate the list using the items retrieved from the store.
 			// tags:
-			//		private
-			this._toggleListLoadingStyle();
-			when(this.store.query(this.query, this.queryOptions), lang.hitch(this, function (queryResult) {
-				if (queryResult.observe) {
-					this._observerHandle = queryResult.observe(lang.hitch(this, "_onModelUpdate"), true);
-				}
-				this._renderNewItems(queryResult, "last");
-				this._toggleListLoadingStyle();
-			}), lang.hitch(this, function (error) {
-				// TODO: is this how we are supposed to report errors (this comes from delite/Store.js)?
-				this.emit("query-error", { error: error, cancelable: false, bubbles: true });
-			}));
+			//		protected
+			this._processAndRemoveContent(this, {});
+			this._renderNewItems(event.items, "last");
+			this._setBusy(false);
 		},
 
-		_toggleListLoadingStyle: function () {
+		_setBusy: function (status) {
 			// summary:
-			//		Toggle the "loading" style for the list.
+			//		Set the "busy" status of the widget.
+			// status: boolean
+			//		true if the list is busy loading and rendering its data.
+			//		false otherwise.
 			// tags:
 			//		private
-			domClass.toggle(this, this._cssClasses.loading);
+			domClass.toggle(this, this._cssClasses.loading, status);
+			status ? this.setAttribute("aria-busy", "true") : this.removeAttribute("aria-busy");
 		},
 
 		//////////// Renderers life cycle ///////////////////////////////////////
@@ -630,33 +805,31 @@ define(["dcl/dcl",
 			return lastRenderer; // Widget
 		},
 
-		//////////// Store update handlers ///////////////////////////////////////
+		////////////Store update handlers ///////////////////////////////////////
 
-		_onModelUpdate: function (/*Object*/item, /*int*/removedFrom, /*int*/insertedInto) {
-			// summary:
-			//		Called when the list of items retrieved from the store is updated (see dojo/store/Observable).
-			// item: Object
-			//		the item that has changed.
-			// removedFrom: int
-			//		the position that the item was removed from.
-			// insertedInto: int
-			//		the position that the item was inserted into.
+		removeItem: dcl.after(function (args) {
 			// tags:
-			//		private
-			var renderer;
-			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._onItemDeleted(item, false);
-			} else if (removedFrom < 0 && insertedInto >= 0) { // item added
-				this._onItemAdded(item, insertedInto);
-			} else if (removedFrom >= 0 && insertedInto >= 0) { // item moved
-				this._onItemMoved(item, removedFrom, insertedInto);
-			} else { // item updated
-				renderer = this.getRendererByItem(item);
-				if (renderer) {
-					renderer.item = item;
-				}
+			//		protected
+			var item = args[1];
+			this._onItemDeleted(item, false);
+		}),
+
+		putItem: dcl.after(function (args) {
+			// tags:
+			//		protected
+			var index = args[0], item = args[1];
+			var renderer = this.getItemRendererByIndex(index);
+			if (renderer) {
+				renderer.item = item;
 			}
-		},
+		}),
+
+		addItem: dcl.after(function (args) {
+			// tags:
+			//		protected
+			var index = args[0], item = args[1];
+			this._onItemAdded(item, index);
+		}),
 
 		_onItemDeleted: function (/*Object*/item, /*Boolean*/keepSelection) {
 			// summary:

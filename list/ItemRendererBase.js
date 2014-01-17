@@ -99,6 +99,8 @@ define(["dcl/dcl",
 			this.containerNode = register.createElement("div");
 			this.containerNode.className = "d-list-item-node";
 			this.appendChild(this.containerNode);
+			// Aria attributes
+			this.setAttribute("role", "listitem");
 		},
 
 		destroy: function () {

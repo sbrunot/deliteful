@@ -55,6 +55,8 @@ define(["dcl/dcl",
 			this.containerNode = this;
 			this.style.display = "block";
 			this._isCategoryRenderer = true; // used by List to identify category renderers
+			// Aria attributes
+			this.setAttribute("role", "listitem");
 		}
 
 	});
