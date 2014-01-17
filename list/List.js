@@ -40,7 +40,7 @@ define(["dcl/dcl",
 		//		deletion, move and update of the store content to refresh its rendering accordingly.
 		//
 		//		If you do not specify the store to retrieve the items from, the widget uses a default
-		//		in memory store implementation that can be retrieved after in the store attributes, as in
+		//		in memory store implementation that can be retrieved in the store attributes, as in
 		//		the following example:
 		//
 		//			var list = register.createElement("d-list");
