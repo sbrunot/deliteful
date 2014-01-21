@@ -79,16 +79,16 @@ define(["dcl/dcl",
 		//		The default one is deliteful/list/DefaultItemRenderer, but another one can be specified
 		//		using the itemsRenderer attribute of the list, as in the following example:
 		//
-		//			define(["delite/register", "deliteful/list/ItemRendererBase"],
-		//				function (register, ItemRendererBase) {
-		//					var myCustomRenderer = dcl([ItemRendererBase], {
+		//			define(["dcl/dcl", "delite/register", "deliteful/list/ItemRendererBase"],
+		//				function (dcl, register, ItemRendererBase) {
+		//					var myCustomRenderer = register("d-custom-item", [HTMLElement, dcl([ItemRendererBase], {
 		//						render: function (item) {
 		//							// Render the item in this.containerNode
 		//							...
 		//						}
-		//				});
-		//				var list = register.createElement("d-list");
-		//				list.itemsRenderer = myCustomRenderer;
+		//					})]);
+		//					var list = register.createElement("d-list");
+		//					list.itemsRenderer = myCustomRenderer;
 		//			});
 		//
 		//		If you are using a custom type of items but want to render them using the default renderer,
@@ -107,12 +107,22 @@ define(["dcl/dcl",
 		//		delite/StoreMap mixin in order to define the mapping between your store items and the ones
 		//		expected by the renderer, as in the following example:
 		//
-		//			define([
-		//				"delite/register",
-		//				"deliteful/list/List",
-		//				"delite/StoreMap"],
-		//				function (register, List, StoreMap) {
-		//				TODO: ADD A CODE EXAMPLE HERE.
+		//			require([
+		//					"delite/register",
+		//					"deliteful/list/List",
+		//					"delite/StoreMap"
+		//				], function (register, List, StoreMap) {
+		//					var MyList = register("m-list",
+		//							[List, StoreMap],
+		//							{labelAttr: "title",
+		//							 rightTextFunc: function (item, store, value) {
+		//								 return item.title.split(" ")[0];
+		//							}});
+		//					var list = register.createElement("m-list");
+		//					list.store.add({title: "first item"});
+		//					...
+		//					document.body.appendChild(list);
+		//					list.startup();
 		//			});
 		//
 		//		Errors encountered when querying the store are reported by the widget through a "query-error" event.
@@ -150,6 +160,9 @@ define(["dcl/dcl",
 		//		when an item got the focus) select it and deselect any previously selected item. When the selection
 		//		mode is "multiple", a click or tap on an item (or a press on the ENTER or SPACE key when an item got
 		//		the focus) toggle its selected state.
+		//
+		//		When the current selection change, a "selection-change" event is emitted. Its oldValue attribute contains
+		//		the previous selection, and its newValue attribute contains the new selection.
 		//
 		//		the d-selected CSS class is applied to items currently selected in the list, so you can define your
 		//		own CSS rules to easily customize how selected items are rendered.
@@ -507,14 +520,20 @@ define(["dcl/dcl",
 			//		The event the handler was called for.
 			// tags:
 			//		protected
-			var item, itemSelected, eventRenderer;
+			var item, itemSelected, eventRenderer, oldSelection;
 			eventRenderer = this.getEnclosingRenderer(event.target || event.srcElement);
 			if (eventRenderer) {
 				item = eventRenderer.item;
 				if (item) {
+					oldSelection = this[this.selectionMode === "single" ? "selectedItem" : "selectedItems"];
 					itemSelected = !this.isSelected(item);
 					this.setSelected(item, itemSelected);
-					this.emit(itemSelected ? "itemSelected" : "itemDeselected", {item: item});
+					this.emit("selection-change", {
+						oldValue: oldSelection,
+						newValue: this[this.selectionMode === "single" ? "selectedItem" : "selectedItems"],
+						renderer: eventRenderer,
+						triggerEvent: event
+					});
 				}
 			}
 		},
