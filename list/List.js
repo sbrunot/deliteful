@@ -10,13 +10,13 @@ define(["dcl/dcl",
 	"delite/KeyNav",
 	"delite/Store",
 	"delite/Invalidating",
-	"./DefaultItemRenderer",
-	"./DefaultCategoryRenderer",
+	"./ItemRenderer",
+	"./CategoryRenderer",
 	"./ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
 	"dojo/i18n!./List/nls/List",
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
 ], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
-		Invalidating, DefaultItemRenderer, DefaultCategoryRenderer, ScrollableList, messages) {
+		Invalidating, ItemRenderer, CategoryRenderer, ScrollableList, messages) {
 
 	// module:
 	//		deliteful/list/List
@@ -76,7 +76,7 @@ define(["dcl/dcl",
 		//		Note that items are appended to the store in the order they are declared in the markup.
 		//
 		//		The actual rendering of the items in the list is performed by an item renderer widget.
-		//		The default one is deliteful/list/DefaultItemRenderer, but another one can be specified
+		//		The default one is deliteful/list/ItemRenderer, but another one can be specified
 		//		using the itemsRenderer attribute of the list, as in the following example:
 		//
 		//			define(["dcl/dcl", "delite/register", "deliteful/list/ItemRendererBase"],
@@ -213,12 +213,12 @@ define(["dcl/dcl",
 		// itemsRenderer: deliteful/list/ItemRendererBase subclass
 		//		The widget class to use to render list items.
 		//		It MUST extend deliteful/list/ItemRendererBase.
-		itemsRenderer: DefaultItemRenderer,
+		itemsRenderer: ItemRenderer,
 
 		// categoriesRenderer: deliteful/list/CategoryRendererBase subclass
 		//		The widget class to use to render category headers when the list items are categorized.
 		//		It MUST extend deliteful/list/CategoryRendererBase.
-		categoriesRenderer: DefaultCategoryRenderer,
+		categoriesRenderer: CategoryRenderer,
 
 		// baseClass: String
 		//	The base class that defines the style of the list.
@@ -946,8 +946,8 @@ define(["dcl/dcl",
 					}
 				} else {
 					// A descendant of the renderer has the focus
-					// FIXME: can it be a category header, with no getNextFocusableChild method ?
-					returned = focusedRenderer.getNextFocusableChild(child, dir);
+					// FIXME: can it be a category header, with no _getNextFocusableChild method ?
+					returned = focusedRenderer._getNextFocusableChild(child, dir);
 				}
 			} else {
 				returned = (dir === 1 ? this._getFirst() : this._getLast());
@@ -959,8 +959,8 @@ define(["dcl/dcl",
 			// tags:
 			//		private
 			var nextChild;
-			if (this._getFocusedRenderer().getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, -1);
+			if (this._getFocusedRenderer()._getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, -1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
@@ -971,8 +971,8 @@ define(["dcl/dcl",
 			// tags:
 			//		private
 			var nextChild;
-			if (this._getFocusedRenderer().getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer().getNextFocusableChild(null, 1);
+			if (this._getFocusedRenderer()._getNextFocusableChild) {
+				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, 1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}

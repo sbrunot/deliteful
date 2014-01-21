@@ -60,32 +60,32 @@ define(["dcl/dcl",
 			//		protected extension
 		},
 
-		setFocusableChildren: function (/*Array*/nodes) {
+		setFocusableChildren: function (/*DomNode...*/children) {
 			// summary:
 			//		This method set the list of children of the renderer that can
 			//		be focused during keyboard navigation, by keyboard navigation
 			//		order. This method is generally called from the render method
 			//		implementation, after the focused node have been created and
 			//		assigned as named attributes of the renderer.
-			// nodeNames: Array
-			//		An array that contains the focusable children (dom nodes)
-			//		of the renderer, in the order they are focusable using keyboard
-			//		navigation.
+			// children: DomNode
+			//		The focusable children (dom nodes) of the renderer, in the order
+			//		they are focusable using keyboard navigation.
 			// tags:
 			//		protected
 			var i, node, that = this;
+			var focusHandler = function () {
+				that._focusedChild = this;
+			};
 			this._focusableChildren = [];
 			this._focusedChild = null;
-			for (i = 0; i < nodes.length; i++) {
-				node = nodes[i];
+			for (i = 0; i < arguments.length; i++) {
+				node = arguments[i];
 				if (node) {
-					// this value will then be returned by getNextFocusableChild
+					// this value will then be returned by _getNextFocusableChild
 					// and processed by delite/KeyNav, that needs a proper delite/Widget
 					// value for the child.
 					register.dcl.mix(node, new Widget());
-					node.onfocus = function () {
-						that._focusedChild = this;
-					};
+					node.onfocus = focusHandler;
 					this._focusableChildren.push(node);
 				}
 			}
@@ -109,12 +109,14 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			var i;
+			this._focusedChild = null;
 			if (this._focusableChildren) {
 				for (i = 0; i < this._focusableChildren.length; i++) {
 					if (this._focusableChildren[i]) {
 						this._focusableChildren[i].destroy();
 					}
 				}
+				this._focusableChildren = null;
 			}
 		},
 
@@ -129,7 +131,7 @@ define(["dcl/dcl",
 			};
 		}),
 
-		getNextFocusableChild: function (fromChild, dir) {
+		_getNextFocusableChild: function (fromChild, dir) {
 			// summary:
 			//		Get the next renderer child that can be focused using arrow keys.
 			// fromChild: Widget
@@ -160,7 +162,7 @@ define(["dcl/dcl",
 				return this._focusableChildren[nextChildIndex]; // Widget
 			}
 		}
-
+		
 	});
 
 });

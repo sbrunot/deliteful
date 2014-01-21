@@ -4,9 +4,9 @@ define(["dcl/dcl",
 ], function (dcl, register, CategoryRendererBase) {
 	
 	// module:
-	//		deliteful/list/DefaultCategoryRenderer
+	//		deliteful/list/CategoryRenderer
 
-	var DefaultCategoryRenderer = dcl([CategoryRendererBase], {
+	var CategoryRenderer = dcl([CategoryRendererBase], {
 		// summary:
 		//		Default category renderer for the deliteful/list/List widget.
 		//
@@ -25,5 +25,5 @@ define(["dcl/dcl",
 
 	});
 
-	return register("d-list-category", [HTMLElement, DefaultCategoryRenderer]);
+	return register("d-list-category", [HTMLElement, CategoryRenderer]);
 });

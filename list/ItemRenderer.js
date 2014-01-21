@@ -6,9 +6,9 @@ define(["dcl/dcl",
 ], function (dcl, register, domConstruct, domClass, ItemRendererBase) {
 	
 	// module:
-	//		deliteful/list/DefaultItemRenderer
+	//		deliteful/list/ItemRenderer
 
-	var DefaultItemRenderer = dcl([ItemRendererBase], {
+	var ItemRenderer = dcl([ItemRendererBase], {
 		// summary:
 		//		Default item renderer for the deliteful/list/List widget.
 		//
@@ -37,63 +37,50 @@ define(["dcl/dcl",
 			//		The item to render.
 			// tags:
 			//		protected
-			this._renderTextNode("labelNode", item ? item.label : null, "d-list-item-label");
-			this._renderImageNode("iconNode", item ? item.icon : null, "d-list-item-icon");
-			this._renderTextNode("rightText", item ? item.rightText : null, "d-list-item-right-text");
-			this._renderImageNode("rightIcon2", item ? item.rightIcon2 : null, "d-list-item-right-icon2");
-			this._renderImageNode("rightIcon", item ? item.rightIcon : null, "d-list-item-right-icon");
-			this.setFocusableChildren([this.iconNode, this.labelNode, this.rightText, this.rightIcon2, this.rightIcon]);
+			this._renderNode("text", "labelNode", item ? item.label : null, "d-list-item-label");
+			this._renderNode("image", "iconNode", item ? item.icon : null, "d-list-item-icon");
+			this._renderNode("text", "rightText", item ? item.rightText : null, "d-list-item-right-text");
+			this._renderNode("image", "rightIcon2", item ? item.rightIcon2 : null, "d-list-item-right-icon2");
+			this._renderNode("image", "rightIcon", item ? item.rightIcon : null, "d-list-item-right-icon");
+			this.setFocusableChildren(this.iconNode, this.labelNode, this.rightText, this.rightIcon2, this.rightIcon);
 		},
 
 		//////////// PRIVATE METHODS ///////////////////////////////////////
 
-		_renderTextNode: function (nodeName, text, nodeClass) {
+		_renderNode: function (nodeType, nodeName, data, nodeClass) {
 			// summary:
-			//		render a text node.
+			//		render a node.
+			// nodeType: String
+			//		"text" for a text node, "image" for an image node.
 			// nodeName: String
 			//		the name of the attribute to use to store a reference to the node in the renderer.
-			// text: String
-			//		the text to render (null if there is no text and the node should be deleted).
+			// data: String
+			//		the data to render (null if there is no data and the node should be deleted).
+			//		For a nodeType of "text", data is the text to render.
+			//		For a nodeType of "image", data is the path of the image to render
 			// nodeClass: String
 			//		CSS class for the node.
 			// tag:
 			//		private
-			if (text) {
+			if (data) {
 				if (this[nodeName]) {
-					this[nodeName].innerHTML = text;
-				} else {
-					this[nodeName] = domConstruct.create("DIV",
-							{id: this.id + nodeName, innerHTML: text, class: nodeClass, tabindex: -1},
-							this.containerNode, 0);
-				}
-			} else {
-				if (this[nodeName]) {
-					this[nodeName].parentNode.removeChild(this[nodeName]);
-					delete this[nodeName];
-				}
-			}
-		},
-
-		_renderImageNode: function (nodeName, image, nodeClass) {
-			// summary:
-			//		render an image node.
-			// nodeName: String
-			//		the name of the attribute to use to store a reference to the node in the renderer.
-			// image: String
-			//		path of the image to render.
-			// nodeClass: String
-			//		CSS class for the node.
-			// tags:
-			//		private
-			if (image) {
-				if (this[nodeName]) {
-					if (this[nodeName].getAttribute("src") !== image) {
-						this[nodeName].src = image;
+					if (nodeType === "text") {
+						this[nodeName].innerHTML = data;
+					} else {
+						if (this[nodeName].getAttribute("src") !== data) {
+							this[nodeName].src = data;
+						}
 					}
 				} else {
-					this[nodeName] = domConstruct.create("IMG",
-							{id: this.id + nodeName, src: image, class: nodeClass, tabindex: -1},
-							this.containerNode, 0);
+					if (nodeType === "text") {
+						this[nodeName] = domConstruct.create("DIV",
+								{id: this.id + nodeName, innerHTML: data, class: nodeClass, tabindex: -1},
+								this.containerNode, 0);
+					} else {
+						this[nodeName] = domConstruct.create("IMG",
+								{id: this.id + nodeName, src: data, class: nodeClass, tabindex: -1},
+								this.containerNode, 0);
+					}
 				}
 			} else {
 				if (this[nodeName]) {
@@ -105,5 +92,5 @@ define(["dcl/dcl",
 
 	});
 
-	return register("d-list-item", [HTMLElement, DefaultItemRenderer]);
+	return register("d-list-item", [HTMLElement, ItemRenderer]);
 });

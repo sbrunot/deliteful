@@ -21,7 +21,7 @@
 			var MyCustomRenderer = register("d-book-item", [HTMLElement, dcl([ItemRendererBase], {
 				render: function (item) {
 					this.containerNode.innerHTML = "<div class='title'>" + item.title + "</div><div class='isbn'>ISBN: " + item.isbn + "</div>";
-					this.setFocusableChildren([query(".title", this)[0],  query(".isbn", this)[0]]);
+					this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
 				}
 			})]);
 			var list = register.createElement("d-list");
