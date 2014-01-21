@@ -62,25 +62,16 @@ define(["dcl/dcl",
 			//		CSS class for the node.
 			// tag:
 			//		private
+			var dataAttribute = (nodeType === "text" ? "innerHTML" : "src");
+			var nodeTag = (nodeType === "text" ? "DIV" : "IMG");
 			if (data) {
-				if (this[nodeName]) {
-					if (nodeType === "text") {
-						this[nodeName].innerHTML = data;
-					} else {
-						if (this[nodeName].getAttribute("src") !== data) {
-							this[nodeName].src = data;
-						}
-					}
-				} else {
-					if (nodeType === "text") {
-						this[nodeName] = domConstruct.create("DIV",
-								{id: this.id + nodeName, innerHTML: data, class: nodeClass, tabindex: -1},
-								this.containerNode, 0);
-					} else {
-						this[nodeName] = domConstruct.create("IMG",
-								{id: this.id + nodeName, src: data, class: nodeClass, tabindex: -1},
-								this.containerNode, 0);
-					}
+				if (!this[nodeName]) {
+					this[nodeName] = domConstruct.create(nodeTag,
+							{id: this.id + nodeName, class: nodeClass, tabindex: -1},
+							this.containerNode, 0);
+				}
+				if (this[nodeName].getAttribute(dataAttribute) !== data) {
+					this[nodeName][dataAttribute] = data;
 				}
 			} else {
 				if (this[nodeName]) {
