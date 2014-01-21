@@ -255,12 +255,11 @@ define(["dcl/dcl",
 					  category: "d-list-category",
 					  loading: "d-list-loading"},
 
+		/*======
 		// Handle for the selection click event handler 
 		_selectionClickHandle: null,
+		=====*/
 		
-		// Handle for the observer of the store query result
-		_observerHandle: null,
-
 		//////////// Widget life cycle ///////////////////////////////////////
 
 		preCreate: function () {
@@ -381,19 +380,6 @@ define(["dcl/dcl",
 				}
 			}
 		}),
-
-		destroy: function () {
-			// summary:
-			//		Destroy the widget.
-			if (this._selectionClickHandle) {
-				this._selectionClickHandle.remove();
-				this._selectionClickHandle = null;
-			}
-			if (this._observerHandle) {
-				this._observerHandle.remove();
-				this._observerHandle = null;
-			}
-		},
 
 		//////////// Public methods ///////////////////////////////////////
 
