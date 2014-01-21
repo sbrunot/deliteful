@@ -9,7 +9,7 @@ define(["dcl/dcl",
         "dojo/dom-construct",
         "dojo/dom-geometry",
         "dojo/touch",
-    	"delite/themes/load!./List/themes/{{theme}}/Editable_css"
+        "delite/themes/load!./List/themes/{{theme}}/Editable_css"
 ], function (dcl, lang, array, on, keys, dom, domClass, domStyle, domConstruct, domGeometry, touch) {
 
 	return dcl(null, {
@@ -75,12 +75,12 @@ define(["dcl/dcl",
 				this.moveable = false;
 			}
 			if (this.deleteable) {
-				this.onRendererEvent("click", lang.hitch(this, "_onRendererClick"));
+				this.onRendererEvent("click", lang.hitch(this, "_rendererClickHandler"));
 			}
 			if (this.moveable) {
-				this.on(touch.press, lang.hitch(this, "_onEditableTouchPress"));
+				this.on(touch.press, lang.hitch(this, "_editableTouchPressHandler"));
 			}
-			this.onRendererEvent("keydown", lang.hitch(this, "_onRendererKeydown"));
+			this.onRendererEvent("keydown", lang.hitch(this, "_rendererKeydownHandler"));
 		}),
 
 		destroy: dcl.after(function () {
@@ -178,7 +178,7 @@ define(["dcl/dcl",
 		// TODO: KEYBOARD NAVIGATION !!!
 		////////////////////////////////////
 
-		_onRendererClick: function (evt, renderer) {
+		_rendererClickHandler: function (evt, renderer) {
 			var node = evt.target;
 			var resetDeleteableItem = true;
 			var itemIndex = this.getItemRendererIndex(renderer);
@@ -214,7 +214,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onRendererKeydown: function (evt, renderer) {
+		_rendererKeydownHandler: function (evt, renderer) {
 			var itemIndex = this.getItemRendererIndex(renderer);
 			if (itemIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
 				if (this._indexOfDeleteableItem >= 0) {
@@ -239,7 +239,7 @@ define(["dcl/dcl",
 		// Moveable implementation
 		///////////////////////////////
 		
-		_onEditableTouchPress: function (event) {
+		_editableTouchPressHandler: function (event) {
 			if (this._draggedRenderer) {
 				return;
 			}
@@ -260,15 +260,15 @@ define(["dcl/dcl",
 				this._touchStartY = event.touches ? event.touches[0].pageY : event.pageY;
 				this._startTop = domGeometry.getMarginBox(this._draggedRenderer).t;
 				this._touchHandlersRefs.push(this.own(on(document, touch.release,
-						lang.hitch(this, "_onEditableTouchRelease")))[0]);
+						lang.hitch(this, "_editableTouchReleaseHandler")))[0]);
 				this._touchHandlersRefs.push(this.own(on(document, touch.move,
-						lang.hitch(this, "_onEditableTouchMove")))[0]);
+						lang.hitch(this, "_editableTouchMoveHandler")))[0]);
 				event.preventDefault();
 				event.stopPropagation();
 			}
 		},
 
-		_onEditableTouchMove: function (event) {
+		_editableTouchMoveHandler: function (event) {
 			///////////////////////////////////////////////////////////
 			// TODO: CATEGORIZED LISTS SUPPORT
 			///////////////////////////////////////////////////////////
@@ -339,7 +339,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onEditableTouchRelease: function (event) {
+		_editableTouchReleaseHandler: function (event) {
 			if (this._draggedRenderer) {
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._draggedItemIndex) {

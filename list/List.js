@@ -316,7 +316,7 @@ define(["dcl/dcl",
 							this.data.push(item);
 						}
 						if (this._queried) {
-							list._onItemAdded(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
+							list._itemAddedHandler(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
 						}
 						return item;
 					},
@@ -325,7 +325,7 @@ define(["dcl/dcl",
 						if (index >= 0 && index < this.data.length) {
 							item = this.data.splice(index, 1)[0];
 							if (this._queried) {
-								list._onItemDeleted(item, false);
+								list._itemDeletedHandler(item, false);
 							}
 							return true;
 						}
@@ -362,7 +362,7 @@ define(["dcl/dcl",
 				}});
 			}});
 			this._setBusy(true);
-			this.on("query-success", lang.hitch(this, "_onQuerySuccess"));
+			this.on("query-success", lang.hitch(this, "_querySuccessHandler"));
 			this.on("query-error", lang.hitch(this, function () {
 				this._setBusy(false);
 			}));
@@ -573,7 +573,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onQuerySuccess: function (/*Event*/event) {
+		_querySuccessHandler: function (/*Event*/event) {
 			// summary:
 			//		Populate the list using the items retrieved from the store.
 			// tags:
@@ -830,7 +830,7 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			var item = args[1];
-			this._onItemDeleted(item, false);
+			this._itemDeletedHandler(item, false);
 		}),
 
 		putItem: dcl.after(function (args) {
@@ -847,10 +847,10 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			var index = args[0], item = args[1];
-			this._onItemAdded(item, index);
+			this._itemAddedHandler(item, index);
 		}),
 
-		_onItemDeleted: function (/*Object*/item, /*Boolean*/keepSelection) {
+		_itemDeletedHandler: function (/*Object*/item, /*Boolean*/keepSelection) {
 			// summary:
 			//		Function to call when an item is removed from the store, to update
 			//		the content of the list widget accordingly.
@@ -866,7 +866,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onItemAdded: function (/*Object*/item, /*Boolean*/atIndex) {
+		_itemAddedHandler: function (/*Object*/item, /*Boolean*/atIndex) {
 			// summary:
 			//		Function to call when an item is added to the store, to update
 			//		the content of the list widget accordingly.
@@ -880,7 +880,7 @@ define(["dcl/dcl",
 			this._addItemRenderer(newRenderer, atIndex);
 		},
 
-		_onItemMoved: function (/*Object*/item, /*int*/fromIndex, /*int*/toIndex) {
+		_itemMovedHandler: function (/*Object*/item, /*int*/fromIndex, /*int*/toIndex) {
 			// summary:
 			//		Function to call when an item is moved within the store, to update
 			//		the content of the list accordingly.
@@ -892,8 +892,8 @@ define(["dcl/dcl",
 			//		The new index of the item.
 			// tags:
 			//		private
-			this._onItemDeleted(item, true);
-			this._onItemAdded(item, toIndex);
+			this._itemDeletedHandler(item, true);
+			this._itemAddedHandler(item, toIndex);
 		},
 
 		//////////// Keyboard navigation (KeyNav implementation) ///////////////////////////////////////
@@ -910,12 +910,12 @@ define(["dcl/dcl",
 			}
 			if (continueProcessing !== false) {
 				if ((evt.keyCode === keys.SPACE && !this._searchTimer) || evt.keyCode === keys.ENTER) {
-					this._onActionKeydown(evt);
+					this._actionKeydownHandler(evt);
 				}
 			}
 		}),
 
-		_onActionKeydown: function (evt) {
+		_actionKeydownHandler: function (evt) {
 			// summary:
 			//		Handle SPACE and ENTER keys
 			// tags:

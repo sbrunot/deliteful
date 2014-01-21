@@ -22,7 +22,7 @@ define(["dcl/dcl",
 
 		buildRendering: function () {
 			this.style.display = "block";
-			this.on("click", lang.hitch(this, this._onClick));
+			this.on("click", lang.hitch(this, this._clickHandler));
 		},
 
 		enteredViewCallback: dcl.after(function () {
@@ -61,7 +61,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onClick: function () {
+		_clickHandler: function () {
 			if (this.isLoading()) { return; }
 			this._loading = true;
 			this.beforeLoading();
@@ -157,7 +157,7 @@ define(["dcl/dcl",
 			}
 			this._pages = [];
 			this._pageObserverHandles = [];
-			when(this._loadNextPage(lang.hitch(this, "_onNextPageReady")), lang.hitch(this, function () {
+			when(this._loadNextPage(lang.hitch(this, "_nextPageReadyHandler")), lang.hitch(this, function () {
 				this._setBusy(false);
 				this._dataLoaded = true;
 			}), function (error) {
@@ -175,12 +175,12 @@ define(["dcl/dcl",
 //			console.log("insertedInto " + insertedInto);
 //			console.log(this._pages);
 			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._onItemDeleted(object, false);
+				this._itemDeletedHandler(object, false);
 				this._lastLoaded--;
 			}
 			if (removedFrom < 0 && insertedInto >= 0) { // item added
 				this._lastLoaded++;
-				this._onItemAdded(object, this._getIndexOfItem(object));
+				this._itemAddedHandler(object, this._getIndexOfItem(object));
 			}
 		},
 
@@ -269,7 +269,7 @@ define(["dcl/dcl",
 				}
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
-					this._onItemDeleted(page[i], true);
+					this._itemDeletedHandler(page[i], true);
 				}
 				if (page.length && !this._previousPageLoader) {
 					this._createPreviousPageLoader();
@@ -285,7 +285,7 @@ define(["dcl/dcl",
 				}
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
-					this._onItemDeleted(page[i], true);
+					this._itemDeletedHandler(page[i], true);
 				}
 				if (page.length && !this._nextPageLoader) {
 					this._createNextPageLoader();
@@ -300,7 +300,7 @@ define(["dcl/dcl",
 			}
 		},
 
-		_onPreviousPageReady: function (/*array*/ items) {
+		_previousPageReadyHandler: function (/*array*/ items) {
 			var def = new Deferred();
 			var firstRendererBeforeUpdate = this._getFirst(), focused;
 			try {
@@ -337,7 +337,7 @@ define(["dcl/dcl",
 			return def;
 		},
 
-		_onNextPageReady: function (/*array*/ items) {
+		_nextPageReadyHandler: function (/*array*/ items) {
 			var def = new Deferred();
 			var lastChild = this._getLast(), firstRenderer, focused;
 			try {
@@ -390,12 +390,12 @@ define(["dcl/dcl",
 			if (this.autoLoad) {
 				if (this.isTopScroll()) {
 					if (this._noExtremity && this._previousPageLoader) {
-						this._previousPageLoader._onClick();
+						this._previousPageLoader._clickHandler();
 					}
 					this._noExtremity = false;
 				} else if (this.isBottomScroll()) {
 					if (this._noExtremity && this._nextPageLoader) {
-						this._nextPageLoader._onClick();
+						this._nextPageLoader._clickHandler();
 					}
 					this._noExtremity = false;
 				} else {
@@ -417,7 +417,7 @@ define(["dcl/dcl",
 				this._nextPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
 			this._nextPageLoader.performLoading = lang.hitch(this, function () {
-				return this._loadNextPage(this._onNextPageReady);
+				return this._loadNextPage(this._nextPageReadyHandler);
 			});
 			this._nextPageLoader.startup();
 			if (!this.autoLoad || !has("touch")) {
@@ -434,7 +434,7 @@ define(["dcl/dcl",
 				this._previousPageLoader.afterLoading = lang.hitch(this, this._hideLoadingPanel);
 			}
 			this._previousPageLoader.performLoading = lang.hitch(this, function () {
-				return this._loadPreviousPage(this._onPreviousPageReady);
+				return this._loadPreviousPage(this._previousPageReadyHandler);
 			});
 			this._previousPageLoader.startup();
 			if (!this.autoLoad || !has("touch")) {
@@ -483,14 +483,14 @@ define(["dcl/dcl",
 			};
 		}),
 
-		_onActionKeydown: dcl.superCall(function (sup) {
+		_actionKeydownHandler: dcl.superCall(function (sup) {
 			return function (event) {
 				if (this._nextPageLoader && dom.isDescendant(event.target, this._nextPageLoader)) {
 					event.preventDefault();
-					this._nextPageLoader._onClick();
+					this._nextPageLoader._clickHandler();
 				} else if (this._previousPageLoader && dom.isDescendant(event.target, this._previousPageLoader)) {
 					event.preventDefault();
-					this._previousPageLoader._onClick();
+					this._previousPageLoader._clickHandler();
 				} else {
 					sup.apply(this, arguments);
 				}
