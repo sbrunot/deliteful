@@ -346,8 +346,7 @@ define(["dcl/dcl",
 		startup: function () {
 			// summary:
 			//		Starts the widget: parse the content of the widget node to clean it,
-			//		add items to the store if specified in markup, and start listening to
-			//		"query-success" event to populate the list with items from the store.
+			//		add items to the store if specified in markup.
 			this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
 				this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
 					var itemAttribute = node.getAttribute("item");
@@ -361,7 +360,6 @@ define(["dcl/dcl",
 				}});
 			}});
 			this._setBusy(true);
-			this.on("query-success", lang.hitch(this, "_querySuccessHandler"));
 			this.on("query-error", lang.hitch(this, function () {
 				this._setBusy(false);
 			}));
@@ -557,16 +555,6 @@ define(["dcl/dcl",
 					}
 				}
 			}
-		},
-
-		_querySuccessHandler: function (/*Event*/event) {
-			// summary:
-			//		Populate the list using the items retrieved from the store.
-			// tags:
-			//		protected
-			this._processAndRemoveContent(this, {});
-			this._renderNewItems(event.items, "last");
-			this._setBusy(false);
 		},
 
 		_setBusy: function (status) {
@@ -810,7 +798,17 @@ define(["dcl/dcl",
 			return lastRenderer; // Widget
 		},
 
-		////////////Store update handlers ///////////////////////////////////////
+		////////////delite/Store implementation ///////////////////////////////////////
+
+		initItems: function (/*Array*/items) {
+			// summary:
+			//		Populate the list using the items retrieved from the store.
+			// tags:
+			//		protected
+			this._processAndRemoveContent(this, {});
+			this._renderNewItems(items, "last");
+			this._setBusy(false);
+		},
 
 		removeItem: dcl.after(function (args) {
 			// tags:
