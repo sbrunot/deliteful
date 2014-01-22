@@ -12,18 +12,17 @@
 
 	<script type="text/javascript">
 		require([
-			"dcl/dcl",
 			"delite/register",
 			"dojo/query",
-			"deliteful/list/ItemRendererBase",
+			"deliteful/list/ItemRenderer",
 			"deliteful/list/List"
-		], function (dcl, register, query, ItemRendererBase) {
-			var MyCustomRenderer = register("d-book-item", [HTMLElement, dcl([ItemRendererBase], {
+		], function (register, query, ItemRenderer) {
+			var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
 				render: function (item) {
 					this.containerNode.innerHTML = "<div class='title'>" + item.title + "</div><div class='isbn'>ISBN: " + item.isbn + "</div>";
 					this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
 				}
-			})]);
+			});
 			var list = register.createElement("d-list");
 			list.itemsRenderer = MyCustomRenderer;
 			list.store.add({title: "Dojo: The Definitive Guide", isbn: "0596516487"});
@@ -53,6 +52,6 @@
 	</style>
 </head>
 <body>
-	This sample demonstrate how to use a custom item renderer.
+	This sample demonstrate how to write a custom item renderer.
 </body>
 </html>

@@ -79,14 +79,14 @@ define(["dcl/dcl",
 		//		The default one is deliteful/list/ItemRenderer, but another one can be specified
 		//		using the itemsRenderer attribute of the list, as in the following example:
 		//
-		//			define(["dcl/dcl", "delite/register", "deliteful/list/ItemRendererBase"],
-		//				function (dcl, register, ItemRendererBase) {
-		//					var myCustomRenderer = register("d-custom-item", [HTMLElement, dcl([ItemRendererBase], {
+		//			define(["delite/register", "deliteful/list/ItemRenderer"],
+		//				function (register, ItemRenderer) {
+		//					var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
 		//						render: function (item) {
-		//							// Render the item in this.containerNode
-		//							...
+		//							this.containerNode.innerHTML = "<div class='title'>" + item.title + "</div><div class='isbn'>ISBN: " + item.isbn + "</div>";
+		//							this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
 		//						}
-		//					})]);
+		//					});
 		//					var list = register.createElement("d-list");
 		//					list.itemsRenderer = myCustomRenderer;
 		//			});
@@ -210,14 +210,14 @@ define(["dcl/dcl",
 		//		If falsy, the list is not categorized.
 		categoryAttribute: "",
 
-		// itemsRenderer: deliteful/list/ItemRendererBase subclass
+		// itemsRenderer: deliteful/list/ItemRenderer subclass
 		//		The widget class to use to render list items.
-		//		It MUST extend deliteful/list/ItemRendererBase.
+		//		It MUST extend deliteful/list/ItemRenderer.
 		itemsRenderer: ItemRenderer,
 
-		// categoriesRenderer: deliteful/list/CategoryRendererBase subclass
+		// categoriesRenderer: deliteful/list/CategoryRenderer subclass
 		//		The widget class to use to render category headers when the list items are categorized.
-		//		It MUST extend deliteful/list/CategoryRendererBase.
+		//		It MUST extend deliteful/list/CategoryRenderer.
 		categoriesRenderer: CategoryRenderer,
 
 		// baseClass: String
@@ -646,7 +646,7 @@ define(["dcl/dcl",
 		_addItemRenderer: function (/*Widget*/renderer, /*int*/atIndex) {
 			// summary:
 			//		Add an item renderer to the List, updating category renderers if needed.
-			// renderer: List/ItemRendererBase subclass
+			// renderer: List/ItemRenderer subclass
 			//		The renderer to add to the list.
 			// atIndex: int
 			//		The index (not counting category renderers) where to add the item renderer in the list.
@@ -696,7 +696,7 @@ define(["dcl/dcl",
 		_removeRenderer: function (/*Widget*/renderer, /*Boolean*/keepSelection) {
 			// summary:
 			//		Remove a renderer from the List, updating category renderers if needed.
-			// renderer: List/ItemRendererBase or List/CategoryRendererBase subclass
+			// renderer: List/ItemRenderer or List/CategoryRenderer subclass
 			//		The renderer to remove from the list.
 			// keepSelection: Boolean
 			//		Set to true if the renderer item should not be removed from the list of selected items.

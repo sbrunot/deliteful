@@ -20,9 +20,9 @@
 			"dojo/dom-class",
 			"dojo/store/Memory",
 			"deliteful/list/List",
-	        "deliteful/list/ItemRendererBase",
+	        "deliteful/list/ItemRenderer",
 	        "deliteful/list/Pageable"
-		], function(dcl, register, lang, string, query, on, domClass, MemoryStore, List, ItemRendererBase, Pageable){
+		], function(dcl, register, lang, string, query, on, domClass, MemoryStore, List, ItemRenderer, Pageable){
 			
  			// the model that contains the list items from the catalog
 			var catalogModel = [];
@@ -35,7 +35,7 @@
 				cart: {}, // the cart in which user push catalog items to buy
 				detailed: {} // store information about catalog items that are selected to display details
 			};
-			var CatalogItemRenderer = register("d-catalog-item", [HTMLElement, dcl([ItemRendererBase], {
+			var CatalogItemRenderer = register("d-catalog-item", [HTMLElement, ItemRenderer], {
 
 				catalogController: catalogController,
 
@@ -86,7 +86,7 @@
 						domClass.remove(this.addToCartLink, 'hidden');
 					}
 				}
-			})]);
+			});
 
 			// create a pageable list widget for the catalog, using the custom items renderer
 			var PageableList = register("p-list", [List, Pageable]);
@@ -144,7 +144,7 @@
 	</style>
 </head>
 <body>
-
+	TODO: ADD KEYBOARD NAVIGATION
 	<h2 style="margin-left: 12px;">Shopping catalog</h2>
 	
 </body>
