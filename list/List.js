@@ -315,7 +315,7 @@ define(["dcl/dcl",
 							this.data.push(item);
 						}
 						if (this._queried) {
-							list._itemAddedHandler(item, beforeIndex >= 0 ? beforeIndex : this.data.length - 1);
+							list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
 						}
 						return item;
 					},
@@ -324,7 +324,7 @@ define(["dcl/dcl",
 						if (index >= 0 && index < this.data.length) {
 							item = this.data.splice(index, 1)[0];
 							if (this._queried) {
-								list._itemDeletedHandler(item, false);
+								list.removeItem(null, item, null, false);
 							}
 							return true;
 						}
@@ -810,74 +810,58 @@ define(["dcl/dcl",
 			this._setBusy(false);
 		},
 
-		removeItem: dcl.after(function (args) {
-			// tags:
-			//		protected
-			var item = args[1];
-			this._itemDeletedHandler(item, false);
-		}),
-
-		putItem: dcl.after(function (args) {
-			// tags:
-			//		protected
-			var index = args[0], item = args[1];
-			var renderer = this.getItemRendererByIndex(index);
-			if (renderer) {
-				renderer.item = item;
-			}
-		}),
-
-		addItem: dcl.after(function (args) {
-			// tags:
-			//		protected
-			var index = args[0], item = args[1];
-			this._itemAddedHandler(item, index);
-		}),
-
-		_itemDeletedHandler: function (/*Object*/item, /*Boolean*/keepSelection) {
+		removeItem: function (/*jshint unused:vars*/index, item, /*jshint unused:vars*/items, keepSelection) {
 			// summary:
 			//		Function to call when an item is removed from the store, to update
 			//		the content of the list widget accordingly.
+			// index: int
+			//		The widget does not use this parameter.
 			// item: Object
 			//		The item that has been removed from the store.
+			// items: Array
+			//		The widget does not use this parameter.
 			// keepSelection: Boolean
 			//		Set to true if the item should not be removed from the list of selected items.
 			// tags:
-			//		private
+			//		protected
 			var renderer = this.getRendererByItem(item);
 			if (renderer) {
 				this._removeRenderer(renderer, keepSelection);
 			}
 		},
 
-		_itemAddedHandler: function (/*Object*/item, /*Boolean*/atIndex) {
+		putItem: function (index, item, /*jshint unused:vars*/items) {
+			// summary:
+			//		Function to call when an item is updated in the store, to update
+			//		the content of the list widget accordingly.
+			// index: int
+			//		The index of the item.
+			// item: Object
+			//		The item that has been updated the store.
+			// items: Array
+			//		The widget does not use this parameter.
+			// tags:
+			//		protected
+			var renderer = this.getItemRendererByIndex(index);
+			if (renderer) {
+				renderer.item = item;
+			}
+		},
+
+		addItem: function (index, item, /*jshint unused:vars*/items) {
 			// summary:
 			//		Function to call when an item is added to the store, to update
 			//		the content of the list widget accordingly.
+			// index:
+			//		The index at which the item has been added to the store.
 			// item: Object
 			//		The item that has been added to the store.
-			// atIndex:
-			//		The index at which the item has been added to the store.
+			// items: Array
+			//		The widget does not use this parameter.
 			// tags:
 			//		private
 			var newRenderer = this._createItemRenderer(item);
-			this._addItemRenderer(newRenderer, atIndex);
-		},
-
-		_itemMovedHandler: function (/*Object*/item, /*int*/fromIndex, /*int*/toIndex) {
-			// summary:
-			//		Function to call when an item is moved within the store, to update
-			//		the content of the list accordingly.
-			// item: Object
-			//		The item that has been moved within the store.
-			// fromIndex:
-			//		The previous index of the item.
-			// toIndex:
-			//		The new index of the item.
-			// tags:
-			//		private
-			this._itemDeletedHandler(item, true);
-			this._itemAddedHandler(item, toIndex);
+			this._addItemRenderer(newRenderer, index);
 		},
 
 		//////////// Keyboard navigation (KeyNav implementation) ///////////////////////////////////////

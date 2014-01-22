@@ -175,13 +175,15 @@ define(["dcl/dcl",
 //			console.log("insertedInto " + insertedInto);
 //			console.log(this._pages);
 			if (removedFrom >= 0 && insertedInto < 0) { // item removed
-				this._itemDeletedHandler(object, false);
+				this.removeItem(null, object, null, false);
 				this._lastLoaded--;
 			}
 			if (removedFrom < 0 && insertedInto >= 0) { // item added
 				this._lastLoaded++;
-				this._itemAddedHandler(object, this._getIndexOfItem(object));
+				this.addItem(this._getIndexOfItem(object), object);
 			}
+			// TODO: ITEM UPDATED
+			// TODO: ITEM MOVED ?
 		},
 
 		_getIndexOfItem: function (item) {
@@ -269,7 +271,7 @@ define(["dcl/dcl",
 				}
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
-					this._itemDeletedHandler(page[i], true);
+					this.removeItem(null, page[i], null, true);
 				}
 				if (page.length && !this._previousPageLoader) {
 					this._createPreviousPageLoader();
@@ -285,7 +287,7 @@ define(["dcl/dcl",
 				}
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
-					this._itemDeletedHandler(page[i], true);
+					this.removeItem(null, page[i], null, true);
 				}
 				if (page.length && !this._nextPageLoader) {
 					this._createNextPageLoader();
