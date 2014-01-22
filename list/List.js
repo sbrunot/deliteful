@@ -14,7 +14,8 @@ define(["dcl/dcl",
 	"./ItemRenderer",
 	"./CategoryRenderer",
 	"dojo/i18n!./List/nls/List",
-	"delite/themes/load!./List/themes/{{theme}}/List_css"
+	"delite/themes/load!./List/themes/{{theme}}/List_css",
+	"dojo/has!dojo-bidi?delite/themes/load!./List/themes/{{theme}}/List_rtl_css"
 ], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
 		Invalidating, Scrollable, ItemRenderer, CategoryRenderer, messages) {
 
@@ -345,6 +346,9 @@ define(["dcl/dcl",
 			// FIXME: THIS IS A WORKAROUND, BECAUSE Widget.enteredViewCallback IS RESETING THE TAB INDEX TO -1.
 			// => WITH THIS WORKAROUND, ANY CUSTOM TABINDEX SET ON A WIDGET NODE IS IGNORED AND REPLACED WITH 0
 			this._enteredView = true;
+			if (!this.isLeftToRight()) {
+				domClass.add(this, "d-rtl");
+			}
 			this.setAttribute("tabindex", "0");
 			this.tabIndex = "0";
 			domClass.add(this, this.baseClass);
@@ -996,9 +1000,9 @@ define(["dcl/dcl",
 		_onLeftArrow: function () {
 			// tags:
 			//		private
-			var nextChild;
-			if (this._getFocusedRenderer()._getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, -1);
+			var nextChild, focusedRenderer = this._getFocusedRenderer();
+			if (focusedRenderer && focusedRenderer._getNextFocusableChild) {
+				nextChild = focusedRenderer._getNextFocusableChild(null, -1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
@@ -1008,9 +1012,9 @@ define(["dcl/dcl",
 		_onRightArrow: function () {
 			// tags:
 			//		private
-			var nextChild;
-			if (this._getFocusedRenderer()._getNextFocusableChild) {
-				nextChild = this._getFocusedRenderer()._getNextFocusableChild(null, 1);
+			var nextChild, focusedRenderer = this._getFocusedRenderer();
+			if (focusedRenderer && focusedRenderer._getNextFocusableChild) {
+				nextChild = focusedRenderer._getNextFocusableChild(null, 1);
 				if (nextChild) {
 					this.focusChild(nextChild);
 				}
