@@ -315,10 +315,10 @@ define(["dcl/dcl",
 
 		_editableAutoScroll: function (rate, clientY) {
 			this._editableAutoScrollID = setTimeout(lang.hitch(this, function () {
-				var oldScroll = this.getScroll();
-				this.scrollBy(rate);
+				var oldScroll = this.getCurrentScroll().y;
+				this.scrollBy({y: rate});
 				setTimeout(lang.hitch(this, function () {
-					var realRate = this.getScroll() - oldScroll;
+					var realRate = this.getCurrentScroll().y - oldScroll;
 					if (realRate !== 0) {
 						if (this._placeHolder) {
 							this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();

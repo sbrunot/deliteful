@@ -327,7 +327,7 @@ define(["dcl/dcl",
 						// scroll the focused node to the top of the screen.
 						// To avoid flickering, we do not wait for a focus event
 						// to confirm that the child has indeed been focused.
-						this.scrollBy(this.getTopDistance(focused));
+						this.scrollBy({y: this.getTopDistance(focused)});
 					}
 				} else {
 					this.focusChild(this._getLastRenderer());
@@ -369,7 +369,7 @@ define(["dcl/dcl",
 						// scroll the focused node to the bottom of the screen.
 						// To avoid flickering, we do not wait for a focus event
 						// to confirm that the child has indeed been focused.
-						this.scrollBy(this.getBottomDistance(focused));
+						this.scrollBy({y: this.getBottomDistance(focused)});
 					}
 				} else {
 					firstRenderer = this._getFirstRenderer();
