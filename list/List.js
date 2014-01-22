@@ -10,18 +10,18 @@ define(["dcl/dcl",
 	"delite/KeyNav",
 	"delite/Store",
 	"delite/Invalidating",
+	"delite/Scrollable",
 	"./ItemRenderer",
 	"./CategoryRenderer",
-	"./ScrollableList", // TODO: Will be removed, List will directly use delite/Scrollable instead
 	"dojo/i18n!./List/nls/List",
 	"delite/themes/load!./List/themes/{{theme}}/List_css"
 ], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
-		Invalidating, ItemRenderer, CategoryRenderer, ScrollableList, messages) {
+		Invalidating, Scrollable, ItemRenderer, CategoryRenderer, messages) {
 
 	// module:
 	//		deliteful/list/List
 
-	var List = dcl([Widget, Invalidating, Selection, KeyNav, Store], {
+	var List = dcl([Widget, Invalidating, Selection, KeyNav, Store, Scrollable], {
 		// summary:
 		//		A widget that renders a scrollable list of items.
 		//
@@ -161,8 +161,8 @@ define(["dcl/dcl",
 		//		mode is "multiple", a click or tap on an item (or a press on the ENTER or SPACE key when an item got
 		//		the focus) toggle its selected state.
 		//
-		//		When the current selection change, a "selection-change" event is emitted. Its oldValue attribute contains
-		//		the previous selection, and its newValue attribute contains the new selection.
+		//		When the current selection change, a "selection-change" event is emitted. Its oldValue attribute
+		//		contains the previous selection, and its newValue attribute contains the new selection.
 		//
 		//		the d-selected CSS class is applied to items currently selected in the list, so you can define your
 		//		own CSS rules to easily customize how selected items are rendered.
@@ -248,6 +248,14 @@ define(["dcl/dcl",
 				}
 				this._set("selectionMode", value);
 			}
+		},
+
+		// scrollDisabled: Boolean
+		//		If true, the scrolling capabilities are disabled. The default value is false.
+		scrollDisabled: false,
+		_setScrollDisabledAttr: function (value) {
+			this.scrollDirection = value ? "none" : "vertical";
+			this._set("scrollDisabled", value);
 		},
 
 		// CSS classes internally referenced by the List widget
@@ -864,6 +872,40 @@ define(["dcl/dcl",
 			this._addItemRenderer(newRenderer, index);
 		},
 
+		//////////// delite/Scrollable extension ///////////////////////////////////////
+
+		isBelowTop: function (node) {
+			// summary:
+			//		Returns true if the top of the node is below or exactly at the 
+			//		top of the scrolling container. Returns false otherwise.
+			return this.getTopDistance(node) >= 0;
+		},
+
+		getTopDistance: function (node) {
+			// summary:
+			//		Returns the distance between the top of the node and 
+			//		the top of the scrolling container.
+			return node.offsetTop - this.getCurrentScroll().y;
+		},
+		
+		isAboveBottom: function (node) {
+			// summary:
+			//		Returns true if the bottom of the node is above or exactly at the 
+			//		bottom of the scrolling container. Returns false otherwise.
+			return this.getBottomDistance(node) <= 0;
+		},
+
+		getBottomDistance: function (node) {
+			// summary:
+			//		Returns the distance between the bottom of the node and 
+			//		the bottom of the scrolling container.
+			var clientRect = this.getBoundingClientRect();
+			return node.offsetTop +
+				node.offsetHeight -
+				this.getCurrentScroll().y -
+				(clientRect.bottom - clientRect.top);
+		},
+
 		//////////// Keyboard navigation (KeyNav implementation) ///////////////////////////////////////
 
 		_onContainerKeydown: dcl.before(function (evt) {
@@ -903,13 +945,27 @@ define(["dcl/dcl",
 		_getFirst: function () {
 			// tags:
 			//		private
-			return this._getFirstRenderer();
+			var renderer = this._getFirstRenderer();
+			while (renderer) {
+				if (this.isBelowTop(renderer)) {
+					break;
+				}
+				renderer = renderer.nextElementSibling;
+			}
+			return renderer;
 		},
 
 		_getLast: function () {
 			// tags:
 			//		private
-			return this._getLastRenderer();
+			var renderer = this._getLastRenderer();
+			while (renderer) {
+				if (this.isAboveBottom(renderer)) {
+					break;
+				}
+				renderer = renderer.previousElementSibling;
+			}
+			return renderer;
 		},
 
 		_getNext: function (child, dir) {
@@ -1002,6 +1058,6 @@ define(["dcl/dcl",
 
 	});
 
-	return register("d-list", [HTMLElement, List, ScrollableList]);
+	return register("d-list", [HTMLElement, List]);
 
 });
