@@ -305,35 +305,79 @@ define(["dcl/dcl",
 			if (!this.store) {
 				this.store = {
 					data: [],
+					_ids: [],
+					idProperty: "id",
 					_queried: false,
+					get: function (id) {
+						var index = this._ids.indexOf(id);
+						if (index >= 0) {
+							return this.data[index];
+						}
+					},
 					query: function () {
 						this._queried = true;
 						return this.data.slice();
 					},
 					getIdentity: function (item) {
-						return item;
+						return item[this.idProperty];
 					},
-					add: function (item, options) {
+					put: function (item, options) {
 						var beforeIndex = -1;
+						var itemBeforeUpdate;
+						var id = item[this.idProperty] = (options && "id" in options)
+							? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
+						var existingIndex = this._ids.indexOf(id);
 						if (options && options.before) {
 							beforeIndex = this.data.indexOf(options.before);
 						}
-						if (beforeIndex >= 0) {
-							this.data.splice(beforeIndex, 0, item);
+						if (existingIndex >= 0) {
+							// item exists in store
+							if (options && options.overwrite === false) {
+								throw new Error(messages["exception-item-already-exists"]);
+							}
+							// update the item
+							itemBeforeUpdate = this.data[existingIndex];
+							this.data[existingIndex] = item;
+							if (beforeIndex >= 0 && beforeIndex !== existingIndex) {
+								// move the item
+								this.data.splice(beforeIndex, 0, this.data.splice(existingIndex, 1)[0]);
+								this._ids.splice(beforeIndex, 0, this._ids.splice(existingIndex, 1)[0]);
+								if (this._queried) {
+									list.removeItem(existingIndex, itemBeforeUpdate, null, true);
+									list.addItem(beforeIndex, item, null);
+								}
+							} else {
+								if (this._queried) {
+									list.putItem(existingIndex, item, null);
+								}
+							}
 						} else {
-							this.data.push(item);
+							// new item to add to store
+							if (beforeIndex >= 0) {
+								this.data.splice(beforeIndex, 0, item);
+								this._ids.splice(beforeIndex, 0, id);
+							} else {
+								this.data.push(item);
+								this._ids.push(id);
+							}
+							if (this._queried) {
+								list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
+							}
 						}
-						if (this._queried) {
-							list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
-						}
-						return item;
+						return id;
+					},
+					add: function (item, options) {
+						var opts = options || {};
+						opts.overwrite = false;
+						return this.put(item, opts);
 					},
 					remove: function (id) {
-						var index = this.data.indexOf(id), item;
+						var index = this._ids.indexOf(id), item;
 						if (index >= 0 && index < this.data.length) {
 							item = this.data.splice(index, 1)[0];
+							this._ids.splice(index, 1);
 							if (this._queried) {
-								list.removeItem(null, item, null, false);
+								list.removeItem(index, item, null, false);
 							}
 							return true;
 						}
@@ -487,7 +531,7 @@ define(["dcl/dcl",
 			//		The item.
 			// tags:
 			//		protected
-			return item; // Object
+			return this.store.getIdentity(item); // Object
 		},
 
 		updateRenderers: function (/*Array*/items) {

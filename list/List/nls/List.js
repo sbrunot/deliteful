@@ -1,6 +1,7 @@
 define({ root: //begin v1.x content
 	({
-		'aria-label': "list"
+		'aria-label': "list",
+		'exception-item-already-exists': "Item already exists"
 	})
 //end v1.x content
 	,
