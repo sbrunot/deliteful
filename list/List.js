@@ -78,7 +78,7 @@ define(["dcl/dcl",
 		//
 		//		The actual rendering of the items in the list is performed by an item renderer widget.
 		//		The default one is deliteful/list/ItemRenderer, but another one can be specified
-		//		using the itemsRenderer attribute of the list, as in the following example:
+		//		using the itemRenderer attribute of the list, as in the following example:
 		//
 		//			define(["delite/register", "deliteful/list/ItemRenderer"],
 		//				function (register, ItemRenderer) {
@@ -89,7 +89,7 @@ define(["dcl/dcl",
 		//						}
 		//					});
 		//					var list = register.createElement("d-list");
-		//					list.itemsRenderer = myCustomRenderer;
+		//					list.itemRenderer = myCustomRenderer;
 		//			});
 		//
 		//		If you are using a custom type of items but want to render them using the default renderer,
@@ -211,15 +211,15 @@ define(["dcl/dcl",
 		//		If falsy, the list is not categorized.
 		categoryAttribute: "",
 
-		// itemsRenderer: deliteful/list/ItemRenderer subclass
+		// itemRenderer: deliteful/list/ItemRenderer subclass
 		//		The widget class to use to render list items.
 		//		It MUST extend deliteful/list/ItemRenderer.
-		itemsRenderer: ItemRenderer,
+		itemRenderer: ItemRenderer,
 
-		// categoriesRenderer: deliteful/list/CategoryRenderer subclass
+		// categoryRenderer: deliteful/list/CategoryRenderer subclass
 		//		The widget class to use to render category headers when the list items are categorized.
 		//		It MUST extend deliteful/list/CategoryRenderer.
-		categoriesRenderer: CategoryRenderer,
+		categoryRenderer: CategoryRenderer,
 
 		// baseClass: String
 		//	The base class that defines the style of the list.
@@ -278,8 +278,8 @@ define(["dcl/dcl",
 			//		protected
 			this.addInvalidatingProperties({
 				"categoryAttribute": "invalidateProperty",
-				"itemsRenderer": "invalidateProperty",
-				"categoriesRenderer": "invalidateProperty"
+				"itemRenderer": "invalidateProperty",
+				"categoryRenderer": "invalidateProperty"
 			});
 		},
 
@@ -426,8 +426,8 @@ define(["dcl/dcl",
 			//		Reload the list if necessary.
 			// tags:
 			//		protected
-			if (props.itemsRenderer
-				|| (this.categoryAttribute && (props.categoryAttribute || props.categoriesRenderer))) {
+			if (props.itemRenderer
+				|| (this.categoryAttribute && (props.categoryAttribute || props.categoryRenderer))) {
 				if (this._started) {
 					this._setBusy(true);
 					props.store = true; // to toggle a reload of the list.
@@ -622,7 +622,11 @@ define(["dcl/dcl",
 			// tags:
 			//		private
 			domClass.toggle(this, this._cssClasses.loading, status);
-			status ? this.setAttribute("aria-busy", "true") : this.removeAttribute("aria-busy");
+			if (status) {
+				this.setAttribute("aria-busy", "true");
+			} else {
+				this.removeAttribute("aria-busy");
+			}
 		},
 
 		//////////// Renderers life cycle ///////////////////////////////////////
@@ -787,7 +791,7 @@ define(["dcl/dcl",
 			//		The item to render.
 			// returns:
 			//		An instance of item renderer that renders the item.
-			var renderer = new this.itemsRenderer({tabindex: "-1"});
+			var renderer = new this.itemRenderer({tabindex: "-1"});
 			renderer.startup();
 			renderer.item = item;
 			if (this.selectionMode !== "none") {
@@ -803,7 +807,7 @@ define(["dcl/dcl",
 			//		The category to render.
 			// returns:
 			//		An instance of category renderer that renders the category.
-			var renderer = new this.categoriesRenderer({category: category, tabindex: "-1"});
+			var renderer = new this.categoryRenderer({category: category, tabindex: "-1"});
 			renderer.startup();
 			return renderer;
 		},

@@ -91,7 +91,7 @@
 			var PageableList = register("p-list", [List, Pageable]);
 			var list = register.createElement("p-list");
 			list.id = "list3";
-			list.itemsRenderer = CatalogItemRenderer;
+			list.itemRenderer = CatalogItemRenderer;
 			list.store = new MemoryStore({data: catalogModel, idProperty: "title"});
 			list.pageLength = 20;
 			list.maxPages = 2;
