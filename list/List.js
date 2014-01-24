@@ -13,7 +13,7 @@ define(["dcl/dcl",
 	"delite/Scrollable",
 	"./ItemRenderer",
 	"./CategoryRenderer",
-	"dojo/i18n!./List/nls/List",
+	"dojo/i18n!./List/nls/List", // TODO: use requirejs-dplugins
 	"delite/themes/load!./List/themes/{{theme}}/List_css",
 	"dojo/has!dojo-bidi?delite/themes/load!./List/themes/{{theme}}/List_rtl_css"
 ], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
@@ -242,9 +242,9 @@ define(["dcl/dcl",
 				if (this.selectionMode === "none") {
 					this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
 				} else {
-					if (this.value === "none") {
+					if (value === "none") {
 						this._selectionClickHandle.remove();
-						// TODO: should we deselect the currently selected items ?
+						this._selectionClickHandle = null;
 					}
 				}
 				this._set("selectionMode", value);
