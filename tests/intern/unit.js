@@ -2,5 +2,6 @@
 define([
         "../list/unit/DefaultStore",
         "../list/unit/Selection",
+        "../list/unit/Categories",
         "../list/unit/List"
 ]);

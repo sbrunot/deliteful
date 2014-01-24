@@ -488,7 +488,7 @@ define(["dcl/dcl",
 			var itemRenderers = query("." + this._cssClasses.item, this.containerNode);
 			var returned = null;
 			if (index < itemRenderers.length) {
-				returned = query("." + this._cssClasses.item, this.containerNode)[index];
+				returned = itemRenderers[index];
 			}
 			return returned; // Widget
 		},
