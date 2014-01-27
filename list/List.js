@@ -5,7 +5,6 @@ define(["dcl/dcl",
 	"dojo/when",
 	"dojo/dom-class",
 	"dojo/keys",
-	"delite/Widget",
 	"delite/Selection",
 	"delite/KeyNav",
 	"delite/Store",
@@ -16,7 +15,7 @@ define(["dcl/dcl",
 	"dojo/i18n!./List/nls/List", // TODO: use requirejs-dplugins
 	"delite/themes/load!./List/themes/{{theme}}/List_css",
 	"dojo/has!dojo-bidi?delite/themes/load!./List/themes/{{theme}}/List_rtl_css"
-], function (dcl, register, lang, query, when, domClass, keys, Widget, Selection, KeyNav, Store,
+], function (dcl, register, lang, query, when, domClass, keys, Selection, KeyNav, Store,
 		Invalidating, Scrollable, ItemRenderer, CategoryRenderer, messages) {
 
 	// module:
@@ -512,11 +511,6 @@ define(["dcl/dcl",
 				currentNode = currentNode.parentNode;
 			}
 			return currentNode ? currentNode : null; // Widget
-			if (currentNode) {
-				return currentNode; // Widget
-			} else {
-				return null;
-			}
 		},
 
 		//////////// delite/Selection implementation ///////////////////////////////////////
@@ -647,7 +641,7 @@ define(["dcl/dcl",
 					this.containerNode.appendChild(this._createRenderers(items, 0, items.length,
 							this._getLastRenderer().item));
 				} else {
-					throw new Error("_renderNewItems: only first and last positions are supported.");
+					throw new Error(messages["exception-renderNewItems-pos"]);
 				}
 			}
 		},
@@ -963,7 +957,7 @@ define(["dcl/dcl",
 			var renderer = this._getFocusedRenderer();
 			if (renderer && renderer.onKeydown) {
 				// onKeydown implementation can cancel the default action
-				continueProcessing = renderer.onKeydown(evt);
+				renderer.onKeydown(evt);
 			}
 			if (!evt.defaultPrevented()) {
 				if ((evt.keyCode === keys.SPACE && !this._searchTimer) || evt.keyCode === keys.ENTER) {
