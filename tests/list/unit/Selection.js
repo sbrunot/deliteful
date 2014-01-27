@@ -130,14 +130,27 @@ define([
 			assert.equal(firstItem.className, "d-list-item");
 		},
 		"revert selection to 'none' remove event handler": function () {
+			var dfd = this.async(1000);
 			list.selectionMode = "single";
-			assert.isNotNull(list._selectionClickHandle, "single");
-			list.selectionMode = "none";
-			assert.isNull(list._selectionClickHandle, "first none");
-			list.selectionMode = "multiple";
-			assert.isNotNull(list._selectionClickHandle, "multiple");
-			list.selectionMode = "none";
-			assert.isNull(list._selectionClickHandle, "second none");
+			setTimeout(function () {
+				assert.isNotNull(list._selectionClickHandle, "single");
+				assert.isDefined(list._selectionClickHandle, "single");
+				list.selectionMode = "none";
+				setTimeout(function () {
+					assert.isNull(list._selectionClickHandle, "first none");
+					list.selectionMode = "multiple";
+					setTimeout(function () {
+						assert.isNotNull(list._selectionClickHandle, "multiple");
+						assert.isDefined(list._selectionClickHandle, "multiple");
+						list.selectionMode = "none";
+						setTimeout(function () {
+							assert.isNull(list._selectionClickHandle, "second none");
+							dfd.resolve();
+						}, 0);
+					}, 0);
+				}, 0);
+			}, 0);
+			return dfd;
 		},
 		teardown : function () {
 			list.destroy();

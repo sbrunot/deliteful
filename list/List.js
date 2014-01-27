@@ -22,7 +22,7 @@ define(["dcl/dcl",
 	// module:
 	//		deliteful/list/List
 
-	var List = dcl([Widget, Invalidating, Selection, KeyNav, Store, Scrollable], {
+	var List = dcl([Invalidating, Selection, KeyNav, Store, Scrollable], {
 		// summary:
 		//		A widget that renders a scrollable list of items.
 		//
@@ -237,19 +237,6 @@ define(["dcl/dcl",
 		// selectionMode: String
 		//		The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
-		_setSelectionModeAttr: function (/*String*/value) {
-			if (this.selectionMode !== value) {
-				if (this.selectionMode === "none") {
-					this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
-				} else {
-					if (value === "none") {
-						this._selectionClickHandle.remove();
-						this._selectionClickHandle = null;
-					}
-				}
-				this._set("selectionMode", value);
-			}
-		},
 
 		// scrollDisabled: Boolean
 		//		If true, the scrolling capabilities are disabled. The default value is false.
@@ -279,7 +266,8 @@ define(["dcl/dcl",
 			this.addInvalidatingProperties({
 				"categoryAttribute": "invalidateProperty",
 				"itemRenderer": "invalidateProperty",
-				"categoryRenderer": "invalidateProperty"
+				"categoryRenderer": "invalidateProperty",
+				"selectionMode": "invalidateProperty"
 			});
 		},
 
@@ -289,7 +277,6 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			this.style.display = "block";
-			this.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			this.containerNode = this;
 			// Aria attributes
 			this.setAttribute("role", "list");
@@ -367,9 +354,9 @@ define(["dcl/dcl",
 						return id;
 					},
 					add: function (item, options) {
-						var opts = options || {};
-						opts.overwrite = false;
-						return this.put(item, opts);
+						options = options || {};
+						options.overwrite = false;
+						return this.put(item, options);
 					},
 					remove: function (id) {
 						var index = this._ids.indexOf(id), item;
@@ -423,9 +410,21 @@ define(["dcl/dcl",
 
 		refreshProperties: dcl.before(function (props) {
 			// summary:
-			//		Reload the list if necessary.
+			//		List attributes have been updated.
 			// tags:
 			//		protected
+			if (props.selectionMode) {
+				if (this.selectionMode === "none") {
+					if (this._selectionClickHandle) {
+						this._selectionClickHandle.remove();
+						this._selectionClickHandle = null;
+					}
+				} else {
+					if (!this._selectionClickHandle) {
+						this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
+					}
+				}
+			}
 			if (props.itemRenderer
 				|| (this.categoryAttribute && (props.categoryAttribute || props.categoryRenderer))) {
 				if (this._started) {
@@ -471,13 +470,14 @@ define(["dcl/dcl",
 			// item: Object
 			//		The item displayed by the renderer.
 			var renderers = query("." + this._cssClasses.item, this.containerNode);
-			var rendererIndex = renderers.map(function (renderer) {
-									return renderer.item;
-								})
-								.indexOf(item);
-			if (rendererIndex >= 0) {
-				return renderers[rendererIndex]; // Widget
+			var renderer, i;
+			for (i = 0; i < renderers.length; i++) {
+				renderer = renderers[i];
+				if (renderer.item === item) {
+					return renderer; // Widget
+				}
 			}
+			return null;
 		},
 
 		getItemRendererByIndex: function (/*int*/index) {
@@ -486,20 +486,16 @@ define(["dcl/dcl",
 			// index: int
 			//		The index of the item renderer in the list (first item renderer index is 0).
 			var itemRenderers = query("." + this._cssClasses.item, this.containerNode);
-			var returned = null;
-			if (index < itemRenderers.length) {
-				returned = itemRenderers[index];
-			}
-			return returned; // Widget
+			return index < itemRenderers.length ? itemRenderers[index] : null; // Widget
 		},
 
 		getItemRendererIndex: function (/*Object*/renderer) {
 			// summary:
-			//		Returns the index of an item renderer in the List.
+			//		Returns the index of an item renderer in the List, or -1 if
+			//		the item renderer is not found in the list.
 			// renderer: Object
 			//		The item renderer.
-			var index = query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
-			return index < 0 ? null : index; // int
+			return query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
 		},
 
 		getEnclosingRenderer: function (/*DOMNode*/node) {
@@ -515,6 +511,7 @@ define(["dcl/dcl",
 				}
 				currentNode = currentNode.parentNode;
 			}
+			return currentNode ? currentNode : null; // Widget
 			if (currentNode) {
 				return currentNode; // Widget
 			} else {
@@ -568,12 +565,10 @@ define(["dcl/dcl",
 					oldSelection = this[this.selectionMode === "single" ? "selectedItem" : "selectedItems"];
 					itemSelected = !this.isSelected(item);
 					this.setSelected(item, itemSelected);
-					this.emit("selection-change", {
-						oldValue: oldSelection,
-						newValue: this[this.selectionMode === "single" ? "selectedItem" : "selectedItems"],
-						renderer: eventRenderer,
-						triggerEvent: event
-					});
+					this.dispatchSelectionChange(oldSelection,
+							this[this.selectionMode === "single" ? "selectedItem" : "selectedItems"],
+							eventRenderer,
+							event);
 				}
 			}
 		},
@@ -652,7 +647,7 @@ define(["dcl/dcl",
 					this.containerNode.appendChild(this._createRenderers(items, 0, items.length,
 							this._getLastRenderer().item));
 				} else {
-					console.log("_renderNewItems: only first and last positions are supported.");
+					throw new Error("_renderNewItems: only first and last positions are supported.");
 				}
 			}
 		},
@@ -965,12 +960,12 @@ define(["dcl/dcl",
 			//		Handle keydown events
 			// tags:
 			//		private
-			var continueProcessing = true, renderer = this._getFocusedRenderer();
+			var renderer = this._getFocusedRenderer();
 			if (renderer && renderer.onKeydown) {
-				// onKeydown implementation can return false to cancel the default action
+				// onKeydown implementation can cancel the default action
 				continueProcessing = renderer.onKeydown(evt);
 			}
-			if (continueProcessing !== false) {
+			if (!evt.defaultPrevented()) {
 				if ((evt.keyCode === keys.SPACE && !this._searchTimer) || evt.keyCode === keys.ENTER) {
 					this._actionKeydownHandler(evt);
 				}

@@ -216,7 +216,7 @@ define(["dcl/dcl",
 
 		_rendererKeydownHandler: function (evt, renderer) {
 			var itemIndex = this.getItemRendererIndex(renderer);
-			if (itemIndex != null && evt.keyCode === keys.DELETE && this.deleteable) {
+			if (itemIndex >= 0 && evt.keyCode === keys.DELETE && this.deleteable) {
 				if (this._indexOfDeleteableItem >= 0) {
 					if (this._indexOfDeleteableItem === itemIndex) {
 						this._hideDeleteButton(itemIndex);

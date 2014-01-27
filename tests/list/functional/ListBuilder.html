@@ -7,9 +7,9 @@
 	<title>A form to create an instance of a List widget</title>
 
 	<!--  following needed by Editable -->
-	<link rel="stylesheet" type="text/css" href="../../mobile/themes/common/domButtons/DomButtonRedCircleMinus.css">
-	<link rel="stylesheet" type="text/css" href="../../mobile/themes/common/domButtons/DomButtonGrayKnob.css">
-	<script type="text/javascript" src="../../../delite/tests/boilerplate.js"></script>
+	<link rel="stylesheet" type="text/css" href="../../../mobile/themes/common/domButtons/DomButtonRedCircleMinus.css">
+	<link rel="stylesheet" type="text/css" href="../../../mobile/themes/common/domButtons/DomButtonGrayKnob.css">
+	<script type="text/javascript" src="../../../../delite/tests/boilerplate.js"></script>
 
 	<script type="text/javascript">
 		require([
@@ -53,10 +53,10 @@
 					data.push({category: 'category ' + Math.floor(i / 10),
 							  id: 'ref' + i,
 							  label: 'this is list item ' + i,
-							  icon: useIcon ? '../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+							  icon: useIcon ? '../../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
 							  rightText: useRightText ? 'id: ref' + i : null,
-							  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
-							  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
+							  rightIcon: useRightIcon ? '../../../mobile/tests/images/a-icon-1.png' : null,
+							  rightIcon2: useRightIcon2 ? '../../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
 				}
 				return new Observable(new CustomMemoryStore({latency: latency, data: data, idProperty: 'id'}));
 			};
