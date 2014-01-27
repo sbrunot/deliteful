@@ -920,31 +920,21 @@ define(["dcl/dcl",
 
 		//////////// delite/Scrollable extension ///////////////////////////////////////
 
-		isBelowTop: function (node) {
-			// summary:
-			//		Returns true if the top of the node is below or exactly at the 
-			//		top of the scrolling container. Returns false otherwise.
-			return this.getTopDistance(node) >= 0;
-		},
-
 		getTopDistance: function (node) {
 			// summary:
 			//		Returns the distance between the top of the node and 
 			//		the top of the scrolling container.
+			// tags:
+			//		protected
 			return node.offsetTop - this.getCurrentScroll().y;
-		},
-		
-		isAboveBottom: function (node) {
-			// summary:
-			//		Returns true if the bottom of the node is above or exactly at the 
-			//		bottom of the scrolling container. Returns false otherwise.
-			return this.getBottomDistance(node) <= 0;
 		},
 
 		getBottomDistance: function (node) {
 			// summary:
 			//		Returns the distance between the bottom of the node and 
 			//		the bottom of the scrolling container.
+			// tags:
+			//		protected
 			var clientRect = this.getBoundingClientRect();
 			return node.offsetTop +
 				node.offsetHeight -
@@ -993,7 +983,7 @@ define(["dcl/dcl",
 			//		private
 			var renderer = this._getFirstRenderer();
 			while (renderer) {
-				if (this.isBelowTop(renderer)) {
+				if (this.getTopDistance(renderer) >= 0) {
 					break;
 				}
 				renderer = renderer.nextElementSibling;
@@ -1006,7 +996,7 @@ define(["dcl/dcl",
 			//		private
 			var renderer = this._getLastRenderer();
 			while (renderer) {
-				if (this.isAboveBottom(renderer)) {
+				if (this.getBottomDistance(renderer) <= 0) {
 					break;
 				}
 				renderer = renderer.previousElementSibling;
