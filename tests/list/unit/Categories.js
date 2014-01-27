@@ -15,7 +15,7 @@ define([
 	var checkItem = function (node, expectedLabel) {
 		assert.equal(node.tagName, "D-LIST-ITEM");
 		assert.equal(node.className, "d-list-item");
-		assert.equal(node.getElementsByClassName('d-list-item-label')[0].innerHTML, expectedLabel);
+		assert.equal(node.getElementsByClassName("d-list-item-label")[0].innerHTML, expectedLabel);
 	};
 
 	registerSuite({
@@ -204,7 +204,7 @@ define([
 			checkItem(children[13], "item a");
 			// add at the top of the list
 			list.store.add({category: "E", label: "item b"}, {before: list.store.data[0]});
-			var children = list.getChildren();
+			children = list.getChildren();
 			assert.equal(children.length, 16);
 			checkCategory(children[0], "E");
 			checkItem(children[1], "item b");
@@ -224,7 +224,7 @@ define([
 			checkItem(children[15], "item a");
 			// add in the middle of the list
 			list.store.add({category: "F", label: "item c"}, {before: list.store.data[8]});
-			var children = list.getChildren();
+			children = list.getChildren();
 			assert.equal(children.length, 19);
 			checkCategory(children[0], "E");
 			checkItem(children[1], "item b");
