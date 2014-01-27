@@ -156,7 +156,7 @@
 		</d-list-store>
 	</d-list>
    	<h2>10 items declared as markup, default store, categorized (id: list-mark-3)</h2>
-	<d-list id="list-mark-3" style="height: 200px" categoryAttribute="rightText">
+	<d-list id="list-mark-3" style="height: 200px" categoryAttr="rightText" rightTextAttr="rightText">
 		<d-list-store>
 			<d-list-store-item item="{label: 'list item 0', rightText: 'A'}"></d-list-store-item>
 			<d-list-store-item item="{label: 'list item 1', rightText: 'A'}"></d-list-store-item>
@@ -170,7 +170,7 @@
 			<d-list-store-item item="{label: 'list item 9', rightText: 'B'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
-	<button onclick="var list = document.getElementById('list-mark-3'); list.categoryAttribute = (list.categoryAttribute === 'rightText' ? 'label' : 'rightText');">Toggle category attribute between rightText and label.</button>
+	<button onclick="var list = document.getElementById('list-mark-3'); list.categoryAttr = (list.categoryAttr === 'rightText' ? 'label' : 'rightText');">Toggle category attribute between rightText and label.</button>
 	<div style="height: 350px;">
 	</div>
 	<div style="border-top: 1px white; position: fixed; bottom: 0px; z-index: 10; background: #c5ccd3; width: 100%">

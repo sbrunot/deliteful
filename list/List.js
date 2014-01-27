@@ -135,12 +135,23 @@ define(["dcl/dcl",
 		//		## Categorized items
 		//
 		//		The List widget supports categorized items, that are rendered with a category header that separates
-		//		each category of items in the list. To enable this feature, use the categoryAttribute attribute to
+		//		each category of items in the list. To enable this feature, use the categoryAttr attribute to
 		//		define the name of the item attribute that holds the category of the item, as in the following
 		//		example:
 		//
 		//			var list = register.createElement("d-list");
 		//			list.categoryAttribute = "category";
+		//			list.store.add({label: "first item", category: "Category A"});
+		//			list.store.add({label: "second item", category: "Category A"});
+		//			list.store.add({label: "third item", category: "Category B"});
+		//
+		//		An alternative is to set categoryFunc to a function that extract the category from the store item,
+		//		as in the following example:
+		//
+		//			var list = register.createElement("d-list");
+		//			list.categoryFunc = function(item, store) {
+		//				return item.category;
+		//			});
 		//			list.store.add({label: "first item", category: "Category A"});
 		//			list.store.add({label: "second item", category: "Category A"});
 		//			list.store.add({label: "third item", category: "Category B"});
@@ -203,11 +214,6 @@ define(["dcl/dcl",
 		queryOptions: null,
 		=====*/
 
-		// categoryAttribute: String
-		//		Name of the list item attribute that define the category of a list item.
-		//		If falsy, the list is not categorized.
-		categoryAttribute: "",
-
 		// itemRenderer: deliteful/list/ItemRenderer subclass
 		//		The widget class to use to render list items.
 		//		It MUST extend deliteful/list/ItemRenderer.
@@ -217,6 +223,18 @@ define(["dcl/dcl",
 		//		The widget class to use to render category headers when the list items are categorized.
 		//		It MUST extend deliteful/list/CategoryRenderer.
 		categoryRenderer: CategoryRenderer,
+
+		// categoryAttr: String
+		//		Name of the list item attribute that define the category of a list item.
+		//		If falsy and categoryFunc is also falsy, the list is not categorized.
+		categoryAttr: "",
+
+		// categoryFunc: String
+		//		A function that extract the category of a list item from the following input parameters/
+		//		- item: the list item from the store
+		//		- store: the store
+		//		If falsy and categoryAttr is also falsy, the list is not categorized.
+		categoryFunc: null,
 
 		// baseClass: String
 		//	The base class that defines the style of the list.
@@ -265,7 +283,8 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			this.addInvalidatingProperties({
-				"categoryAttribute": "invalidateProperty",
+				"categoryAttr": "invalidateProperty",
+				"categoryFunc": "invalidateProperty",
 				"itemRenderer": "invalidateProperty",
 				"categoryRenderer": "invalidateProperty",
 				"selectionMode": "invalidateProperty"
@@ -438,7 +457,7 @@ define(["dcl/dcl",
 					}
 				}
 				if (props.itemRenderer
-					|| (this.categoryAttribute && (props.categoryAttribute || props.categoryRenderer))) {
+					|| (this._isCategorized() && (props.categoryAttr || props.categoryFunc || props.categoryRenderer))) {
 					if (this._started) {
 						this._setBusy(true);
 						props.store = true; // to toggle a reload of the list.
@@ -635,6 +654,10 @@ define(["dcl/dcl",
 			}
 		},
 
+		_isCategorized: function () {
+			return this.categoryAttr || this.categoryFunc;
+		},
+
 		//////////// Renderers life cycle ///////////////////////////////////////
 
 		_renderNewItems: function (/*Array*/ items, /*String*/pos) {
@@ -685,10 +708,10 @@ define(["dcl/dcl",
 			var documentFragment = document.createDocumentFragment();
 			for (; currentIndex <= toIndex; currentIndex++) {
 				currentItem = items[currentIndex];
-				if (this.categoryAttribute) {
+				if (this._isCategorized()) {
 					if (!previousItem
-							|| currentItem[this.categoryAttribute] !== previousItem[this.categoryAttribute]) {
-						documentFragment.appendChild(this._createCategoryRenderer(currentItem[this.categoryAttribute]));
+							|| currentItem.category !== previousItem.category) {
+						documentFragment.appendChild(this._createCategoryRenderer(currentItem.category));
 					}
 				}
 				documentFragment.appendChild(this._createItemRenderer(currentItem));
@@ -706,8 +729,8 @@ define(["dcl/dcl",
 			//		The index (not counting category renderers) where to add the item renderer in the list.
 			var rendererAtIndex = atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null;
 			var previousRenderer = null, rendererCategory, newCategoryRenderer;
-			if (this.categoryAttribute) {
-				rendererCategory = renderer.item[this.categoryAttribute];
+			if (this._isCategorized()) {
+				rendererCategory = renderer.item.category;
 				previousRenderer = rendererAtIndex
 										? this._getNextRenderer(rendererAtIndex, -1)
 										: this._getLastRenderer();
@@ -720,7 +743,7 @@ define(["dcl/dcl",
 					}
 					if (!previousRenderer
 							|| (!this._isCategoryRenderer(previousRenderer)
-									&& previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
+									&& previousRenderer.item.category !== rendererCategory)) {
 						this.insertBefore(this._createCategoryRenderer(rendererCategory), rendererAtIndex);
 					}
 				} else {
@@ -732,9 +755,9 @@ define(["dcl/dcl",
 					}
 				}
 				if (rendererAtIndex && !this._isCategoryRenderer(rendererAtIndex)) {
-					if (rendererAtIndex.item[this.categoryAttribute] !== rendererCategory) {
+					if (rendererAtIndex.item.category !== rendererCategory) {
 						newCategoryRenderer =
-							this._createCategoryRenderer(rendererAtIndex.item[this.categoryAttribute]);
+							this._createCategoryRenderer(rendererAtIndex.item.category);
 						this.insertBefore(newCategoryRenderer, rendererAtIndex);
 						rendererAtIndex = newCategoryRenderer;
 					}
@@ -756,7 +779,7 @@ define(["dcl/dcl",
 			//		Set to true if the renderer item should not be removed from the list of selected items.
 			var rendererIsCategoryHeader = this._isCategoryRenderer(renderer),
 				nextRenderer, previousRenderer, nextFocusRenderer;
-			if (this.categoryAttribute && !rendererIsCategoryHeader) {
+			if (this._isCategorized() && !rendererIsCategoryHeader) {
 				previousRenderer = this._getNextRenderer(renderer, -1);
 				// remove the previous category header if necessary
 				if (previousRenderer && this._isCategoryRenderer(previousRenderer)) {
@@ -767,7 +790,7 @@ define(["dcl/dcl",
 							previousRenderer = this._getNextRenderer(renderer, -1);
 							// remove this category renderer if it is not needed anymore
 							if (previousRenderer
-									&& nextRenderer.category === previousRenderer.item[this.categoryAttribute]) {
+									&& nextRenderer.category === previousRenderer.item.category) {
 								this._removeRenderer(nextRenderer);
 							}
 						}
@@ -843,7 +866,7 @@ define(["dcl/dcl",
 			// summary:
 			//		Returns the first renderer in the list.
 			var firstRenderer = this.getItemRendererByIndex(0);
-			if (this.categoryAttribute) {
+			if (this._isCategorized()) {
 				var previousRenderer = null;
 				if (firstRenderer) {
 					previousRenderer = firstRenderer.previousElementSibling;

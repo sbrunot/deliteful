@@ -27,7 +27,7 @@ define([
 			list = new List();
 			list.startup();
 			list.store.query();
-			list.categoryAttribute = "category";
+			list.categoryAttr = "category";
 			list.store.add({category: "A", label: "item 1"});
 			list.store.add({category: "A", label: "item 2"});
 			list.store.add({category: "A", label: "item 3"});

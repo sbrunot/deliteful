@@ -70,7 +70,7 @@ define(["dcl/dcl",
 		}),
 
 		enteredViewCallback: dcl.after(function () {
-			if (this.categoryAttribute || (this.pageLength && this.autoLoad)) {
+			if (this._isCategorized() || (this.pageLength && this.autoLoad)) {
 				// moving items not yet supported on categorized lists or on paginated lists with auto loading
 				this.moveable = false;
 			}
