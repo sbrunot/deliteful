@@ -19,16 +19,11 @@ define([
 			list.store.add({label: "item 3"});
 		},
 		"baseClass update" : function () {
-			var dfd = this.async(1000);
-			list.initItems = dfd.callback(function () {
-				list._setBusy(false);
-				assert.equal(list.className, "d-list");
-				list.baseClass = "d-round-rect-list";
-				assert.equal(list.className, "d-round-rect-list");
-				list.baseClass = "d-list";
-				assert.equal(list.className, "d-list");
-			});
-			return dfd;
+			assert.equal(list.className, "d-list");
+			list.baseClass = "d-round-rect-list";
+			assert.equal(list.className, "d-round-rect-list");
+			list.baseClass = "d-list";
+			assert.equal(list.className, "d-list");
 		},
 		"scrollDisabled and scroll direction" : function () {
 			assert.equal(list.scrollDirection, "vertical", "intial scroll direction");
