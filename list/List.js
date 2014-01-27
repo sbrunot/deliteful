@@ -282,94 +282,99 @@ define(["dcl/dcl",
 			this.setAttribute("aria-label", messages["aria-label"]);
 		},
 
-		createdCallback: dcl.after(function () {
+		createdCallback: dcl.superCall(function (sup) {
 			// summary:
 			//		Create the default store, if necessary, after all attributes values are set on the widget.
 			// tags:
 			//		protected
-			var list = this;
-			if (!this.store) {
-				this.store = {
-					data: [],
-					_ids: [],
-					idProperty: "id",
-					_queried: false,
-					get: function (id) {
-						var index = this._ids.indexOf(id);
-						if (index >= 0) {
-							return this.data[index];
-						}
-					},
-					query: function () {
-						this._queried = true;
-						return this.data.slice();
-					},
-					getIdentity: function (item) {
-						return item[this.idProperty];
-					},
-					put: function (item, options) {
-						var beforeIndex = -1;
-						var itemBeforeUpdate;
-						var id = item[this.idProperty] = (options && "id" in options)
-							? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
-						var existingIndex = this._ids.indexOf(id);
-						if (options && options.before) {
-							beforeIndex = this.data.indexOf(options.before);
-						}
-						if (existingIndex >= 0) {
-							// item exists in store
-							if (options && options.overwrite === false) {
-								throw new Error(messages["exception-item-already-exists"]);
+			return function () {
+				if (sup) {
+					sup.apply(this, arguments);
+				}
+				var list = this;
+				if (!this.store) {
+					this.store = {
+						data: [],
+						_ids: [],
+						idProperty: "id",
+						_queried: false,
+						get: function (id) {
+							var index = this._ids.indexOf(id);
+							if (index >= 0) {
+								return this.data[index];
 							}
-							// update the item
-							itemBeforeUpdate = this.data[existingIndex];
-							this.data[existingIndex] = item;
-							if (beforeIndex >= 0 && beforeIndex !== existingIndex) {
-								// move the item
-								this.data.splice(beforeIndex, 0, this.data.splice(existingIndex, 1)[0]);
-								this._ids.splice(beforeIndex, 0, this._ids.splice(existingIndex, 1)[0]);
-								if (this._queried) {
-									list.removeItem(existingIndex, itemBeforeUpdate, null, true);
-									list.addItem(beforeIndex, item, null);
+						},
+						query: function () {
+							this._queried = true;
+							return this.data.slice();
+						},
+						getIdentity: function (item) {
+							return item[this.idProperty];
+						},
+						put: function (item, options) {
+							var beforeIndex = -1;
+							var itemBeforeUpdate;
+							var id = item[this.idProperty] = (options && "id" in options)
+								? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
+							var existingIndex = this._ids.indexOf(id);
+							if (options && options.before) {
+								beforeIndex = this.data.indexOf(options.before);
+							}
+							if (existingIndex >= 0) {
+								// item exists in store
+								if (options && options.overwrite === false) {
+									throw new Error(messages["exception-item-already-exists"]);
+								}
+								// update the item
+								itemBeforeUpdate = this.data[existingIndex];
+								this.data[existingIndex] = item;
+								if (beforeIndex >= 0 && beforeIndex !== existingIndex) {
+									// move the item
+									this.data.splice(beforeIndex, 0, this.data.splice(existingIndex, 1)[0]);
+									this._ids.splice(beforeIndex, 0, this._ids.splice(existingIndex, 1)[0]);
+									if (this._queried) {
+										list.removeItem(existingIndex, itemBeforeUpdate, null, true);
+										list.addItem(beforeIndex, item, null);
+									}
+								} else {
+									if (this._queried) {
+										list.putItem(existingIndex, item, null);
+									}
 								}
 							} else {
+								// new item to add to store
+								if (beforeIndex >= 0) {
+									this.data.splice(beforeIndex, 0, item);
+									this._ids.splice(beforeIndex, 0, id);
+								} else {
+									this.data.push(item);
+									this._ids.push(id);
+								}
 								if (this._queried) {
-									list.putItem(existingIndex, item, null);
+									list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
 								}
 							}
-						} else {
-							// new item to add to store
-							if (beforeIndex >= 0) {
-								this.data.splice(beforeIndex, 0, item);
-								this._ids.splice(beforeIndex, 0, id);
-							} else {
-								this.data.push(item);
-								this._ids.push(id);
-							}
-							if (this._queried) {
-								list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
+							return id;
+						},
+						add: function (item, options) {
+							options = options || {};
+							options.overwrite = false;
+							return this.put(item, options);
+						},
+						remove: function (id) {
+							var index = this._ids.indexOf(id), item;
+							if (index >= 0 && index < this.data.length) {
+								item = this.data.splice(index, 1)[0];
+								this._ids.splice(index, 1);
+								if (this._queried) {
+									list.removeItem(index, item, null, false);
+								}
+								return true;
 							}
 						}
-						return id;
-					},
-					add: function (item, options) {
-						options = options || {};
-						options.overwrite = false;
-						return this.put(item, options);
-					},
-					remove: function (id) {
-						var index = this._ids.indexOf(id), item;
-						if (index >= 0 && index < this.data.length) {
-							item = this.data.splice(index, 1)[0];
-							this._ids.splice(index, 1);
-							if (this._queried) {
-								list.removeItem(index, item, null, false);
-							}
-							return true;
-						}
-					}
-				};
-			}
+					};
+				}
+			};
 		}),
 
 		enteredViewCallback: function () {
