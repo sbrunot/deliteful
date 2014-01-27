@@ -705,14 +705,14 @@ define(["dcl/dcl",
 										? this._getNextRenderer(rendererAtIndex, -1)
 										: this._getLastRenderer();
 				if (previousRenderer) {
-					if (previousRenderer._isCategoryRenderer) {
+					if (this._isCategoryRenderer(previousRenderer)) {
 						if (rendererCategory !== previousRenderer.category) {
 							rendererAtIndex = previousRenderer;
 							previousRenderer = this._getNextRenderer(previousRenderer, -1);
 						}
 					}
 					if (!previousRenderer
-							|| (!previousRenderer._isCategoryRenderer
+							|| (!this._isCategoryRenderer(previousRenderer)
 									&& previousRenderer.item[this.categoryAttribute] !== rendererCategory)) {
 						this.insertBefore(this._createCategoryRenderer(rendererCategory), rendererAtIndex);
 					}
@@ -724,7 +724,7 @@ define(["dcl/dcl",
 						this.appendChild(newCategoryRenderer);
 					}
 				}
-				if (rendererAtIndex && !rendererAtIndex._isCategoryRenderer) {
+				if (rendererAtIndex && !this._isCategoryRenderer(rendererAtIndex)) {
 					if (rendererAtIndex.item[this.categoryAttribute] !== rendererCategory) {
 						newCategoryRenderer =
 							this._createCategoryRenderer(rendererAtIndex.item[this.categoryAttribute]);
@@ -747,16 +747,16 @@ define(["dcl/dcl",
 			//		The renderer to remove from the list.
 			// keepSelection: Boolean
 			//		Set to true if the renderer item should not be removed from the list of selected items.
-			var rendererIsCategoryHeader = renderer._isCategoryRenderer,
+			var rendererIsCategoryHeader = this._isCategoryRenderer(renderer),
 				nextRenderer, previousRenderer, nextFocusRenderer;
 			if (this.categoryAttribute && !rendererIsCategoryHeader) {
 				previousRenderer = this._getNextRenderer(renderer, -1);
 				// remove the previous category header if necessary
-				if (previousRenderer && previousRenderer._isCategoryRenderer) {
+				if (previousRenderer && this._isCategoryRenderer(previousRenderer)) {
 					nextRenderer = this._getNextRenderer(renderer, 1);
-					if (!nextRenderer || (nextRenderer && nextRenderer._isCategoryRenderer)) {
+					if (!nextRenderer || (nextRenderer && this._isCategoryRenderer(nextRenderer))) {
 						this._removeRenderer(previousRenderer);
-						if (nextRenderer && nextRenderer._isCategoryRenderer) {
+						if (nextRenderer && this._isCategoryRenderer(nextRenderer)) {
 							previousRenderer = this._getNextRenderer(renderer, -1);
 							// remove this category renderer if it is not needed anymore
 							if (previousRenderer
@@ -774,7 +774,7 @@ define(["dcl/dcl",
 					this.focusChild(nextFocusRenderer);
 				}
 			}
-			if (!keepSelection && !renderer._isCategoryRenderer && this.isSelected(renderer.item)) {
+			if (!keepSelection && !this._isCategoryRenderer(renderer) && this.isSelected(renderer.item)) {
 				// deselected the item before removing the renderer
 				this.setSelected(renderer.item, false);
 			}
@@ -809,6 +809,12 @@ define(["dcl/dcl",
 			var renderer = new this.categoryRenderer({category: category, tabindex: "-1"});
 			renderer.startup();
 			return renderer;
+		},
+
+		_isCategoryRenderer: function (/*Widget*/renderer) {
+			// summary:
+			//		test if a widget is a category renderer.
+			return domClass.contains(renderer, this._cssClasses.category);
 		},
 
 		_getNextRenderer: function (/*Widget*/renderer, /*int*/dir) {

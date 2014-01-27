@@ -33,7 +33,6 @@ define(["dcl/dcl",
 			//		protected
 			this.containerNode = this;
 			this.style.display = "block";
-			this._isCategoryRenderer = true; // used by List to identify category renderers
 		},
 
 		render: function () {
