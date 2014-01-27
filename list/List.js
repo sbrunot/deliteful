@@ -82,8 +82,8 @@ define(["dcl/dcl",
 		//			define(["delite/register", "deliteful/list/ItemRenderer"],
 		//				function (register, ItemRenderer) {
 		//					var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
-		//						render: function (item) {
-		//							this.containerNode.innerHTML = "<div class='title'>" + item.title + "</div><div class='isbn'>ISBN: " + item.isbn + "</div>";
+		//						render: function () {
+		//							this.containerNode.innerHTML = "<div class='title'>" + this.item.title + "</div><div class='isbn'>ISBN: " + this.item.isbn + "</div>";
 		//							this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
 		//						}
 		//					});
@@ -959,7 +959,7 @@ define(["dcl/dcl",
 				// onKeydown implementation can cancel the default action
 				renderer.onKeydown(evt);
 			}
-			if (!evt.defaultPrevented()) {
+			if (!evt.defaultPrevented) {
 				if ((evt.keyCode === keys.SPACE && !this._searchTimer) || evt.keyCode === keys.ENTER) {
 					this._actionKeydownHandler(evt);
 				}

@@ -2,13 +2,13 @@ define(["dcl/dcl",
         "delite/register",
         "dojo/dom-construct",
         "dojo/dom-class",
-        "./ItemRendererBase"
-], function (dcl, register, domConstruct, domClass, ItemRendererBase) {
+        "./Renderer"
+], function (dcl, register, domConstruct, domClass, Renderer) {
 	
 	// module:
 	//		deliteful/list/ItemRenderer
 
-	var ItemRenderer = dcl([ItemRendererBase], {
+	var ItemRenderer = dcl([Renderer], {
 		// summary:
 		//		Default item renderer for the deliteful/list/List widget.
 		//
@@ -28,20 +28,46 @@ define(["dcl/dcl",
 		//		All the nodes that renders the attributes are focusable with keyboard navigation (using left and
 		//		right arrows).
 
+		// item: Object
+		//		the list item to render.
+		item: null,
+		_setItemAttr: function (/*Object*/value) {
+			this._set("item", value);
+			this.render();
+			// Set a label attribute For text search in keyboard navigation
+			this.label = value.label;
+		},
+
+		// baseClass: [protected] String
+		//		CSS class of an item renderer. This value is expected by the deliteful/list/List widget
+		//		so it must not be changed.
+		baseClass: "d-list-item",
+
+
 		//////////// PROTECTED METHODS ///////////////////////////////////////
 
-		render: function (item) {
+		buildRendering: function () {
 			// summary:
-			//		render the item.
+			//		Create the widget container node, into which an item will be rendered.
+			// tags:
+			//		protected
+			this.containerNode = register.createElement("div");
+			this.containerNode.className = "d-list-item-node";
+			this.appendChild(this.containerNode);
+		},
+
+		render: function () {
+			// summary:
+			//		render the item inside this.containerNode.
 			// item: Object
 			//		The item to render.
 			// tags:
 			//		protected
-			this._renderNode("text", "labelNode", item ? item.label : null, "d-list-item-label");
-			this._renderNode("image", "iconNode", item ? item.icon : null, "d-list-item-icon");
-			this._renderNode("text", "rightText", item ? item.rightText : null, "d-list-item-right-text");
-			this._renderNode("image", "rightIcon2", item ? item.rightIcon2 : null, "d-list-item-right-icon2");
-			this._renderNode("image", "rightIcon", item ? item.rightIcon : null, "d-list-item-right-icon");
+			this._renderNode("text", "labelNode", this.item ? this.item.label : null, "d-list-item-label");
+			this._renderNode("image", "iconNode", this.item ? this.item.icon : null, "d-list-item-icon");
+			this._renderNode("text", "rightText", this.item ? this.item.rightText : null, "d-list-item-right-text");
+			this._renderNode("image", "rightIcon2", this.item ? this.item.rightIcon2 : null, "d-list-item-right-icon2");
+			this._renderNode("image", "rightIcon", this.item ? this.item.rightIcon : null, "d-list-item-right-icon");
 			this.setFocusableChildren(this.iconNode, this.labelNode, this.rightText, this.rightIcon2, this.rightIcon);
 		},
 

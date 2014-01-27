@@ -18,8 +18,8 @@
 			"deliteful/list/List"
 		], function (register, query, ItemRenderer) {
 			var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
-				render: function (item) {
-					this.containerNode.innerHTML = "<div class='title'>" + item.title + "</div><div class='isbn'>ISBN: " + item.isbn + "</div>";
+				render: function () {
+					this.containerNode.innerHTML = "<div class='title'>" + this.item.title + "</div><div class='isbn'>ISBN: " + this.item.isbn + "</div>";
 					this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
 				}
 			});

@@ -1,43 +1,26 @@
 define(["dcl/dcl",
         "delite/register",
-        "delite/Widget"
-], function (dcl, register, Widget) {
+        "delite/Widget",
+        "delite/Invalidating"
+], function (dcl, register, Widget, Invalidating) {
 
 	// module:
-	//		deliteful/list/ItemRendererBase
+	//		deliteful/list/Renderer
 
-	return dcl([Widget], {
+	return dcl([Widget, Invalidating], {
 		// summary:
-		//		Base class for a widget that render an item inside a deliteful/list/List widget.
+		//		Base class for a widget that render an item or a category inside a deliteful/list/List widget.
 		//
 		// description:
 		//		This base class provide all the infrastructure that a deliteful/list/List widget
-		//		expect from an item renderer, including keyboard navigation support.
+		//		expect from a renderer, including keyboard navigation support.
 		//
-		//		A concrete item renderer must extend this class an implement its render method
-		//		to render the item inside the container node of the widget (this.containerNode).
-		//
-		//		Keyboard navigation is defined using the setFocusableChildren method.
-
-		// item: Object
-		//		the list item to render.
-		item: null,
-		_setItemAttr: function (/*Object*/value) {
-			this._set("item", value);
-			this.render(value);
-			// Set a label attribute For text search in keyboard navigation
-			this.label = value.label;
-		},
-
-		// baseClass: [protected] String
-		//		CSS class of an item renderer. This value is expected by the deliteful/list/List widget
-		//		so it must not be changed.
-		baseClass: "d-list-item",
+		//		Keyboard navigation for a concrete renderer class is defined using the setFocusableChildren method.
 
 		// _focusableChildren: Array
-		//		contains the names of all the renderer nodes that can be focused, in the same order
+		//		contains all the renderer nodes that can be focused, in the same order
 		//		that they are to be focused during keyboard navigation with the left and right arrow
-		//		keys. The name of a focusable node is such that this[name] returns the node.
+		//		keys.
 		_focusableChildren: null,
 
 		// _focusedChild: Widget
@@ -46,21 +29,24 @@ define(["dcl/dcl",
 
 		//////////// PROTECTED METHODS ///////////////////////////////////////
 
-		/* jshint unused:vars */
-		render: function (/*Object*/item) {
+		buildRendering: function () {
 			// summary:
-			//		This method must be implemented by the item renderer concrete class.
-			//		It should render the item inside the renderer container node
-			//		(this.containerNode). It is called every time that the item attribute
-			//		of the renderer is assigned to a value, and might be called more than once
-			//		during the List life cycle, with a different item value each time.
-			// item: Object
-			//		The item to render.
+			//		set Aria attributes.
 			// tags:
-			//		protected extension
+			//		protected
+			this.setAttribute("role", "listitem");
 		},
 
-		setFocusableChildren: function (/*DomNode...*/children) {
+		/*=====
+		 render: function () {
+			// summary:
+			// 		render the item or category inside the containerNode of the renderer.
+			// tags:
+			//		protected extension
+		 },
+		 =====*/
+
+		setFocusableChildren: function (/*DomNode...*//*jshint unused:vars*/children) {
 			// summary:
 			//		This method set the list of children of the renderer that can
 			//		be focused during keyboard navigation, by keyboard navigation
@@ -89,18 +75,6 @@ define(["dcl/dcl",
 					this._focusableChildren.push(node);
 				}
 			}
-		},
-
-		buildRendering: function () {
-			// summary:
-			//		Create the widget container node, into which an item will be rendered.
-			// tags:
-			//		protected
-			this.containerNode = register.createElement("div");
-			this.containerNode.className = "d-list-item-node";
-			this.appendChild(this.containerNode);
-			// Aria attributes
-			this.setAttribute("role", "listitem");
 		},
 
 		destroy: function () {

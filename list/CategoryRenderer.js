@@ -1,26 +1,49 @@
 define(["dcl/dcl",
         "delite/register",
-        "./CategoryRendererBase"
-], function (dcl, register, CategoryRendererBase) {
+        "./Renderer"
+], function (dcl, register, Renderer) {
 	
 	// module:
 	//		deliteful/list/CategoryRenderer
 
-	var CategoryRenderer = dcl([CategoryRendererBase], {
+	var CategoryRenderer = dcl([Renderer], {
 		// summary:
 		//		Default category renderer for the deliteful/list/List widget.
 		//
 
+		// category: String
+		//		the category to render.
+		category: "",
+		_setCategoryAttr: function (value) {
+			this._set("category", value);
+			this.render(value);
+		},
+
+		// baseClass: [protected] String
+		//		CSS class of a category renderer. This value is expected by the deliteful/list/List widget
+		//		so it must not be changed.
+		baseClass: "d-list-category",
+
 		//////////// PROTECTED METHODS ///////////////////////////////////////
 
-		render: function (category) {
+		buildRendering: function () {
 			// summary:
-			//		render the category.
+			//		Create the widget container node, into which a category will be rendered.
+			// tags:
+			//		protected
+			this.containerNode = this;
+			this.style.display = "block";
+			this._isCategoryRenderer = true; // used by List to identify category renderers
+		},
+
+		render: function () {
+			// summary:
+			//		render the category inside this.containerNode.
 			// item: Object
 			//		The category to render.
 			// tags:
 			//		protected
-			this.innerHTML = category;
+			this.containerNode.innerHTML = this.category;
 		}
 
 	});
