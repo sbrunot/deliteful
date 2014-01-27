@@ -10,10 +10,13 @@ define([
 		put: null,
 		added: null,
 		removed: null,
-		initMock: function () {
+		cleanupMock: function () {
 			this.put = [];
 			this.added = [];
 			this.removed = [];
+		},
+		initMock: function () {
+			this.cleanupMock();
 			this.startup();
 		},
 		putItem: function (index, item, items) {
@@ -53,7 +56,6 @@ define([
 			list.initMock();
 		},
 		"addItem with no identity" : function () {
-			list.store.query();
 			var item = {label: "firstItem"};
 			var id = list.store.add(item);
 			assert.isDefined(id, "id should be defined");
@@ -65,7 +67,6 @@ define([
 			checkArray(result, 1, [0], [item], "query result");
 		},
 		"addItem with identity" : function () {
-			list.store.query();
 			var item = {id: "item0", label: "firstItem"};
 			var id = list.store.add(item);
 			assert.equal(id, "item0");
@@ -76,7 +77,6 @@ define([
 			checkArray(result, 1, [0], [item], "query result");
 		},
 		"addItem with identity in options" : function () {
-			list.store.query();
 			var item = {label: "firstItem"};
 			var id = list.store.add(item, {id: "item0"});
 			assert.equal(id, "item0");
@@ -87,7 +87,6 @@ define([
 			checkArray(result, 1, [0], [item], "query result");
 		},
 		"addItem at the end" : function () {
-			list.store.query();
 			var item1 = {label: "firstItem"};
 			var item2 = {label: "secondItem"};
 			var item3 = {label: "thirdItem"};
@@ -107,7 +106,6 @@ define([
 			checkArray(result, 3, [0, 1, 2], [item1, item2, item3], "query result");
 		},
 		"addItem before another one" : function () {
-			list.store.query();
 			var item1 = {label: "firstItem"};
 			var item2 = {label: "secondItem"};
 			var item3 = {label: "thirdItem"};
@@ -181,6 +179,7 @@ define([
 			list.store.add(item3, {id: "third"});
 			var result = list.store.query();
 			checkArray(result, 3, [0, 1, 2], [item1, item2, item3], "query result");
+			list.cleanupMock();
 			list.store.remove(id1);
 			list.store.remove("second");
 			list.store.remove("third");
@@ -202,6 +201,7 @@ define([
 			var id1 = list.store.add(item1);
 			var result = list.store.query();
 			checkArray(result, 1, [0], [item1], "query result");
+			list.cleanupMock();
 			list.store.put(item2, {id: id1});
 			assert.equal(list.store.get(id1), item2, "item after update");
 			checkArray(list.put, 1, [0], [{index: 0, item: item2, items: null}], "put");
@@ -231,7 +231,7 @@ define([
 			list.store.add(item1);
 			list.store.add(item2);
 			list.store.add(item3);
-			list.store.query();
+			list.cleanupMock();
 			list.store.put(item3, {before: item2});
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 1, [0], [{index: 2, item: item3, items: null, keepSelection: true}], "removed");
@@ -247,7 +247,7 @@ define([
 			list.store.add(item1);
 			list.store.add(item2);
 			list.store.add(item3);
-			list.store.query();
+			list.cleanupMock();
 			list.store.put(item3updated, {id: 3, before: item2});
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 1, [0], [{index: 2, item: item3, items: null, keepSelection: true}], "removed");

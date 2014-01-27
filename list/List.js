@@ -7,7 +7,7 @@ define(["dcl/dcl",
 	"dojo/keys",
 	"delite/Selection",
 	"delite/KeyNav",
-	"delite/Store",
+	"delite/StoreMap",
 	"delite/Invalidating",
 	"delite/Scrollable",
 	"./ItemRenderer",
@@ -15,13 +15,13 @@ define(["dcl/dcl",
 	"dojo/i18n!./List/nls/List", // TODO: use requirejs-dplugins
 	"delite/themes/load!./List/themes/{{theme}}/List_css",
 	"dojo/has!dojo-bidi?delite/themes/load!./List/themes/{{theme}}/List_rtl_css"
-], function (dcl, register, lang, query, when, domClass, keys, Selection, KeyNav, Store,
+], function (dcl, register, lang, query, when, domClass, keys, Selection, KeyNav, StoreMap,
 		Invalidating, Scrollable, ItemRenderer, CategoryRenderer, messages) {
 
 	// module:
 	//		deliteful/list/List
 
-	var List = dcl([Invalidating, Selection, KeyNav, Store, Scrollable], {
+	var List = dcl([Invalidating, Selection, KeyNav, StoreMap, Scrollable], {
 		// summary:
 		//		A widget that renders a scrollable list of items.
 		//
@@ -103,15 +103,13 @@ define(["dcl/dcl",
 		//				return itemForDefaultRenderer;
 		//			};
 		//
-		//		Because the List widget uses the delite/Store mixin, you can also extend it using the
-		//		delite/StoreMap mixin in order to define the mapping between your store items and the ones
-		//		expected by the renderer, as in the following example:
+		//		Because the List widget uses the delite/StorMap mixin, you can also define the mapping between
+		//		your store items and the ones expected by the renderer as in the following example:
 		//
 		//			require([
 		//					"delite/register",
-		//					"deliteful/list/List",
-		//					"delite/StoreMap"
-		//				], function (register, List, StoreMap) {
+		//					"deliteful/list/List"
+		//				], function (register, List) {
 		//					var MyList = register("m-list",
 		//							[List, StoreMap],
 		//							{labelAttr: "title",
@@ -236,6 +234,10 @@ define(["dcl/dcl",
 		// selectionMode: String
 		//		The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
+
+		// tags:
+		//		protected
+		copyAllItemProps: true,
 
 		// scrollDisabled: Boolean
 		//		If true, the scrolling capabilities are disabled. The default value is false.
@@ -390,27 +392,32 @@ define(["dcl/dcl",
 			// END OF WORKAROUND
 		},
 
-		startup: function () {
+		startup: dcl.superCall(function (sup) {
 			// summary:
 			//		Starts the widget: parse the content of the widget node to clean it,
 			//		add items to the store if specified in markup.
-			this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
-				this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
-					var itemAttribute = node.getAttribute("item");
-					if (itemAttribute) {
-						// Reusing the widget mechanism to extract attribute value.
-						// FIXME: should not have to manipulate node._propCaseMap but use a "more public" method ?
-						node._propCaseMap = {item: "item"};
-						node.item = {};
-						this.store.add(this.mapAttributes.call(node).item);
-					}
+			return function () {
+				this._processAndRemoveContent(this, {"D-LIST-STORE": function (node) {
+					this._processAndRemoveContent(node, {"D-LIST-STORE-ITEM": function (node) {
+						var itemAttribute = node.getAttribute("item");
+						if (itemAttribute) {
+							// Reusing the widget mechanism to extract attribute value.
+							// FIXME: should not have to manipulate node._propCaseMap but use a "more public" method ?
+							node._propCaseMap = {item: "item"};
+							node.item = {};
+							this.store.add(this.mapAttributes.call(node).item);
+						}
+					}});
 				}});
-			}});
-			this._setBusy(true);
-			this.on("query-error", lang.hitch(this, function () {
-				this._setBusy(false);
-			}));
-		},
+				this._setBusy(true);
+				this.on("query-error", lang.hitch(this, function () {
+					this._setBusy(false);
+				}));
+				if (sup) {
+					sup.call(this, arguments);
+				}
+			};
+		}),
 
 		refreshProperties: dcl.superCall(function (sup) {
 			// summary:

@@ -13,16 +13,13 @@
 	<script type="text/javascript">
 		require([
 			"delite/register",
-			"deliteful/list/List",
-			"delite/StoreMap"
-		], function (register, List, StoreMap) {
-			var MyList = register("m-list",
-					[List, StoreMap],
-					{labelAttr: "title",
-					 rightTextFunc: function (item, store, value) {
-						 return item.title.split(" ")[0];
-					}});
-			var list = register.createElement("m-list");
+			"deliteful/list/List"
+		], function (register, List) {
+			var list = register.createElement("d-list");
+			list.labelAttr = "title";
+			list.rightTextFunc = function (item, store, value) {
+				 return item.title.split(" ")[0];
+			};
 			list.store.add({title: "first item"});
 			list.store.add({title: "second item"});
 			list.store.add({title: "third item"});
