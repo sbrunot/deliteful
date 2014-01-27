@@ -407,30 +407,35 @@ define(["dcl/dcl",
 			}));
 		},
 
-		refreshProperties: dcl.before(function (props) {
+		refreshProperties: dcl.superCall(function (sup) {
 			// summary:
 			//		List attributes have been updated.
 			// tags:
 			//		protected
-			if (props.selectionMode) {
-				if (this.selectionMode === "none") {
-					if (this._selectionClickHandle) {
-						this._selectionClickHandle.remove();
-						this._selectionClickHandle = null;
-					}
-				} else {
-					if (!this._selectionClickHandle) {
-						this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
+			return function (props) {
+				if (props.selectionMode) {
+					if (this.selectionMode === "none") {
+						if (this._selectionClickHandle) {
+							this._selectionClickHandle.remove();
+							this._selectionClickHandle = null;
+						}
+					} else {
+						if (!this._selectionClickHandle) {
+							this._selectionClickHandle = this.on("click", lang.hitch(this, "_handleSelection"));
+						}
 					}
 				}
-			}
-			if (props.itemRenderer
-				|| (this.categoryAttribute && (props.categoryAttribute || props.categoryRenderer))) {
-				if (this._started) {
-					this._setBusy(true);
-					props.store = true; // to toggle a reload of the list.
+				if (props.itemRenderer
+					|| (this.categoryAttribute && (props.categoryAttribute || props.categoryRenderer))) {
+					if (this._started) {
+						this._setBusy(true);
+						props.store = true; // to toggle a reload of the list.
+					}
 				}
-			}
+				if (sup) {
+					sup.call(this, props);
+				}
+			};
 		}),
 
 		//////////// Public methods ///////////////////////////////////////
