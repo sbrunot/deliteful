@@ -103,7 +103,7 @@ define(["dcl/dcl",
 		//				return itemForDefaultRenderer;
 		//			};
 		//
-		//		Because the List widget uses the delite/StorMap mixin, you can also define the mapping between
+		//		Because the List widget inherit from delite/StoreMap, you can also define the mapping between
 		//		your store items and the ones expected by the renderer as in the following example:
 		//
 		//			require([
