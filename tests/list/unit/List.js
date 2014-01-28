@@ -26,12 +26,19 @@ define([
 			list.baseClass = "d-list";
 			assert.equal(list.className, "d-list");
 		},
-		"scrollDisabled and scroll direction" : function () {
-			assert.equal(list.scrollDirection, "vertical", "intial scroll direction");
-			list.scrollDisabled = true;
-			assert.equal(list.scrollDirection, "none", "scroll direction after disabling scroll");
-			list.scrollDisabled = false;
-			assert.equal(list.scrollDirection, "vertical", "scroll direction after re enabling scroll");
+		"scrollDirection horizontal not supported": function () {
+			var dfd = this.async(1000);
+			var error = null;
+			window.onerror = function (e) {
+				error = e;
+			};
+			list.scrollDirection = "horizontal";
+			setTimeout(dfd.callback(function () {
+				assert.isNotNull(error);
+				assert(error.indexOf(listMessages["horizontal-scroll-not-supported"]) >= 0);
+				assert.equal(list.scrollDirection, "none");
+			}), 0);
+			return dfd;
 		},
 		"getRendererByItem": function () {
 			var children = list.getChildren();

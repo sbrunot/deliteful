@@ -74,7 +74,7 @@
 					maxPages: parseInt(dom.byId("maxPages").value),
 					baseClass: dom.byId("listStyle").value,
 					autoLoad: dom.byId("autoLoad").value,
-					scrollDisabled: !dom.byId("scrollable").value,
+					scrollDirection: dom.byId("scrollable").value ? "vertical" : "none",
 					useMaskingPanel: dom.byId("useMaskingPanel").value
 				};
 				var editable = dom.byId("editable").value;
@@ -163,6 +163,12 @@
 					list.style.height = parseInt(dom.byId("height").value) + "px";
 				}
 			}
+			// Update scrollable
+			var updateScrollable = function () {
+				if (list) {
+					list.scrollDirection = dom.byId("scrollable").value ? "vertical" : "none";
+				}
+			}
 			// Events
 			on(dom.byId("buildButton"), 'click', lang.hitch(this, buildList));
 			on(dom.byId("removeItem"), 'click', lang.hitch(this, removeItem));
@@ -170,6 +176,7 @@
 			on(dom.byId("listStyle"), 'change', lang.hitch(this, updateStyle));
 			on(dom.byId("selectionMode"), 'change', lang.hitch(this, updateSelectionMode));
 			on(dom.byId("height"), 'change', lang.hitch(this, updateHeight));
+			on(dom.byId("scrollable"), 'change', lang.hitch(this, updateScrollable));
 		});
 	</script>
 	<style>

@@ -134,6 +134,7 @@ define(function(){ return '\
   margin: 0 9px !important;\
   padding: 0;\
   overflow-x: hidden;\
+  overflow-y: hidden;\
 }\
 .d-round-rect-list > *:first-child {\
   border-top-left-radius: 8px;\
@@ -165,6 +166,7 @@ define(function(){ return '\
   padding: 0;\
   margin: 0 !important;\
   overflow-x: hidden;\
+  overflow-y: hidden;\
 }\
 .d-list > *:last-child {\
   border-bottom-width: 0;\

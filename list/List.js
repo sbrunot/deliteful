@@ -31,8 +31,8 @@ define(["dcl/dcl",
 		//
 		//		## Scroll capabilities
 		//
-		//		If you do not want the list to be scrollable, you can set its scrollDisabled attribute
-		//		to true in order to remove the default scrolling capability.
+		//		If you do not want the list to be scrollable, you can set its scrollDirection attribute
+		//		to "none" in order to remove the default scrolling capability.
 		//
 		//		## Store capabilities
 		//
@@ -249,6 +249,12 @@ define(["dcl/dcl",
 			}
 		},
 
+		/*=====
+		// scrollDirection: String
+		//		"vertical" for a scrollable List, "none" for a non scrollable List.
+		scrollDirection: "vertical",
+		=====*/
+
 		// selectionMode: String
 		//		The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
@@ -256,14 +262,6 @@ define(["dcl/dcl",
 		// tags:
 		//		protected
 		copyAllItemProps: true,
-
-		// scrollDisabled: Boolean
-		//		If true, the scrolling capabilities are disabled. The default value is false.
-		scrollDisabled: false,
-		_setScrollDisabledAttr: function (value) {
-			this.scrollDirection = value ? "none" : "vertical";
-			this._set("scrollDisabled", value);
-		},
 
 		// CSS classes internally referenced by the List widget
 		_cssClasses: {item: "d-list-item",
@@ -384,9 +382,9 @@ define(["dcl/dcl",
 							return id;
 						},
 						add: function (item, options) {
-							options = options || {};
-							options.overwrite = false;
-							return this.put(item, options);
+							var opts = options || {};
+							opts.overwrite = false;
+							return this.put(item, opts);
 						},
 						remove: function (id) {
 							var index = this._ids.indexOf(id), item;
@@ -440,6 +438,18 @@ define(["dcl/dcl",
 				}));
 				if (sup) {
 					sup.call(this, arguments);
+				}
+			};
+		}),
+
+		refreshRendering: dcl.superCall(function (sup) {
+			return function (props) {
+				if (props.scrollDirection && this.scrollDirection === "horizontal") {
+					this.scrollDirection = "none";
+					throw new Error(messages["horizontal-scroll-not-supported"]);
+				}
+				if (sup) {
+					sup.apply(this, arguments);
 				}
 			};
 		}),
