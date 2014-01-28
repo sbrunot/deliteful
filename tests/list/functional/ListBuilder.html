@@ -54,9 +54,9 @@
 							  id: 'ref' + i,
 							  label: 'this is list item ' + i,
 							  icon: useIcon ? '../../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
-							  rightText: useRightText ? 'id: ref' + i : null,
-							  rightIcon: useRightIcon ? '../../../mobile/tests/images/a-icon-1.png' : null,
-							  rightIcon2: useRightIcon2 ? '../../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
+							  righttext: useRightText ? 'id: ref' + i : null,
+							  righticon: useRightIcon ? '../../../mobile/tests/images/a-icon-1.png' : null,
+							  righticon2: useRightIcon2 ? '../../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
 				}
 				return new Observable(new CustomMemoryStore({latency: latency, data: data, idProperty: 'id'}));
 			};
@@ -133,9 +133,9 @@
 								  id: dom.byId("newItemId").value,
 								  label: 'this is a new list item with id ' + dom.byId("newItemId").value,
 								  icon: useIcon ? '../../mobile/tests/images/i-icon-1.png' : null,
-								  rightText: useRightText ? 'id: ' + dom.byId("newItemId").value : null,
-								  rightIcon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
-								  rightIcon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-1.png' : null};
+								  righttext: useRightText ? 'id: ' + dom.byId("newItemId").value : null,
+								  righticon: useRightIcon ? '../../mobile/tests/images/a-icon-1.png' : null,
+								  righticon2: useRightIcon2 ? '../../mobile/tests/images/b-icon-1.png' : null};
 				var addOptions = {id: newItem.id};
 				var before = dom.byId("newItemBeforeId").value;
 				if (before) {

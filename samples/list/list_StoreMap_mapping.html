@@ -17,7 +17,7 @@
 		], function (register, List) {
 			var list = register.createElement("d-list");
 			list.labelAttr = "title";
-			list.rightTextFunc = function (item, store, value) {
+			list.righttextFunc = function (item, store, value) {
 				 return item.title.split(" ")[0];
 			};
 			list.store.add({title: "first item"});

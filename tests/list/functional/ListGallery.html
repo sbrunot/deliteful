@@ -73,8 +73,8 @@
 				var options = {}, beforeRenderer;
 				var list = document.getElementById(document.getElementById("listId").value);
 				var label = document.getElementById("labelInput").value;
-				var rightText = document.getElementById("rightTextInput").value;
-				var item = {label: label, rightText: rightText};
+				var righttext = document.getElementById("righttextInput").value;
+				var item = {label: label, righttext: righttext};
 				var index = document.getElementById("indexInput").value;
 				index = index ? parseInt(index) : null;
 				
@@ -128,49 +128,49 @@
     <h2>10 items declared as markup, memory store, and selectionMode set to "multiple" (id: list-mark-1)</h2>
 	<d-list id="list-mark-1" style="height: 200px" selectionMode="multiple" store="globalStore">
 		<d-list-store>
-			<d-list-store-item item="{label: 'list item 0', rightText: 'right text 1'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 1', rightText: 'right text 2'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 2', rightText: 'right text 3'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 3', rightText: 'right text 4'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 4', rightText: 'right text 5'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 5', rightText: 'right text 6'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 6', rightText: 'right text 7'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 7', rightText: 'right text 8'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 8', rightText: 'right text 9'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 9', rightText: 'right text 10'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 0', righttext: 'right text 1'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', righttext: 'right text 2'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', righttext: 'right text 3'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', righttext: 'right text 4'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', righttext: 'right text 5'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', righttext: 'right text 6'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', righttext: 'right text 7'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', righttext: 'right text 8'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', righttext: 'right text 9'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', righttext: 'right text 10'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
     <h2>Non scrollable with 10 items declared as markup, default store, and selectionMode set to "single" (id: list-mark-2)</h2>
 	<d-list id="list-mark-2" scrollDisabled=true selectionMode="single">
 		<d-list-store>
-			<d-list-store-item item="{label: 'list item 0', rightText: 'right text 1'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 1', rightText: 'right text 2'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 2', rightText: 'right text 3'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 3', rightText: 'right text 4'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 4', rightText: 'right text 5'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 5', rightText: 'right text 6'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 6', rightText: 'right text 7'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 7', rightText: 'right text 8'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 8', rightText: 'right text 9'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 9', rightText: 'right text 10'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 0', righttext: 'right text 1'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', righttext: 'right text 2'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', righttext: 'right text 3'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', righttext: 'right text 4'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', righttext: 'right text 5'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', righttext: 'right text 6'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', righttext: 'right text 7'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', righttext: 'right text 8'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', righttext: 'right text 9'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', righttext: 'right text 10'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
    	<h2>10 items declared as markup, default store, categorized (id: list-mark-3)</h2>
-	<d-list id="list-mark-3" style="height: 200px" categoryAttr="rightText" rightTextAttr="rightText">
+	<d-list id="list-mark-3" style="height: 200px" categoryAttr="righttext" righttextAttr="righttext">
 		<d-list-store>
-			<d-list-store-item item="{label: 'list item 0', rightText: 'A'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 1', rightText: 'A'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 2', rightText: 'A'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 3', rightText: 'A'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 4', rightText: 'A'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 5', rightText: 'B'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 6', rightText: 'B'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 7', rightText: 'B'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 8', rightText: 'B'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 9', rightText: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 0', righttext: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', righttext: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', righttext: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', righttext: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', righttext: 'A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', righttext: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', righttext: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', righttext: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', righttext: 'B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', righttext: 'B'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
-	<button onclick="var list = document.getElementById('list-mark-3'); list.categoryAttr = (list.categoryAttr === 'rightText' ? 'label' : 'rightText');">Toggle category attribute between rightText and label.</button>
+	<button onclick="var list = document.getElementById('list-mark-3'); list.categoryAttr = (list.categoryAttr === 'righttext' ? 'label' : 'righttext');">Toggle category attribute between righttext and label.</button>
 	<div style="height: 350px;">
 	</div>
 	<div style="border-top: 1px white; position: fixed; bottom: 0px; z-index: 10; background: #c5ccd3; width: 100%">
@@ -196,7 +196,7 @@
 				<td>List id:</td><td><input id="idInput" type="text" value="list-mark-4"></td>
 			</tr>
 			<tr>
-				<td>New item label / right text (category):</td><td><input id="labelInput" type="text" value="new item A"> / <input id="rightTextInput" type="text" value="Category 1"></td>
+				<td>New item label / right text (category):</td><td><input id="labelInput" type="text" value="new item A"> / <input id="righttextInput" type="text" value="Category 1"></td>
 			</tr>
 			<tr>
 				<td>Index:</td><td><input id="indexInput" type="number"></td>

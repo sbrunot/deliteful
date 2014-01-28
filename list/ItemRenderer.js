@@ -19,11 +19,11 @@ define(["dcl/dcl",
 		//				Rendered with CSS class d-list-item-icon;
 		//		- label: string to render on the left side of the node, after the icon.
 		//				Rendered with CSS class d-list-item-label;
-		//		- rightText: string to render of the right side if the node.
+		//		- righttext: string to render of the right side if the node.
 		//				Rendered with CSS class d-list-item-right-text;
-		//		- rightIcon2: path to an image to render as icon on the right side, after the right text. 
+		//		- righticon2: path to an image to render as icon on the right side, after the right text. 
 		//				Rendered with CSS class d-list-item-right-icon2;
-		//		- rightIcon: path to an image to render as icon on the right side, after rightIcon2. 
+		//		- righticon: path to an image to render as icon on the right side, after righticon2. 
 		//				Rendered with CSS class d-list-item-right-icon;
 		//		All the nodes that renders the attributes are focusable with keyboard navigation (using left and
 		//		right arrows).
@@ -65,10 +65,10 @@ define(["dcl/dcl",
 			//		protected
 			this._renderNode("text", "labelNode", this.item ? this.item.label : null, "d-list-item-label");
 			this._renderNode("image", "iconNode", this.item ? this.item.icon : null, "d-list-item-icon");
-			this._renderNode("text", "rightText", this.item ? this.item.rightText : null, "d-list-item-right-text");
-			this._renderNode("image", "rightIcon2", this.item ? this.item.rightIcon2 : null, "d-list-item-right-icon2");
-			this._renderNode("image", "rightIcon", this.item ? this.item.rightIcon : null, "d-list-item-right-icon");
-			this.setFocusableChildren(this.iconNode, this.labelNode, this.rightText, this.rightIcon2, this.rightIcon);
+			this._renderNode("text", "righttext", this.item ? this.item.righttext : null, "d-list-item-right-text");
+			this._renderNode("image", "righticon2", this.item ? this.item.righticon2 : null, "d-list-item-right-icon2");
+			this._renderNode("image", "righticon", this.item ? this.item.righticon : null, "d-list-item-right-icon");
+			this.setFocusableChildren(this.iconNode, this.labelNode, this.righttext, this.righticon2, this.righticon);
 		},
 
 		//////////// PRIVATE METHODS ///////////////////////////////////////

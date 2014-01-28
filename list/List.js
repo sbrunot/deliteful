@@ -113,7 +113,7 @@ define(["dcl/dcl",
 		//					var MyList = register("m-list",
 		//							[List, StoreMap],
 		//							{labelAttr: "title",
-		//							 rightTextFunc: function (item, store, value) {
+		//							 righttextFunc: function (item, store, value) {
 		//								 return item.title.split(" ")[0];
 		//							}});
 		//					var list = register.createElement("m-list");
