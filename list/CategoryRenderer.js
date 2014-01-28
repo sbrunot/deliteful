@@ -26,14 +26,19 @@ define(["dcl/dcl",
 
 		//////////// PROTECTED METHODS ///////////////////////////////////////
 
-		buildRendering: function () {
+		buildRendering: dcl.superCall(function (sup) {
 			// summary:
 			//		Create the widget container node, into which a category will be rendered.
 			// tags:
 			//		protected
-			this.containerNode = this;
-			this.style.display = "block";
-		},
+			return function () {
+				if (sup) {
+					sup.apply(this, arguments);
+				}
+				this.containerNode = this;
+				this.style.display = "block";
+			};
+		}),
 
 		render: function () {
 			// summary:

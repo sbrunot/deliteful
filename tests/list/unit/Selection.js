@@ -25,7 +25,7 @@ define([
 			var secondItem = list.getChildren()[1];
 			var event = null;
 			list.selectionMode = "multiple";
-			list.on('selection-change', function (event) {
+			list.on("selection-change", function (event) {
 				selectionChangeEvent = event;
 			});
 			assert.equal(firstItem.className, "d-list-item");
@@ -76,7 +76,7 @@ define([
 			var secondItem = list.getChildren()[1];
 			var event = null;
 			list.selectionMode = "single";
-			list.on('selection-change', function (event) {
+			list.on("selection-change", function (event) {
 				selectionChangeEvent = event;
 			});
 			assert.equal(firstItem.className, "d-list-item");
@@ -119,7 +119,7 @@ define([
 			var firstItem = list.getChildren()[0];
 			var event = null;
 			list.selectionMode = "none";
-			list.on('selection-change', function (event) {
+			list.on("selection-change", function (event) {
 				selectionChangeEvent = event;
 			});
 			assert.equal(firstItem.className, "d-list-item");

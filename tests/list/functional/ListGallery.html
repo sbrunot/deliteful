@@ -27,7 +27,7 @@
 			list.pageLength = 20;
 			list.style.height = "200px";
  			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic item of order " + i});
+				list.store.add({label: "Programmatic item of order " + i, righttext: list.id});
 			}
 			document.getElementById("list1Placeholder").appendChild(list);
 			list.startup();
@@ -39,7 +39,7 @@
 			list.startup();
 			document.getElementById("list2Placeholder").appendChild(list);
   			for (i = 0; i < 100; i++) {
-				list.store.add({label: "Programmatic item of order " + i});
+				list.store.add({label: "Programmatic item of order " + i, righttext: list.id});
 			}
 
   			// Programmatic list: memory store, items added before adding the list to the document and before startup
@@ -128,16 +128,16 @@
     <h2>10 items declared as markup, memory store, and selectionMode set to "multiple" (id: list-mark-1)</h2>
 	<d-list id="list-mark-1" style="height: 200px" selectionMode="multiple" store="globalStore">
 		<d-list-store>
-			<d-list-store-item item="{label: 'list item 0', righttext: 'right text 1'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 1', righttext: 'right text 2'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 2', righttext: 'right text 3'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 3', righttext: 'right text 4'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 4', righttext: 'right text 5'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 5', righttext: 'right text 6'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 6', righttext: 'right text 7'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 7', righttext: 'right text 8'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 8', righttext: 'right text 9'}"></d-list-store-item>
-			<d-list-store-item item="{label: 'list item 9', righttext: 'right text 10'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 0', righttext: 'right text A'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 1', righttext: 'right text B'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 2', righttext: 'right text C'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 3', righttext: 'right text D'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 4', righttext: 'right text E'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 5', righttext: 'right text F'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 6', righttext: 'right text G'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 7', righttext: 'right text H'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 8', righttext: 'right text I'}"></d-list-store-item>
+			<d-list-store-item item="{label: 'list item 9', righttext: 'right text J'}"></d-list-store-item>
 		</d-list-store>
 	</d-list>
     <h2>Non scrollable with 10 items declared as markup, default store, and selectionMode set to "single" (id: list-mark-2)</h2>

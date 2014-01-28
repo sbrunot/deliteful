@@ -457,7 +457,8 @@ define(["dcl/dcl",
 					}
 				}
 				if (props.itemRenderer
-					|| (this._isCategorized() && (props.categoryAttr || props.categoryFunc || props.categoryRenderer))) {
+					|| (this._isCategorized()
+							&& (props.categoryAttr || props.categoryFunc || props.categoryRenderer))) {
 					if (this._started) {
 						this._setBusy(true);
 						props.store = true; // to toggle a reload of the list.
@@ -470,34 +471,6 @@ define(["dcl/dcl",
 		}),
 
 		//////////// Public methods ///////////////////////////////////////
-
-		onRendererEvent: function (/*String*/event, /*Function*/func) {
-			// summary:
-			//		Call specified function when event occurs within a renderer.
-			//	event: String 
-			//		the type of events ("click", ...)
-			//	func: Function
-			//		The function to call when the event occurs within a renderer.
-			//		The function is called in the context of the List widget, and
-			//		it receives the following parameters:
-			//		- the original event;
-			//		- the renderer within which the event occurred.
-			// returns:
-			//		An object with a remove method to call to unregister the func
-			//		for the event.
-			var that = this;
-			return this.on(event, function (e) {
-				var enclosingRenderer;
-				if (e.target === this) {
-					return;
-				} else {
-					enclosingRenderer = that.getEnclosingRenderer(e.target);
-					if (enclosingRenderer) {
-						return func.call(that, e, enclosingRenderer);
-					}
-				}
-			}); // Object
-		},
 
 		getRendererByItem: function (/*Object*/item) {
 			// summary:

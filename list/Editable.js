@@ -75,12 +75,12 @@ define(["dcl/dcl",
 				this.moveable = false;
 			}
 			if (this.deleteable) {
-				this.onRendererEvent("click", lang.hitch(this, "_rendererClickHandler"));
+				this._onRendererEvent("click", lang.hitch(this, "_rendererClickHandler"));
 			}
 			if (this.moveable) {
 				this.on(touch.press, lang.hitch(this, "_editableTouchPressHandler"));
 			}
-			this.onRendererEvent("keydown", lang.hitch(this, "_rendererKeydownHandler"));
+			this._onRendererEvent("keydown", lang.hitch(this, "_rendererKeydownHandler"));
 		}),
 
 		destroy: dcl.after(function () {
@@ -129,6 +129,34 @@ define(["dcl/dcl",
 		/////////////////////////////////
 		// Private methods
 		/////////////////////////////////
+
+		_onRendererEvent: function (/*String*/event, /*Function*/func) {
+			// summary:
+			//		Call specified function when event occurs within a renderer.
+			//	event: String 
+			//		the type of events ("click", ...)
+			//	func: Function
+			//		The function to call when the event occurs within a renderer.
+			//		The function is called in the context of the List widget, and
+			//		it receives the following parameters:
+			//		- the original event;
+			//		- the renderer within which the event occurred.
+			// returns:
+			//		An object with a remove method to call to unregister the func
+			//		for the event.
+			var that = this;
+			return this.on(event, function (e) {
+				var enclosingRenderer;
+				if (e.target === this) {
+					return;
+				} else {
+					enclosingRenderer = that.getEnclosingRenderer(e.target);
+					if (enclosingRenderer) {
+						return func.call(that, e, enclosingRenderer);
+					}
+				}
+			}); // Object
+		},
 
 		_showDeleteButton: function (itemIndex) {
 			// TODO: USE i18n string

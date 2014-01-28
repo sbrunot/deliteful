@@ -3,7 +3,7 @@ define([
 	"intern/chai!assert",
 	"delite/register",
 	"deliteful/list/List",
-	"dojo/i18n!deliteful/list/List/nls/List",
+	"dojo/i18n!deliteful/list/List/nls/List"
 ], function (registerSuite, assert, register, List, listMessages) {
 
 	var MockList = register("mock-list", [List], {

@@ -46,15 +46,20 @@ define(["dcl/dcl",
 
 		//////////// PROTECTED METHODS ///////////////////////////////////////
 
-		buildRendering: function () {
+		buildRendering: dcl.superCall(function (sup) {
 			// summary:
 			//		Create the widget container node, into which an item will be rendered.
 			// tags:
 			//		protected
-			this.containerNode = register.createElement("div");
-			this.containerNode.className = "d-list-item-node";
-			this.appendChild(this.containerNode);
-		},
+			return function () {
+				if (sup) {
+					sup.apply(this, arguments);
+				}
+				this.containerNode = register.createElement("div");
+				this.containerNode.className = "d-list-item-node";
+				this.appendChild(this.containerNode);
+			};
+		}),
 
 		render: function () {
 			// summary:

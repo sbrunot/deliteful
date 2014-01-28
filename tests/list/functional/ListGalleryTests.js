@@ -168,6 +168,144 @@ define(["intern!object",
 					})
 					.end();
 			});
+		},
+		"keyboard navigation": function () {
+			var remote = this.remote;
+			return remote
+			.get(require.toUrl("./ListGallery.html"))
+			.waitForCondition("ready", 5000)
+			.then(function () {
+				remote
+				.keys("\uE004") // Press TAB
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1\nProgrammatic item of order 0");
+				})
+				.end()
+				.keys("\uE015") // Press DOWN ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1\nProgrammatic item of order 1");
+				})
+				.end()
+				.keys("\uE015") // Press DOWN ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1\nProgrammatic item of order 2");
+				})
+				.end()
+				.keys("\uE014") // Press RIGHT ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "Programmatic item of order 2");
+				})
+				.end()
+				.keys("\uE014") // Press RIGHT ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1");
+				})
+				.end()
+				.keys("\uE014") // Press RIGHT ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "Programmatic item of order 2");
+				})
+				.end()
+				.keys("\uE012") // Press LEFT ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1");
+				})
+				.keys("\uE013") // Press UP ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1\nProgrammatic item of order 2");
+				})
+				.end()
+				.keys("\uE013") // Press UP ARROW
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-1\nProgrammatic item of order 1");
+				})
+				.end()
+				.keys("\uE004") // Press TAB
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "list-prog-2\nProgrammatic item of order 0");
+				})
+				.end()
+				.keys("\uE004") // Press TAB
+				.keys("\uE004") // Press TAB
+				.keys("\uE004") // Press TAB
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text A\nlist item 0");
+				})
+				.end()
+				.keys("\uE00D") // Press SPACE
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text A\nlist item 0");
+				})
+				.getAttribute("className")
+				.then(function (value) {
+					assert.equal(value, "d-list-item d-selected");
+				})
+				.end()
+				.keys("\uE006") // Press ENTER
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text A\nlist item 0");
+				})
+				.getAttribute("className")
+				.then(function (value) {
+					assert.equal(value, "d-list-item");
+				})
+				.end()
+				.keys("\uE004") // Press TAB
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text 1\nlist item 0");
+				})
+				.end()
+				.keys("\uE006") // Press ENTER
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text 1\nlist item 0");
+				})
+				.getAttribute("className")
+				.then(function (value) {
+					assert.equal(value, "d-list-item d-selected");
+				})
+				.end()
+				.keys("\uE00D") // Press SPACE
+				.execute("return document.activeElement")
+				.text()
+				.then(function (value) {
+					assert.equal(value, "right text 1\nlist item 0");
+				})
+				.getAttribute("className")
+				.then(function (value) {
+					assert.equal(value, "d-list-item");
+				})
+				.end();
+			});
 		}
 	});
 });
