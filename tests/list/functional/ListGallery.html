@@ -81,7 +81,7 @@
 				if (index !== null) {
 					beforeRenderer = list.getItemRendererByIndex(index);
 					if (beforeRenderer) {
-						options.before = beforeRenderer.item;
+						options.before = list.renderItemToItem(beforeRenderer.item); // there is a bug in delite/StoreMap, the method always return undefined
 					}
 				}
 				

@@ -246,6 +246,62 @@ define([
 			checkCategory(children[17], "D");
 			checkItem(children[18], "item a");
 		},
+		"custom category attribute": function () {
+			var dfd = this.async(1000);
+			list.categoryAttr = "label";
+			setTimeout(dfd.callback(function () {
+				var children = list.getChildren();
+				assert.equal(children.length, 18);
+				checkCategory(children[0], "item 1");
+				checkItem(children[1], "item 1");
+				checkCategory(children[2], "item 2");
+				checkItem(children[3], "item 2");
+				checkCategory(children[4], "item 3");
+				checkItem(children[5], "item 3");
+				checkCategory(children[6], "item 4");
+				checkItem(children[7], "item 4");
+				checkCategory(children[8], "item 5");
+				checkItem(children[9], "item 5");
+				checkCategory(children[10], "item 6");
+				checkItem(children[11], "item 6");
+				checkCategory(children[12], "item 7");
+				checkItem(children[13], "item 7");
+				checkCategory(children[14], "item 8");
+				checkItem(children[15], "item 8");
+				checkCategory(children[16], "item 9");
+				checkItem(children[17], "item 9");
+			}), 0);
+			return dfd;
+		},
+		"custom category function": function () {
+			var dfd = this.async(1000);
+			list.categoryFunc = function (item) {
+				return item.label;
+			};
+			setTimeout(dfd.callback(function () {
+				var children = list.getChildren();
+				assert.equal(children.length, 18);
+				checkCategory(children[0], "item 1");
+				checkItem(children[1], "item 1");
+				checkCategory(children[2], "item 2");
+				checkItem(children[3], "item 2");
+				checkCategory(children[4], "item 3");
+				checkItem(children[5], "item 3");
+				checkCategory(children[6], "item 4");
+				checkItem(children[7], "item 4");
+				checkCategory(children[8], "item 5");
+				checkItem(children[9], "item 5");
+				checkCategory(children[10], "item 6");
+				checkItem(children[11], "item 6");
+				checkCategory(children[12], "item 7");
+				checkItem(children[13], "item 7");
+				checkCategory(children[14], "item 8");
+				checkItem(children[15], "item 8");
+				checkCategory(children[16], "item 9");
+				checkItem(children[17], "item 9");
+			}), 0);
+			return dfd;
+		},
 		teardown : function () {
 			list.destroy();
 			list = null;

@@ -110,6 +110,13 @@ define([
 			assert.equal(children[0].getChildren()[0].className, "d-list-item-label");
 			assert.equal(children[0].getChildren()[0].innerHTML, "item a");
 		},
+		"item category attribute is not undefined by StoreMap": function () {
+			list.destroy();
+			list = new List();
+			list.startup();
+			list.store.add({label: "item 1", category: "category 1"});
+			assert.equal(list.getChildren()[0].item.category, "category 1");
+		},
 		teardown : function () {
 			list.destroy();
 			list = null;

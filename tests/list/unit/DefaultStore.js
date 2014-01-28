@@ -40,7 +40,7 @@ define([
 				currentObserved = checked[indexes[i]];
 				currentExpected = expectedValues[indexes[i]];
 				for (attr in currentExpected) {
-					assert.equal(currentObserved[attr], currentExpected[attr], hint + ": " + attr + " value");
+					assert.deepEqual(currentObserved[attr], currentExpected[attr], hint + ": " + attr + " value");
 				}
 			}
 		}
@@ -60,7 +60,11 @@ define([
 			var id = list.store.add(item);
 			assert.isDefined(id, "id should be defined");
 			assert.isNotNull(id, "id should be not null");
-			checkArray(list.added, 1, [0], [{index: 0, item: item, items: null}], "added");
+			checkArray(list.added,
+						1,
+						[0],
+						[{index: 0, item: {id: id, category: undefined, label: "firstItem"}, items: null}],
+						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
 			var result = list.store.query();
@@ -70,7 +74,11 @@ define([
 			var item = {id: "item0", label: "firstItem"};
 			var id = list.store.add(item);
 			assert.equal(id, "item0");
-			checkArray(list.added, 1, [0], [{index: 0, item: item, items: null}], "added");
+			checkArray(list.added,
+						1,
+						[0],
+						[{index: 0, item: {id: "item0", category: undefined, label: "firstItem"}, items: null}],
+						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
 			var result = list.store.query();
@@ -80,7 +88,11 @@ define([
 			var item = {label: "firstItem"};
 			var id = list.store.add(item, {id: "item0"});
 			assert.equal(id, "item0");
-			checkArray(list.added, 1, [0], [{index: 0, item: item, items: null}], "added");
+			checkArray(list.added,
+						1,
+						[0],
+						[{index: 0, item: {id: "item0", category: undefined, label: "firstItem"}, items: null}],
+						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
 			var result = list.store.query();
@@ -90,15 +102,15 @@ define([
 			var item1 = {label: "firstItem"};
 			var item2 = {label: "secondItem"};
 			var item3 = {label: "thirdItem"};
-			list.store.add(item1);
-			list.store.add(item2);
-			list.store.add(item3);
+			var id1 = list.store.add(item1);
+			var id2 = list.store.add(item2);
+			var id3 = list.store.add(item3);
 			checkArray(list.added,
 						3,
 						[0, 1, 2],
-						[{index: 0, item: item1, items: null},
-						 {index: 1, item: item2, items: null},
-						 {index: 2, item: item3, items: null}],
+						[{index: 0, item: {id: id1, category: undefined, label: "firstItem"}, items: null},
+						 {index: 1, item: {id: id2, category: undefined, label: "secondItem"}, items: null},
+						 {index: 2, item: {id: id3, category: undefined, label: "thirdItem"}, items: null}],
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
@@ -109,15 +121,15 @@ define([
 			var item1 = {label: "firstItem"};
 			var item2 = {label: "secondItem"};
 			var item3 = {label: "thirdItem"};
-			list.store.add(item1);
-			list.store.add(item3);
-			list.store.add(item2, {before: item3});
+			var id1 = list.store.add(item1);
+			var id3 = list.store.add(item3);
+			var id2 = list.store.add(item2, {before: item3});
 			checkArray(list.added,
 						3,
 						[0, 1, 2],
-						[{index: 0, item: item1, items: null},
-						 {index: 1, item: item3, items: null},
-						 {index: 1, item: item2, items: null}],
+						[{index: 0, item: {id: id1, category: undefined, label: "firstItem"}, items: null},
+						 {index: 1, item: {id: id3, category: undefined, label: "thirdItem"}, items: null},
+						 {index: 1, item: {id: id2, category: undefined, label: "secondItem"}, items: null}],
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
@@ -188,9 +200,18 @@ define([
 			checkArray(list.removed,
 						3,
 						[0, 1, 2],
-						[{index: 0, item: item1, items: null, keepSelection: false},
-						 {index: 0, item: item2, items: null, keepSelection: false},
-						 {index: 0, item: item3, items: null, keepSelection: false}],
+						[{index: 0,
+						  item: {id: id1, category: undefined, label: "first"},
+						  items: null,
+						  keepSelection: false},
+						 {index: 0,
+						  item: {id: "second", category: undefined, label: "second"},
+						  items: null,
+						  keepSelection: false},
+						 {index: 0,
+						  item: {id: "third", category: undefined, label: "third"},
+						  items: null,
+						  keepSelection: false}],
 						"removed");
 			result = list.store.query();
 			checkArray(result, 0, null, null, "query result");
@@ -204,7 +225,11 @@ define([
 			list.cleanupMock();
 			list.store.put(item2, {id: id1});
 			assert.equal(list.store.get(id1), item2, "item after update");
-			checkArray(list.put, 1, [0], [{index: 0, item: item2, items: null}], "put");
+			checkArray(list.put,
+					1,
+					[0],
+					[{index: 0, item: {id: id1, category: undefined, label: "second"}, items: null}],
+					"put");
 			checkArray(list.added, 0, null, null, "added");
 			checkArray(list.removed, 0, null, null, "removed");
 			result = list.store.query();
@@ -234,8 +259,19 @@ define([
 			list.cleanupMock();
 			list.store.put(item3, {before: item2});
 			checkArray(list.put, 0, null, null, "put");
-			checkArray(list.removed, 1, [0], [{index: 2, item: item3, items: null, keepSelection: true}], "removed");
-			checkArray(list.added, 1, [0], [{index: 1, item: item3, items: null}], "added");
+			checkArray(list.removed,
+						1,
+						[0],
+						[{index: 2,
+						  item: {id: 3, category: undefined, label: "third"},
+						  items: null,
+						  keepSelection: true}],
+						"removed");
+			checkArray(list.added,
+						1,
+						[0],
+						[{index: 1, item: {id: 3, category: undefined, label: "third"}, items: null}],
+						"added");
 			var result = list.store.query();
 			checkArray(result, 3, [0, 1, 2], [item1, item3, item2], "query result after move");
 		},
@@ -250,10 +286,49 @@ define([
 			list.cleanupMock();
 			list.store.put(item3updated, {id: 3, before: item2});
 			checkArray(list.put, 0, null, null, "put");
-			checkArray(list.removed, 1, [0], [{index: 2, item: item3, items: null, keepSelection: true}], "removed");
-			checkArray(list.added, 1, [0], [{index: 1, item: item3updated, items: null}], "added");
+			checkArray(list.removed,
+						1,
+						[0],
+						[{index: 2,
+						  item: {id: 3, category: undefined, label: "third"},
+						  items: null,
+						  keepSelection: true}],
+						"removed");
+			checkArray(list.added,
+						1,
+						[0],
+						[{index: 1, item: {id: 3, category: undefined, label: "fourth"}, items: null}],
+						"added");
 			var result = list.store.query();
 			checkArray(result, 3, [0, 1, 2], [item1, item3updated, item2], "query result after move");
+		},
+		"use attribute mapping": function () {
+			list.destroy();
+			list = new MockList();
+			list.labelFunc = function (item) {
+				return item.label.toUpperCase();
+			};
+			list.righttextAttr = "id";
+			list.initMock();
+			var item1 = {id: 1, label: "first"};
+			var item2 = {id: 2, label: "second"};
+			var item3 = {id: 3, label: "third"};
+			list.store.add(item1);
+			list.store.add(item2);
+			list.store.add(item3);
+			checkArray(list.added,
+						3,
+						[0, 1, 2],
+						[{index: 0,
+						  item: {id: 1, category: undefined, label: "FIRST", righttext: 1},
+						  items: null},
+						  {index: 1,
+						   item: {id: 2, category: undefined, label: "SECOND", righttext: 2},
+						   items: null},
+						  {index: 2,
+						   item: {id: 3, category: undefined, label: "THIRD", righttext: 3},
+						   items: null}],
+						"added");
 		},
 		teardown : function () {
 			list.destroy();

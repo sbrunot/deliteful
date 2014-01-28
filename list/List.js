@@ -339,7 +339,11 @@ define(["dcl/dcl",
 								? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
 							var existingIndex = this._ids.indexOf(id);
 							if (options && options.before) {
-								beforeIndex = this.data.indexOf(options.before);
+								if (this.idProperty in options.before) {
+									beforeIndex = this._ids.indexOf(options.before[this.idProperty]);
+								} else {
+									beforeIndex = this.data.indexOf(options.before);
+								}
 							}
 							if (existingIndex >= 0) {
 								// item exists in store
@@ -354,12 +358,13 @@ define(["dcl/dcl",
 									this.data.splice(beforeIndex, 0, this.data.splice(existingIndex, 1)[0]);
 									this._ids.splice(beforeIndex, 0, this._ids.splice(existingIndex, 1)[0]);
 									if (this._queried) {
-										list.removeItem(existingIndex, itemBeforeUpdate, null, true);
-										list.addItem(beforeIndex, item, null);
+										list.removeItem(existingIndex,
+												list.itemToRenderItem(itemBeforeUpdate), null, true);
+										list.addItem(beforeIndex, list.itemToRenderItem(item), null);
 									}
 								} else {
 									if (this._queried) {
-										list.putItem(existingIndex, item, null);
+										list.putItem(existingIndex, list.itemToRenderItem(item), null);
 									}
 								}
 							} else {
@@ -372,7 +377,8 @@ define(["dcl/dcl",
 									this._ids.push(id);
 								}
 								if (this._queried) {
-									list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1, item, null);
+									list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1,
+											list.itemToRenderItem(item), null);
 								}
 							}
 							return id;
@@ -388,7 +394,7 @@ define(["dcl/dcl",
 								item = this.data.splice(index, 1)[0];
 								this._ids.splice(index, 1);
 								if (this._queried) {
-									list.removeItem(index, item, null, false);
+									list.removeItem(index, list.itemToRenderItem(item), null, false);
 								}
 								return true;
 							}
@@ -475,13 +481,14 @@ define(["dcl/dcl",
 		getRendererByItem: function (/*Object*/item) {
 			// summary:
 			//		Returns the renderer currently displaying a specific item.
+			//		This method uses the getIdentity method to compare items.
 			// item: Object
 			//		The item displayed by the renderer.
 			var renderers = query("." + this._cssClasses.item, this.containerNode);
 			var renderer, i;
 			for (i = 0; i < renderers.length; i++) {
 				renderer = renderers[i];
-				if (renderer.item === item) {
+				if (this.getIdentity(renderer.item) === this.getIdentity(item)) {
 					return renderer; // Widget
 				}
 			}
@@ -526,7 +533,7 @@ define(["dcl/dcl",
 
 		getIdentity: function (/*Object*/item) {
 			// summary:
-			//		Returns the identity of an item for the Selection.
+			//		Returns the identity of an item.
 			// item: Object
 			//		The item.
 			// tags:
