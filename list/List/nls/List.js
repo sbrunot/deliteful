@@ -2,7 +2,6 @@ define({ root: //begin v1.x content
 	({
 		"aria-label": "list",
 		"exception-item-already-exists": "Item already exists",
-		"exception-renderNewItems-pos": "_renderNewItems: only first and last positions are supported",
 		"horizontal-scroll-not-supported": "'horizontal' not supported for scrollDirection, reverting to 'none'"
 	})
 //end v1.x content

@@ -309,7 +309,7 @@ define(["dcl/dcl",
 				if (firstRendererBeforeUpdate && this._previousPageLoader && this._previousPageLoader.isLoading()) {
 					this.focusChild(firstRendererBeforeUpdate);
 				}
-				this._renderNewItems(items, "first");
+				this._renderNewItems(items, true);
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("last");
 				}
@@ -346,7 +346,7 @@ define(["dcl/dcl",
 				if (lastChild) {
 					this.focusChild(lastChild);
 				}
-				this._renderNewItems(items, "last");
+				this._renderNewItems(items, false);
 				if (this.maxPages && this._pages.length > this.maxPages) {
 					this._unloadPage("first");
 				}

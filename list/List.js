@@ -650,28 +650,25 @@ define(["dcl/dcl",
 
 		//////////// Renderers life cycle ///////////////////////////////////////
 
-		_renderNewItems: function (/*Array*/ items, /*String*/pos) {
+		_renderNewItems: function (/*Array*/ items, /*boolean*/atTheTop) {
 			// summary:
 			//		Render new items within the list widget.
 			// items: Array
 			//		The new items to render.
-			// pos:
-			//		Where to render the new items. Supported values are:
-			//		- "first": render the new items at the beginning of the list
-			//		- "last": render the new items at the end of the list
+			// atTheTop:
+			//		If true, the new items are rendered at the top of the list.
+			//		If false, they are rendered at the bottom of the list.
 			// tags:
 			//		private
 			if (!this.containerNode.firstElementChild) {
 				this.containerNode.appendChild(this._createRenderers(items, 0, items.length, null));
 			} else {
-				if (pos === "first") {
+				if (atTheTop) {
 					this.containerNode.insertBefore(this._createRenderers(items, 0, items.length, null),
 							this.containerNode.firstElementChild);
-				} else if (pos === "last") {
+				} else {
 					this.containerNode.appendChild(this._createRenderers(items, 0, items.length,
 							this._getLastRenderer().item));
-				} else {
-					throw new Error(messages["exception-renderNewItems-pos"]);
 				}
 			}
 		},
@@ -891,7 +888,7 @@ define(["dcl/dcl",
 			// tags:
 			//		protected
 			this._processAndRemoveContent(this, {});
-			this._renderNewItems(items, "last");
+			this._renderNewItems(items, false);
 			this._setBusy(false);
 		},
 

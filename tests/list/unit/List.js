@@ -61,24 +61,18 @@ define([
 			assert.isNull(list.getEnclosingRenderer(list), "third");
 		},
 		"_renderNewItems": function () {
-			list._renderNewItems([{label: "item a"}, {label: "item b"}, {label: "item c"}], "first");
+			list._renderNewItems([{label: "item a"}, {label: "item b"}, {label: "item c"}], true);
 			var children = list.getChildren();
 			assert.equal(children.length, 6, "nb of items");
 			assert.equal(children[0].item.label, "item a", "first added 1");
 			assert.equal(children[1].item.label, "item b", "first added 2");
 			assert.equal(children[2].item.label, "item c", "firstd added 3");
-			list._renderNewItems([{label: "item d"}, {label: "item e"}, {label: "item f"}], "last");
+			list._renderNewItems([{label: "item d"}, {label: "item e"}, {label: "item f"}], false);
 			children = list.getChildren();
 			assert.equal(children.length, 9, "nb of items 2");
 			assert.equal(children[6].item.label, "item d", "last added 1");
 			assert.equal(children[7].item.label, "item e", "last added 2");
 			assert.equal(children[8].item.label, "item f", "last added 3");
-			try {
-				list._renderNewItems([{label: "item g"}, {label: "item h"}, {label: "item i"}], "top");
-				assert.fail("error expected");
-			} catch (e) {
-				assert.equal(e.message, listMessages["exception-renderNewItems-pos"], "error message");
-			}
 		},
 		"_getFirstRenderer": function () {
 			var dfd = this.async(1000);
