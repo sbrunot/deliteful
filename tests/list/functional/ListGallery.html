@@ -11,12 +11,15 @@
 	<script type="text/javascript">
 		var ready = false;
 		require([
+		    "dcl/dcl",
 			"dojo/on",
+			"dojo/Deferred",
+			"dojo/store/util/QueryResults",
 			"dojo/store/Memory",
 			"dojo/store/Observable",
 			"delite/register",
 			"deliteful/list/List"
-		], function (on, MemoryStore, Observable, register, List) {
+		], function (dcl, on, Deferred, QueryResults, MemoryStore, Observable, register, List) {
   			var i, list;
 
   			globalStore = new Observable(MemoryStore({data: []}));
@@ -66,6 +69,49 @@
 				list.store.add({label: "Programmatic item of order " + i});
 			}
 
+  			// Programmatic list: custom store with 500ms latency, using all items attribute and using delite/StoreMap mapping
+			var CustomMemoryStore = dcl([MemoryStore], {
+				latency: 500,
+				query: dcl.superCall(function (sup) {
+					return function (query, options) {
+						var def = new Deferred;
+						var that = this;
+						setTimeout(function () {
+							def.resolve(sup.call(that, query, options));
+						}, this.latency);
+						return new QueryResults(def);
+					};
+				})
+			});
+			var createStore = function (itemsCount, latency) {
+				var i = 0, data = [];
+				for (; i < itemsCount; i++) {
+					data.push({id: 'ref' + i, text: 'this is list item ' + i});
+				}
+				return new Observable(new CustomMemoryStore({latency: latency, data: data, idProperty: 'id'}));
+			};
+			list = register.createElement("d-list");
+			list.id = "list-prog-5";
+			list.style.height = "200px";
+			list.store = createStore(100, 500);
+			list.labelAttr = "text";
+			list.righttextFunc = function (item) {
+				return "id: " + item.id;
+			};
+			list.iconFunc = function (item) {
+				var i = parseInt(item.id.slice(3));
+				return "../../images/i-icon-" + (i % 10 + 1) + ".png";
+			};
+			list.righticonFunc = function () {
+				return "../../images/a-icon-1.png";
+			};
+			list.righticon2Func = function (item) {
+				var i = parseInt(item.id.slice(3));
+				return "../../images/b-icon-" + (i % 8 + 1) + ".png";
+			};
+			list.startup();
+			document.getElementById("list5Placeholder").appendChild(list);
+			
  			register.parse();
 
 
@@ -124,6 +170,8 @@
  	<div id="list3Placeholder"></div>
  	<h2>Observable Memory store, items added after the list startup and after adding the list to the document (id: list-prog-4)</h2>
  	<div id="list4Placeholder"></div>
+ 	<h2>Observable custom store with 500ms latency, using all items attribute and using delite/StoreMap mapping (id: list-prog-5)</h2>
+ 	<div id="list5Placeholder"></div>
     <h1>Markup lists</h1>
     <h2>10 items declared as markup, memory store, and selectionMode set to "multiple" (id: list-mark-1)</h2>
 	<d-list id="list-mark-1" style="height: 200px" selectionMode="multiple" store="globalStore">
@@ -171,6 +219,21 @@
 		</d-list-store>
 	</d-list>
 	<button onclick="var list = document.getElementById('list-mark-3'); list.categoryAttr = (list.categoryAttr === 'righttext' ? 'label' : 'righttext');">Toggle category attribute between righttext and label.</button>
+   	<h2>10 items declared as markup, using all items attribute (id: list-mark-4)</h2>
+	<d-list id="list-mark-4" style="height: 200px">
+		<d-list-store>
+			<d-list-store-item item="{icon: '../../images/i-icon-1.png', label: 'list item 0', righttext: 'A', righticon2: '../../images/b-icon-1.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-2.png', label: 'list item 1', righttext: 'A', righticon2: '../../images/b-icon-2.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-3.png', label: 'list item 2', righttext: 'A', righticon2: '../../images/b-icon-3.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-4.png', label: 'list item 3', righttext: 'A', righticon2: '../../images/b-icon-4.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-5.png', label: 'list item 4', righttext: 'A', righticon2: '../../images/b-icon-5.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-6.png', label: 'list item 5', righttext: 'B', righticon2: '../../images/b-icon-6.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-7.png', label: 'list item 6', righttext: 'B', righticon2: '../../images/b-icon-7.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-8.png', label: 'list item 7', righttext: 'B', righticon2: '../../images/b-icon-8.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-9.png', label: 'list item 8', righttext: 'B', righticon2: '../../images/b-icon-1.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+			<d-list-store-item item="{icon: '../../images/i-icon-10.png', label: 'list item 9', righttext: 'B', righticon2: '../../images/b-icon-2.png', righticon: '../../images/a-icon-1.png'}"></d-list-store-item>
+		</d-list-store>
+	</d-list>
 	<div style="height: 350px;">
 	</div>
 	<div style="border-top: 1px white; position: fixed; bottom: 0px; z-index: 10; background: #c5ccd3; width: 100%">
@@ -188,9 +251,11 @@
 						<option value="list-prog-2">list-prog-2</option>
 						<option value="list-prog-3">list-prog-3</option>
 						<option value="list-prog-4">list-prog-4</option>
+						<option value="list-prog-5">list-prog-5</option>
 						<option value="list-mark-1">list-mark-1</option>
 						<option value="list-mark-2">list-mark-2</option>
 						<option value="list-mark-3">list-mark-3</option>
+						<option value="list-mark-4">list-mark-4</option>
 					</select>
 				</td>
 				<td>List id:</td><td><input id="idInput" type="text" value="list-mark-4"></td>

@@ -22,10 +22,11 @@
 			"deliteful/list/Editable",
 			"deliteful/list/Pageable",
 			"dojo/dom",
+			"dojo/store/util/QueryResults",
 			"dojo/store/Memory",
 			"dojo/store/Observable",
 			"dojo/Deferred"
-		], function(dcl, register, lang, domReady, on, List, Editable, StoreModel, dom, Memory, Observable, Deferred){
+		], function(dcl, register, lang, domReady, on, List, Editable, StoreModel, dom, QueryResults, Memory, Observable, Deferred){
 			domReady(function () {
 				document.body.dojoClick = false; // this is to avoid https://bugs.dojotoolkit.org/ticket/17578
 			});
@@ -42,7 +43,7 @@
 						setTimeout(function () {
 							def.resolve(sup.call(that, query, options));
 						}, this.latency);
-						return def;
+						return new QueryResults(def);
 					};
 				})
 			});
@@ -53,10 +54,10 @@
 					data.push({category: 'category ' + Math.floor(i / 10),
 							  id: 'ref' + i,
 							  label: 'this is list item ' + i,
-							  icon: useIcon ? '../../../mobile/tests/images/i-icon-' + (i % 10 + 1) + '.png' : null,
+							  icon: useIcon ? '../../images/i-icon-' + (i % 10 + 1) + '.png' : null,
 							  righttext: useRightText ? 'id: ref' + i : null,
-							  righticon: useRightIcon ? '../../../mobile/tests/images/a-icon-1.png' : null,
-							  righticon2: useRightIcon2 ? '../../../mobile/tests/images/b-icon-' + (i % 8 + 1) + '.png' : null});
+							  righticon: useRightIcon ? '../../images/a-icon-1.png' : null,
+							  righticon2: useRightIcon2 ? '../../images/b-icon-' + (i % 8 + 1) + '.png' : null});
 				}
 				return new Observable(new CustomMemoryStore({latency: latency, data: data, idProperty: 'id'}));
 			};

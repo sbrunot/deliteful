@@ -40,6 +40,9 @@ define(["intern!object",
 		"ListGallery.html / list-prog-4": function () {
 			return basicTest(this.remote, "./ListGallery.html", "list-prog-4", 100, 0);
 		},
+		"ListGallery.html / list-prog-5": function () {
+			return basicTest(this.remote, "./ListGallery.html", "list-prog-4", 100, 0);
+		},
 		"ListGallery.html / list-mark-1": function () {
 			return basicTest(this.remote, "./ListGallery.html", "list-mark-1", 10, 0);
 		},
@@ -48,6 +51,9 @@ define(["intern!object",
 		},
 		"ListGallery.html / list-mark-3": function () {
 			return basicTest(this.remote, "./ListGallery.html", "list-mark-3", 10, 2);
+		},
+		"ListGallery.html / list-mark-4": function () {
+			return basicTest(this.remote, "./ListGallery.html", "list-mark-4", 10, 0);
 		},
 		"selectionMode 'none'": function () {
 			var remote = this.remote;
@@ -245,6 +251,7 @@ define(["intern!object",
 					assert.equal(value, "list-prog-2\nProgrammatic item of order 0");
 				})
 				.end()
+				.keys("\uE004") // Press TAB
 				.keys("\uE004") // Press TAB
 				.keys("\uE004") // Press TAB
 				.keys("\uE004") // Press TAB
