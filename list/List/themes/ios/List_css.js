@@ -82,7 +82,7 @@ define(function(){ return '\
   margin-top: 7px;\
   margin-bottom: -7px;\
 }\
-.d-list-loader-node {\
+.d-list-loader {\
   padding: 0 8px;\
   color: blue;\
   cursor: pointer;\
@@ -90,6 +90,10 @@ define(function(){ return '\
   line-height: 43px;\
   background-color: #ffffff;\
   border-bottom: 1px solid #adaaad;\
+}\
+.d-list-loader.d-loading {\
+  color: #808080;\
+  cursor: wait;\
 }\
 .d-list-loading-panel {\
   position: absolute;\
@@ -100,21 +104,12 @@ define(function(){ return '\
   background-color: #c5ccd3;\
   cursor: wait;\
 }\
-.d-list-loader-node-loading {\
-  padding: 0 8px;\
-  color: #808080;\
-  cursor: wait;\
-  height: 43px;\
-  line-height: 43px;\
-  background-color: #ffffff;\
-  border-bottom: 1px solid #adaaad;\
-}\
 /* TODO: REMOVE THE TWO FOLLOWING CLASSES AND USE A LOADING PANEL INSTEAD ? */\
-.d-list-loading {\
+.d-list.d-loading {\
   padding-top: 50px;\
   text-align: center;\
 }\
-.d-list-loading:after {\
+.d-list.d-loading:after {\
   content: "Loading...";\
   font-size: large;\
   font-style: italic;\

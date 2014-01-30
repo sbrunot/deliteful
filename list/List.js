@@ -266,7 +266,7 @@ define(["dcl/dcl",
 		// CSS classes internally referenced by the List widget
 		_cssClasses: {item: "d-list-item",
 					  category: "d-list-category",
-					  loading: "d-list-loading"},
+					  loading: "d-loading"},
 
 		/*======
 		// Handle for the selection click event handler 

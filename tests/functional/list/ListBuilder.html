@@ -76,7 +76,7 @@
 					baseClass: dom.byId("listStyle").value,
 					autoLoad: dom.byId("autoLoad").value,
 					scrollDirection: dom.byId("scrollable").value ? "vertical" : "none",
-					useMaskingPanel: dom.byId("useMaskingPanel").value
+					maskOnUpdate: dom.byId("maskOnUpdate").value
 				};
 				var editable = dom.byId("editable").value;
 				var editButton = dom.byId("editButton");
@@ -276,8 +276,8 @@
 		<label for="maxPages">Max nb of pages:</label>
 		<input id="maxPages" type="number" value="2">
 		<br>
-		<label for="useMaskingPanel">Mask on page update:</label>
-		<select id="useMaskingPanel">
+		<label for="maskOnUpdate">Mask on page update:</label>
+		<select id="maskOnUpdate">
 			<option value="">No</option>
 			<option value="true">Yes</option>
 		</select>
@@ -301,7 +301,8 @@
 	<div id="editPanel" style="display: none;">
 		<h2>Store updater</h2>
 		<p style="color: red;">
-		WARNING: cannot work at the moment, as the store we're using is not Observable (because its query method returns a Promise ?).
+		FIXME: LOAD PAGES UNTIL THERE IS A PREVIOUS PAGE. DELETE THE ITEM BEFORE THE FIRST ONE, THEN LOAD THE PREVIOUS PAGE: THE FIRST ITEM IS DUPLICATED
+		=> FILTER BY ID TO REMOVE DUPLICATES FROM RESULT WHEN LOADING A PREVIOUS PAGE ?
 		</p>
 		<h3>Removal</h3>
 		<label for="itemIdInput">Item id:</label> <input id="itemIdInput" type="text" value="ref0"><button id="removeItem">Remove from store</button>
