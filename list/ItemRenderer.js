@@ -1,9 +1,7 @@
 define(["dcl/dcl",
         "delite/register",
-        "dojo/dom-construct",
-        "dojo/dom-class",
         "./Renderer"
-], function (dcl, register, domConstruct, domClass, Renderer) {
+], function (dcl, register, Renderer) {
 	
 	// module:
 	//		deliteful/list/ItemRenderer
@@ -97,9 +95,15 @@ define(["dcl/dcl",
 			var nodeTag = (nodeType === "text" ? "DIV" : "IMG");
 			if (data) {
 				if (!this[nodeName]) {
-					this[nodeName] = domConstruct.create(nodeTag,
-							{id: this.id + nodeName, class: nodeClass, tabindex: -1},
-							this.containerNode, 0);
+					this[nodeName] = register.createElement(nodeTag);
+					this[nodeName].id = this.id + nodeName;
+					this[nodeName].className = nodeClass;
+					this[nodeName].tabIndex = -1;
+					if (this.containerNode.firstChild) {
+						this.containerNode.insertBefore(this[nodeName], this.containerNode.firstChild);
+					} else {
+						this.containerNode.appendChild(this[nodeName]);
+					}
 				}
 				if (this[nodeName].getAttribute(dataAttribute) !== data) {
 					this[nodeName][dataAttribute] = data;
