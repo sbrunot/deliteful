@@ -62,7 +62,7 @@ example:
 _Note that items are appended to the store in the order they are declared in the markup._
 
 The actual rendering of the items in the list is performed by an item renderer widget.
-The default one is [deliteful/list/ItemRenderer](ItemRenderer), but another one can be specified
+The default one is [deliteful/list/ItemRenderer](ItemRenderer.md), but another one can be specified
 using the `itemRenderer` attribute of the list, as in the following example:
 
 ```js
@@ -162,7 +162,7 @@ list.store.add({label: "third item", category: "Category B"});
 ```
 
 The actual rendering of the categories in the list is performed by a category renderer widget.
-The default one is [deliteful/list/CategoryRenderer](CategoryRenderer), but another one can be specified
+The default one is [deliteful/list/CategoryRenderer](CategoryRenderer.md), but another one can be specified
 using the `categoryRenderer` attribute of the list, as in the following example:
 
 ```js
