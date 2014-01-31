@@ -367,6 +367,19 @@ define(["dcl/dcl",
 			}));
 			when(results, lang.hitch(this, function (page) {
 				if (page.length) {
+					// Note: if store was supporting negative values in query option "count",
+					// we wouldn't have to do the following
+					var that = this, i;
+					var previousPageIds = this._pages[0].map(function (item) {
+						return that.getIdentity(item);
+					});
+					for (i = 0; i < page.length; i++) {
+						if (previousPageIds.indexOf(this.getIdentity(page[i])) >= 0) {
+							// remove the duplicate (happens if an element was deleted before the first one)
+							page.splice(i--, 1);
+						}
+					}
+					// End of note
 					this._firstLoaded = this._queryOptions.start;
 					this._pages.unshift(page);
 					when(lang.hitch(this, onDataReadyHandler)(page), function () {
@@ -391,9 +404,7 @@ define(["dcl/dcl",
 			var page, i;
 			if (first) {
 				page = this._pages.shift();
-//				if (this._pageObserverHandles.length) {
-					this._pageObserverHandles.shift().remove();
-//				}
+				this._pageObserverHandles.shift().remove();
 				this._firstLoaded += page.length;
 				for (i = 0; i < page.length; i++) {
 					this.removeItem(null, page[i], null, true);
@@ -407,9 +418,7 @@ define(["dcl/dcl",
 				}
 			} else {
 				page = this._pages.pop();
-//				if (this._pageObserverHandles.length) {
-					this._pageObserverHandles.pop().remove();
-//				}
+				this._pageObserverHandles.pop().remove();
 				this._lastLoaded -= page.length;
 				for (i = 0; i < page.length; i++) {
 					this.removeItem(null, page[i], null, true);
