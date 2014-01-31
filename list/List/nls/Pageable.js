@@ -1,7 +1,5 @@
 define({ root: //begin v1.x content
 	({
-		"click-to-load-message": "Click to load more items",
-		"loading-message": "Loading more items...",
 		"default-click-to-load-message": "Click to load ${pageLength} more items",
 		"default-loading-message": "Loading ${pageLength} more items..."
 	})

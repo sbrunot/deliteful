@@ -18,11 +18,11 @@ define(["dcl/dcl",
 
 		// clickToLoadMessage: String
 		//		The message to display on the widget when it can be clicked to load a page
-		clickToLoadMessage: messages["click-to-load-message"],
+		clickToLoadMessage: "",
 
 		// loadingMessage: String
 		//		The message to display on the widget a page is loading
-		loadingMessage: messages["loading-message"],
+		loadingMessage: "",
 
 		// _loading: Boolean
 		//		true if a page is loading, false otherwise
