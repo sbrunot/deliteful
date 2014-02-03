@@ -703,11 +703,9 @@ define(["dcl/dcl",
 			var documentFragment = document.createDocumentFragment();
 			for (; currentIndex <= toIndex; currentIndex++) {
 				currentItem = items[currentIndex];
-				if (this._isCategorized()) {
-					if (!previousItem
-							|| currentItem.category !== previousItem.category) {
-						documentFragment.appendChild(this._createCategoryRenderer(currentItem.category));
-					}
+				if (this._isCategorized()
+					&& (!previousItem || currentItem.category !== previousItem.category)) {
+					documentFragment.appendChild(this._createCategoryRenderer(currentItem.category));
 				}
 				documentFragment.appendChild(this._createItemRenderer(currentItem));
 				previousItem = currentItem;
@@ -722,47 +720,63 @@ define(["dcl/dcl",
 			//		The renderer to add to the list.
 			// atIndex: int
 			//		The index (not counting category renderers) where to add the item renderer in the list.
-			var rendererAtIndex = atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null;
-			var previousRenderer = null, rendererCategory, newCategoryRenderer;
-			if (this._isCategorized()) {
-				rendererCategory = renderer.item.category;
-				previousRenderer = rendererAtIndex
-										? this._getNextRenderer(rendererAtIndex, -1)
-										: this._getLastRenderer();
-				if (previousRenderer) {
-					if (this._isCategoryRenderer(previousRenderer)) {
-						if (rendererCategory !== previousRenderer.category) {
-							rendererAtIndex = previousRenderer;
-							previousRenderer = this._getNextRenderer(previousRenderer, -1);
-						}
-					}
-					if (!previousRenderer
-							|| (!this._isCategoryRenderer(previousRenderer)
-									&& previousRenderer.item.category !== rendererCategory)) {
-						this.insertBefore(this._createCategoryRenderer(rendererCategory), rendererAtIndex);
-					}
-				} else {
-					newCategoryRenderer = this._createCategoryRenderer(rendererCategory);
-					if (rendererAtIndex) {
-						this.insertBefore(newCategoryRenderer, rendererAtIndex);
-					} else {
-						this.appendChild(newCategoryRenderer);
-					}
+			var spec = this._getItemRendererInsertSpec(renderer, atIndex);
+			if (spec.nodeToInsertBefore) {
+				this.insertBefore(renderer, spec.nodeToInsertBefore);
+				if (spec.addCategoryAfter) {
+					this.insertBefore(this._createCategoryRenderer(spec.nodeToInsertBefore.item.category),
+							spec.nodeToInsertBefore);
 				}
-				if (rendererAtIndex && !this._isCategoryRenderer(rendererAtIndex)) {
-					if (rendererAtIndex.item.category !== rendererCategory) {
-						newCategoryRenderer =
-							this._createCategoryRenderer(rendererAtIndex.item.category);
-						this.insertBefore(newCategoryRenderer, rendererAtIndex);
-						rendererAtIndex = newCategoryRenderer;
-					}
-				}
-			}
-			if (rendererAtIndex) {
-				this.insertBefore(renderer, rendererAtIndex);
 			} else {
 				this.appendChild(renderer);
 			}
+			if (spec.addCategoryBefore) {
+				this.insertBefore(this._createCategoryRenderer(renderer.item.category), renderer);
+			}
+		},
+
+		_getItemRendererInsertSpec: function (/*Widget*/renderer, /*int*/atIndex) {
+			// summary:
+			//		Get a specification for the insertion of an item renderer in the list.
+			// description:
+			//		Returns an object that contains the following attributes:
+			//		- nodeToInsertBefore: the node before which to insert the item renderer
+			//		- addCategoryBefore: true if a category header should be inserted before the item renderer
+			//		- addCategoryAfter: true if a category header should be inserted after the item renderer
+			// renderer: List/ItemRenderer subclass
+			//		The renderer to add to the list.
+			// atIndex: int
+			//		The index (not counting category renderers) where to add the item renderer in the list.
+			var result = {nodeToInsertBefore: atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null,
+						  addCategoryBefore: false,
+						  addCategoryAfter: false};
+			if (this._isCategorized()) {
+				var previousRenderer = result.nodeToInsertBefore
+										? this._getNextRenderer(result.nodeToInsertBefore, -1)
+										: this._getLastRenderer();
+				if (!previousRenderer) {
+					result.addCategoryBefore = true;
+				} else {
+					if (!this._sameCategory(renderer, previousRenderer)) {
+						if (this._isCategoryRenderer(previousRenderer)) {
+							result.nodeToInsertBefore = previousRenderer;
+							previousRenderer = this._getNextRenderer(previousRenderer, -1);
+							if (!previousRenderer
+								|| (previousRenderer && !this._sameCategory(renderer, previousRenderer))) {
+								result.addCategoryBefore = true;
+							}
+						} else {
+							result.addCategoryBefore = true;
+						}
+					}
+				}
+				if (result.nodeToInsertBefore
+					&& !this._isCategoryRenderer(result.nodeToInsertBefore)
+					&& !this._sameCategory(result.nodeToInsertBefore, renderer)) {
+					result.addCategoryAfter = true;
+				}
+			}
+			return result; // Object
 		},
 
 		_removeRenderer: function (/*Widget*/renderer, /*Boolean*/keepSelection) {
@@ -772,29 +786,19 @@ define(["dcl/dcl",
 			//		The renderer to remove from the list.
 			// keepSelection: Boolean
 			//		Set to true if the renderer item should not be removed from the list of selected items.
-			var rendererIsCategoryHeader = this._isCategoryRenderer(renderer),
-				nextRenderer, previousRenderer, nextFocusRenderer;
-			if (this._isCategorized() && !rendererIsCategoryHeader) {
-				previousRenderer = this._getNextRenderer(renderer, -1);
+			if (this._isCategorized() && !this._isCategoryRenderer(renderer)) {
 				// remove the previous category header if necessary
+				var previousRenderer = this._getNextRenderer(renderer, -1);
 				if (previousRenderer && this._isCategoryRenderer(previousRenderer)) {
-					nextRenderer = this._getNextRenderer(renderer, 1);
-					if (!nextRenderer || (nextRenderer && this._isCategoryRenderer(nextRenderer))) {
+					var nextRenderer = this._getNextRenderer(renderer, 1);
+					if (!nextRenderer || !this._sameCategory(renderer, nextRenderer)) {
 						this._removeRenderer(previousRenderer);
-						if (nextRenderer && this._isCategoryRenderer(nextRenderer)) {
-							previousRenderer = this._getNextRenderer(renderer, -1);
-							// remove this category renderer if it is not needed anymore
-							if (previousRenderer
-									&& nextRenderer.category === previousRenderer.item.category) {
-								this._removeRenderer(nextRenderer);
-							}
-						}
 					}
 				}
 			}
 			// Update focus if necessary
 			if (this._getFocusedRenderer() === renderer) {
-				nextFocusRenderer = this._getNext(renderer, 1) || this._getNext(renderer, -1);
+				var nextFocusRenderer = this._getNext(renderer, 1) || this._getNext(renderer, -1);
 				if (nextFocusRenderer) {
 					this.focusChild(nextFocusRenderer);
 				}
@@ -840,6 +844,18 @@ define(["dcl/dcl",
 			// summary:
 			//		test if a widget is a category renderer.
 			return domClass.contains(renderer, this._cssClasses.category);
+		},
+
+		_sameCategory: function (/*Widget*/renderer1, /*Widget*/renderer2) {
+			// summary:
+			//		Returns true if two renderers have the same category, false otherwise
+			// renderer1: Widget
+			//		The first renderer.
+			// renderer2; Widget
+			//		The second renderer.
+			var category1 = this._isCategoryRenderer(renderer1) ? renderer1.category : renderer1.item.category;
+			var category2 = this._isCategoryRenderer(renderer2) ? renderer2.category : renderer2.item.category;
+			return category1 === category2; // boolean
 		},
 
 		_getNextRenderer: function (/*Widget*/renderer, /*int*/dir) {
