@@ -323,9 +323,17 @@ define(["dcl/dcl",
 								return this.data[index];
 							}
 						},
-						query: function () {
+						query: function (query, options) {
+							var results;
+							if (options && (options.start || options.count)) {
+								results = this.data.slice(options.start || 0,
+										(options.start || 0) + (options.count || Infinity));
+							} else {
+								results = this.data.slice();
+							}
+							results.total = this.data.length;
 							this._queried = true;
-							return this.data.slice();
+							return results;
 						},
 						getIdentity: function (item) {
 							return item[this.idProperty];
