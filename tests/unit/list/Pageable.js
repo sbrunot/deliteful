@@ -11,9 +11,10 @@ define([
 	var list = null;
 
 	var clickPageLoader = function (hint, dfd, next, expectedItemsCount, expectedFirstItemIndex,
-			expectedNextPageLoaderLabel, expectedPreviousPageLoaderLabel, nextAction) {
+			expectedNextPageLoaderLabel, expectedPreviousPageLoaderLabel, expectedFirstOrLastItemLabel, nextAction) {
 		var children = list.getChildren();
 		var pageLoader = next ? children[children.length - 1] : children[0];
+		pageLoader.scrollIntoView();
 		when(pageLoader._clickHandler(), function () {
 			try {
 				var totalCount = expectedItemsCount
@@ -37,6 +38,15 @@ define([
 					assert.equal(children[i].textContent,
 							"item " + (i + expectedFirstItemIndex - correction),
 							"text for node " + (i + expectedFirstItemIndex - correction) + " " + hint);
+				}
+				if (next) {
+					assert.equal(list._getLast().textContent,
+							expectedFirstOrLastItemLabel,
+							"last displayed item " + hint);
+				} else {
+					assert.equal(list._getFirst().textContent,
+							expectedFirstOrLastItemLabel,
+							"first displayed item " + hint);
 				}
 				nextAction.call();
 			} catch (error) {
@@ -64,7 +74,6 @@ define([
 			list.startup();
 		},
 		"paging with default store" : function () {
-			// TODO: TEST FOCUSED NODE !!!
 			var dfd = this.async(1000);
 			document.body.appendChild(list);
 			var children = list.getChildren(), i;
@@ -82,6 +91,7 @@ define([
 				0,
 				"Click to load 20 more items",
 				null,
+				"item 20",
 				function () {
 					clickPageLoader("second click on next page loader",
 						dfd,
@@ -90,6 +100,7 @@ define([
 						20,
 						"Click to load 20 more items",
 						"Click to load 20 more items",
+						"item 40",
 						function () {
 							clickPageLoader("third click on next page loader",
 								dfd,
@@ -98,6 +109,7 @@ define([
 								40,
 								"Click to load 20 more items",
 								"Click to load 20 more items",
+								"item 60",
 								function () {
 									clickPageLoader("fourth click on next page loader",
 										dfd,
@@ -106,6 +118,7 @@ define([
 										60,
 										null,
 										"Click to load 20 more items",
+										"item 79",
 										function () {
 											clickPageLoader("firth click on previous page loader",
 												dfd,
@@ -114,6 +127,7 @@ define([
 												40,
 												null,
 												"Click to load 20 more items",
+												"item 59",
 												function () {
 													clickPageLoader("second click on previous page loader",
 														dfd,
@@ -122,6 +136,7 @@ define([
 														20,
 														"Click to load 20 more items",
 														"Click to load 20 more items",
+														"item 39",
 														function () {
 															clickPageLoader("third click on previous page loader",
 																dfd,
@@ -130,6 +145,7 @@ define([
 																0,
 																"Click to load 20 more items",
 																null,
+																"item 19",
 																function () {
 																	dfd.resolve();
 																}
@@ -149,7 +165,7 @@ define([
 			return dfd;
 		},
 		teardown : function () {
-			list.destroy();
+//			list.destroy();
 			list = null;
 		}
 	});
