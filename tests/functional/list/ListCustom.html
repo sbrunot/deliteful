@@ -14,14 +14,14 @@
 			"delite/register",
 			"dojo/_base/lang",
 			"dojo/string",
-			"dojo/query",
 			"dojo/on",
 			"dojo/dom-class",
 			"dojo/store/Memory",
 			"deliteful/list/List",
 	        "deliteful/list/ItemRenderer",
-	        "deliteful/list/Pageable"
-		], function(dcl, register, lang, string, query, on, domClass, MemoryStore, List, ItemRenderer, Pageable){
+	        "deliteful/list/Pageable",
+	        "dojo/query" // needed for dojo/on to use on.selector 
+		], function(dcl, register, lang, string, on, domClass, MemoryStore, List, ItemRenderer, Pageable){
 			
  			// the model that contains the list items from the catalog
 			var catalogModel = [];
@@ -42,9 +42,9 @@
 
 				render: function () {
 					this.containerNode.innerHTML = string.substitute(this.templateString2, this);
-					this.addToCartLink = query(".addToCart", this.containerNode)[0];
+					this.addToCartLink = this.containerNode.querySelector(".addToCart");
 					on(this, on.selector(".addToCart", "click"), lang.hitch(this, "addToCart"));
-					this.itemDetail = query(".itemDetails", this.containerNode)[0];
+					this.itemDetail = this.containerNode.querySelector(".itemDetails");
 					on(this, on.selector(".itemContainer", "click"), lang.hitch(this, "toggleDetail"));
 					this._updateDetailRendering();
 					this._updateAddToCartLinkRendering();

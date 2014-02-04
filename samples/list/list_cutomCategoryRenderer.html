@@ -13,14 +13,13 @@
 	<script type="text/javascript">
 		require([
 			"delite/register",
-			"dojo/query",
 			"deliteful/list/CategoryRenderer",
 			"deliteful/list/List"
-		], function (register, query, CategoryRenderer) {
+		], function (register, CategoryRenderer) {
 			var MyCustomRenderer = register("d-cust-category", [HTMLElement, CategoryRenderer], {
 				render: function () {
 					this.containerNode.innerHTML = "<div class='categoryName'>" + this.category + "</div><div class='categoryLink'><a href='http://en.wikipedia.org/wiki/Special:Search?search=" + this.category + "&go=Go'>Wikipedia</a></div>";
-					this.setFocusableChildren(query(".categoryName", this)[0],  query(".categoryLink", this)[0]);
+					this.setFocusableChildren(this.querySelector(".categoryName"),  this.querySelector(".categoryLink"));
 				}
 			});
 			var list = register.createElement("d-list");

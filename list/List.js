@@ -1,7 +1,6 @@
 define(["dcl/dcl",
 	"delite/register",
 	"dojo/_base/lang",
-	"dojo/query", // TODO: what if the user wants to use jquery ? Should we provide a wrapper for one or the other ?
 	"dojo/when",
 	"dojo/dom-class",
 	"dojo/keys",
@@ -15,7 +14,7 @@ define(["dcl/dcl",
 	"dojo/i18n!./List/nls/List", // TODO: use requirejs-dplugins
 	"delite/themes/load!./List/themes/{{theme}}/List_css",
 	"dojo/has!dojo-bidi?delite/themes/load!./List/themes/{{theme}}/List_rtl_css"
-], function (dcl, register, lang, query, when, domClass, keys, Selection, KeyNav, StoreMap,
+], function (dcl, register, lang, when, domClass, keys, Selection, KeyNav, StoreMap,
 		Invalidating, Scrollable, ItemRenderer, CategoryRenderer, messages) {
 
 	// module:
@@ -84,7 +83,7 @@ define(["dcl/dcl",
 		//					var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
 		//						render: function () {
 		//							this.containerNode.innerHTML = "<div class='title'>" + this.item.title + "</div><div class='isbn'>ISBN: " + this.item.isbn + "</div>";
-		//							this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
+		//							this.setFocusableChildren(this.querySelector(".title"),  this.querySelector(".isbn"));
 		//						}
 		//					});
 		//					var list = register.createElement("d-list");
@@ -502,11 +501,12 @@ define(["dcl/dcl",
 			//		This method uses the getIdentity method to compare items.
 			// item: Object
 			//		The item displayed by the renderer.
-			var renderers = query("." + this._cssClasses.item, this.containerNode);
+			var renderers = this.containerNode.querySelectorAll("." + this._cssClasses.item);
+			var id = this.getIdentity(item);
 			var renderer, i;
 			for (i = 0; i < renderers.length; i++) {
-				renderer = renderers[i];
-				if (this.getIdentity(renderer.item) === this.getIdentity(item)) {
+				renderer = renderers.item(i);
+				if (this.getIdentity(renderer.item) === id) {
 					return renderer; // Widget
 				}
 			}
@@ -518,8 +518,7 @@ define(["dcl/dcl",
 			//		Returns the item renderer at a specific index in the List.
 			// index: int
 			//		The index of the item renderer in the list (first item renderer index is 0).
-			var itemRenderers = query("." + this._cssClasses.item, this.containerNode);
-			return index < itemRenderers.length ? itemRenderers[index] : null; // Widget
+			return this.containerNode.querySelectorAll("." + this._cssClasses.item).item(index);
 		},
 
 		getItemRendererIndex: function (/*Object*/renderer) {
@@ -528,7 +527,19 @@ define(["dcl/dcl",
 			//		the item renderer is not found in the list.
 			// renderer: Object
 			//		The item renderer.
-			return query("." + this._cssClasses.item, this.containerNode).indexOf(renderer);
+			var result = -1;
+			if (renderer.item) {
+				var id = this.getIdentity(renderer.item);
+				var nodeList = this.containerNode.querySelectorAll("." + this._cssClasses.item);
+				for (var i = 0; i < nodeList.length; i++) {
+					var currentRenderer = nodeList.item(i);
+					if (this.getIdentity(currentRenderer.item) === id) {
+						result = i;
+						break;
+					}
+				}
+			}
+			return result;
 		},
 
 		getEnclosingRenderer: function (/*DOMNode*/node) {

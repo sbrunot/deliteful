@@ -13,14 +13,13 @@
 	<script type="text/javascript">
 		require([
 			"delite/register",
-			"dojo/query",
 			"deliteful/list/ItemRenderer",
 			"deliteful/list/List"
-		], function (register, query, ItemRenderer) {
+		], function (register, ItemRenderer) {
 			var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
 				render: function () {
 					this.containerNode.innerHTML = "<div class='title'>" + this.item.title + "</div><div class='isbn'>ISBN: " + this.item.isbn + "</div>";
-					this.setFocusableChildren(query(".title", this)[0],  query(".isbn", this)[0]);
+					this.setFocusableChildren(this.querySelector(".title"),  this.querySelector(".isbn"));
 				}
 			});
 			var list = register.createElement("d-list");
