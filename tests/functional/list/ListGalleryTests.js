@@ -92,16 +92,19 @@ define(["intern!object",
 						assert.equal(className, "d-list-item");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
@@ -113,6 +116,7 @@ define(["intern!object",
 						assert.equal(className, "d-list-item");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
@@ -141,16 +145,19 @@ define(["intern!object",
 						assert.equal(className, "d-list-item");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
+					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
