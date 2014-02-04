@@ -258,6 +258,9 @@ define(["dcl/dcl",
 		//		The selection mode for list items (see delite/Selection).
 		selectionMode: "none",
 
+		// copyAllItemProps: boolean
+		//		we set it to true to that all the store items property are copied into the
+		//		render item by delite/StoreMap.itemToRenderItem.
 		// tags:
 		//		protected
 		copyAllItemProps: true,
@@ -887,32 +890,16 @@ define(["dcl/dcl",
 		_getFirstRenderer: function () {
 			// summary:
 			//		Returns the first renderer in the list.
-			var firstRenderer = this.getItemRendererByIndex(0);
-			if (this._isCategorized()) {
-				var previousRenderer = null;
-				if (firstRenderer) {
-					previousRenderer = firstRenderer.previousElementSibling;
-					if (previousRenderer && domClass.contains(previousRenderer, this._cssClasses.category)) {
-						firstRenderer = previousRenderer;
-					}
-				}
-			}
-			return firstRenderer; // Widget
+			return this.containerNode
+						.querySelector("." + this._cssClasses.item + ", ." + this._cssClasses.category); // Widget
 		},
 
 		_getLastRenderer: function () {
 			// summary:
 			//		Returns the last renderer in the list.
-			var children = this.getChildren(), lastRenderer = null;
-			if (children.length) {
-				lastRenderer = children[children.length - 1];
-				while (lastRenderer
-						&& !domClass.contains(lastRenderer, this._cssClasses.category)
-						&& !domClass.contains(lastRenderer, this._cssClasses.item)) {
-					lastRenderer = lastRenderer.previousElementSibling;
-				}
-			}
-			return lastRenderer; // Widget
+			var renderers = this.containerNode
+								.querySelectorAll("." + this._cssClasses.item + ", ." + this._cssClasses.category);
+			return renderers.item(renderers.length - 1);
 		},
 
 		////////////delite/Store implementation ///////////////////////////////////////
