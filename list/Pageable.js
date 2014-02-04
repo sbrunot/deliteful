@@ -11,6 +11,9 @@ define(["dcl/dcl",
 		"dojo/i18n!./List/nls/Pageable" // TODO: use requirejs-dplugins
 ], function (dcl, register, lang, string, when, Deferred, dom, domClass, has, Widget, messages) {
 
+	// module:
+	//		deliteful/list/Pageable
+
 	var LoaderWidget = register("d-list-loader", [HTMLElement, dcl([Widget], {
 		// summary:
 		//		A clickable widget that we use to initiate the loading of a page.
@@ -95,20 +98,26 @@ define(["dcl/dcl",
 		_clickHandler: function () {
 			// summary:
 			//		Handle click events on the widget.
+			//		Returns a deferred that resolves when the loading
+			//		has completed.
 			if (this.isLoading()) { return; }
+			var def = new Deferred();
 			this._loading = true;
 			this.beforeLoading();
 			this.defer(lang.hitch(this, function () {
 				when(this.performLoading(), lang.hitch(this, function () {
 					this.afterLoading();
 					this._loading = false;
+					def.resolve();
 				}), lang.hitch(this, function (error) {
 					this.afterLoading();
 					this._loading = false;
+					def.reject(error);
 					// FIXME: SHOULD EMIT AN ERROR EVENT !
 					throw error;
 				}));
 			}));
+			return def; // dojo/Deferred
 		}
 	})]);
 
@@ -187,9 +196,9 @@ define(["dcl/dcl",
 		//		false otherwise.
 		_noExtremity: true,
 		
-		// _pages: Array
-		//		the pages currently loaded.
-		_pages: null,
+		// _idPages: Array
+		//		ids of the items in the pages currently loaded.
+		_idPages: null,
 
 		// _pageObserverHandles: Object
 		//		handle on the page observer.
@@ -253,7 +262,7 @@ define(["dcl/dcl",
 			if (this._dataLoaded) {
 				return;
 			}
-			this._pages = [];
+			this._idPages = [];
 			this._pageObserverHandles = [];
 			when(this._loadNextPage(lang.hitch(this, "_nextPageReadyHandler")), lang.hitch(this, function () {
 				this._setBusy(false);
@@ -292,12 +301,12 @@ define(["dcl/dcl",
 			//		Retrieve the index of an item in the loaded pages
 			// item: Object
 			//		The item
-			var itemIndex = -1, pageIndex, page, indexInPage;
-			for (pageIndex = 0; pageIndex < this._pages.length; pageIndex++, itemIndex++) {
-				page = this._pages[pageIndex];
-				indexInPage = page.indexOf(item);
+			var itemIndex = -1, pageIndex, idPage, indexInPage, id = this.getIdentity(item);
+			for (pageIndex = 0; pageIndex < this._idPages.length; pageIndex++, itemIndex++) {
+				idPage = this._idPages[pageIndex];
+				indexInPage = idPage.indexOf(id);
 				if (indexInPage < 0) {
-					itemIndex += page.length;
+					itemIndex += idPage.length;
 				} else {
 					itemIndex += indexInPage;
 				}
@@ -332,8 +341,12 @@ define(["dcl/dcl",
 				return this.itemToRenderItem(item);
 			}));
 			when(results, lang.hitch(this, function (page) {
-				this._lastLoaded = this._queryOptions.start + page.length - 1;
-				this._pages.push(page);
+				var that = this;
+				var idPage = page.map(function (item) {
+					return that.getIdentity(item);
+				});
+				this._lastLoaded = this._queryOptions.start + idPage.length - 1;
+				this._idPages.push(idPage);
 				when(lang.hitch(this, onDataReadyHandler)(page), function () {
 					def.resolve();
 				},
@@ -367,21 +380,22 @@ define(["dcl/dcl",
 			}));
 			when(results, lang.hitch(this, function (page) {
 				if (page.length) {
-					// Note: if store was supporting negative values in query option "count",
-					// we wouldn't have to do the following
 					var that = this, i;
-					var previousPageIds = this._pages[0].map(function (item) {
+					var idPage = page.map(function (item) {
 						return that.getIdentity(item);
 					});
-					for (i = 0; i < page.length; i++) {
-						if (previousPageIds.indexOf(this.getIdentity(page[i])) >= 0) {
-							// remove the duplicate (happens if an element was deleted before the first one)
-							page.splice(i--, 1);
+					// TODO: DO WE NEED TO OPTIMIZE THIS BY TRACKING total VALUE ?
+					var previousPageIds = this._idPages[0];
+					for (i = 0; i < idPage.length; i++) {
+						if (previousPageIds.indexOf(idPage[i]) >= 0) {
+							// remove the duplicate (happens if an element was deleted before the first one displayed)
+							page.splice(i, 1);
+							idPage.splice(i, 1);
+							i--;
 						}
 					}
-					// End of note
 					this._firstLoaded = this._queryOptions.start;
-					this._pages.unshift(page);
+					this._idPages.unshift(idPage);
 					when(lang.hitch(this, onDataReadyHandler)(page), function () {
 						def.resolve();
 					}, function (error) {
@@ -401,33 +415,37 @@ define(["dcl/dcl",
 			//		unload a page.
 			// first: Boolean
 			//		true to unload the first page, false to unload the last one.
-			var page, i;
+			var idPage, i;
 			if (first) {
-				page = this._pages.shift();
-				this._pageObserverHandles.shift().remove();
-				this._firstLoaded += page.length;
-				for (i = 0; i < page.length; i++) {
-					this.removeItem(null, page[i], null, true);
+				idPage = this._idPages.shift();
+				if (this._pageObserverHandles.length) {
+					this._pageObserverHandles.shift().remove();
 				}
-				if (page.length && !this._previousPageLoader) {
+				this._firstLoaded += idPage.length;
+				for (i = 0; i < idPage.length; i++) {
+					this.removeItem(null, this._getFirstRenderer().item, null, true);
+				}
+				if (idPage.length && !this._previousPageLoader) {
 					this._createPreviousPageLoader();
 				}
 				// if the next page is also empty, unload it too
-				if (this._pages.length && !this._pages[0].length) {
+				if (this._idPages.length && !this._idPages[0].length) {
 					this._unloadPage(first);
 				}
 			} else {
-				page = this._pages.pop();
-				this._pageObserverHandles.pop().remove();
-				this._lastLoaded -= page.length;
-				for (i = 0; i < page.length; i++) {
-					this.removeItem(null, page[i], null, true);
+				idPage = this._idPages.pop();
+				if (this._pageObserverHandles.length) {
+					this._pageObserverHandles.pop().remove();
 				}
-				if (page.length && !this._nextPageLoader) {
+				this._lastLoaded -= idPage.length;
+				for (i = 0; i < idPage.length; i++) {
+					this.removeItem(null, this._getLastRenderer().item, null, true);
+				}
+				if (idPage.length && !this._nextPageLoader) {
 					this._createNextPageLoader();
 				}
 				// if the previous page is also empty, unload it too
-				if (this._pages.length && !this._pages[this._pages.length - 1].length) {
+				if (this._idPages.length && !this._idPages[this._idPages.length - 1].length) {
 					this._unloadPage(first);
 				}
 			}
@@ -445,7 +463,7 @@ define(["dcl/dcl",
 					this.focusChild(firstRendererBeforeUpdate);
 				}
 				this._renderNewItems(items, true);
-				if (this.maxPages && this._pages.length > this.maxPages) {
+				if (this.maxPages && this._idPages.length > this.maxPages) {
 					this._unloadPage(false);
 				}
 				if (this._firstLoaded ===
@@ -486,7 +504,7 @@ define(["dcl/dcl",
 					this.focusChild(lastChild);
 				}
 				this._renderNewItems(items, false);
-				if (this.maxPages && this._pages.length > this.maxPages) {
+				if (this.maxPages && this._idPages.length > this.maxPages) {
 					this._unloadPage(true);
 				}
 				if (this._nextPageLoader) {

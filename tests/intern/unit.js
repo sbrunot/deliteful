@@ -3,5 +3,6 @@ define([
         "../unit/list/DefaultStore",
         "../unit/list/Selection",
         "../unit/list/Categories",
-        "../unit/list/List"
+        "../unit/list/List",
+        "../unit/list/Pageable"
 ]);
