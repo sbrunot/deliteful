@@ -734,12 +734,12 @@ define(["dcl/dcl",
 			//		The renderer to add to the list.
 			// atIndex: int
 			//		The index (not counting category renderers) where to add the item renderer in the list.
-			var spec = this._getItemRendererInsertSpec(renderer, atIndex);
-			if (spec.nodeToInsertBefore) {
-				this.insertBefore(renderer, spec.nodeToInsertBefore);
+			var spec = this._getInsertSpec(renderer, atIndex);
+			if (spec.nodeRef) {
+				this.insertBefore(renderer, spec.nodeRef);
 				if (spec.addCategoryAfter) {
-					this.insertBefore(this._createCategoryRenderer(spec.nodeToInsertBefore.item.category),
-							spec.nodeToInsertBefore);
+					this.insertBefore(this._createCategoryRenderer(spec.nodeRef.item.category),
+							spec.nodeRef);
 				}
 			} else {
 				this.appendChild(renderer);
@@ -749,31 +749,31 @@ define(["dcl/dcl",
 			}
 		},
 
-		_getItemRendererInsertSpec: function (/*Widget*/renderer, /*int*/atIndex) {
+		_getInsertSpec: function (/*Widget*/renderer, /*int*/atIndex) {
 			// summary:
 			//		Get a specification for the insertion of an item renderer in the list.
 			// description:
 			//		Returns an object that contains the following attributes:
-			//		- nodeToInsertBefore: the node before which to insert the item renderer
+			//		- nodeRef: the node before which to insert the item renderer
 			//		- addCategoryBefore: true if a category header should be inserted before the item renderer
 			//		- addCategoryAfter: true if a category header should be inserted after the item renderer
 			// renderer: List/ItemRenderer subclass
 			//		The renderer to add to the list.
 			// atIndex: int
 			//		The index (not counting category renderers) where to add the item renderer in the list.
-			var result = {nodeToInsertBefore: atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null,
+			var result = {nodeRef: atIndex >= 0 ? this.getItemRendererByIndex(atIndex) : null,
 						  addCategoryBefore: false,
 						  addCategoryAfter: false};
 			if (this._isCategorized()) {
-				var previousRenderer = result.nodeToInsertBefore
-										? this._getNextRenderer(result.nodeToInsertBefore, -1)
+				var previousRenderer = result.nodeRef
+										? this._getNextRenderer(result.nodeRef, -1)
 										: this._getLastRenderer();
 				if (!previousRenderer) {
 					result.addCategoryBefore = true;
 				} else {
 					if (!this._sameCategory(renderer, previousRenderer)) {
 						if (this._isCategoryRenderer(previousRenderer)) {
-							result.nodeToInsertBefore = previousRenderer;
+							result.nodeRef = previousRenderer;
 							previousRenderer = this._getNextRenderer(previousRenderer, -1);
 							if (!previousRenderer
 								|| (previousRenderer && !this._sameCategory(renderer, previousRenderer))) {
@@ -784,9 +784,9 @@ define(["dcl/dcl",
 						}
 					}
 				}
-				if (result.nodeToInsertBefore
-					&& !this._isCategoryRenderer(result.nodeToInsertBefore)
-					&& !this._sameCategory(result.nodeToInsertBefore, renderer)) {
+				if (result.nodeRef
+					&& !this._isCategoryRenderer(result.nodeRef)
+					&& !this._sameCategory(result.nodeRef, renderer)) {
 					result.addCategoryAfter = true;
 				}
 			}
