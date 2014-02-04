@@ -27,16 +27,29 @@ define([
 			assert.equal(list.className, "d-list");
 		},
 		"scrollDirection horizontal not supported": function () {
-			var dfd = this.async(1000);
-			var error = null;
-			window.onerror = function (e) {
-				error = e;
-			};
-			list.scrollDirection = "horizontal";
-			setTimeout(dfd.callback(function () {
+			try {
+				list.scrollDirection = "horizontal";
+			} catch (error) {
 				assert.isNotNull(error);
-				assert(error.indexOf(listMessages["horizontal-scroll-not-supported"]) >= 0);
+				console.log(error);
+				assert.equal(error.message, listMessages["horizontal-scroll-not-supported"], "error message");
 				assert.equal(list.scrollDirection, "none");
+			}
+		},
+		"default scroll direction is vertical": function () {
+			var dfd = this.async(1000);
+			setTimeout(dfd.callback(function () {
+				list.scrollDirection = "vertical";
+				assert.equal(list.className, "d-list d-scrollable");
+			}), 0);
+			return dfd;
+		},
+		"scroll direction none": function () {
+			var dfd = this.async(1000);
+			list.scrollDirection = "none";
+			setTimeout(dfd.callback(function () {
+				list.scrollDirection = "none";
+				assert.equal(list.className, "d-list");
 			}), 0);
 			return dfd;
 		},

@@ -253,6 +253,14 @@ define(["dcl/dcl",
 		//		"vertical" for a scrollable List, "none" for a non scrollable List.
 		scrollDirection: "vertical",
 		=====*/
+		_setScrollDirectionAttr: function (value) {
+			if (value === "horizontal") {
+				this.scrollDirection = "none";
+				throw new Error(messages["horizontal-scroll-not-supported"]);
+			} else {
+				this._set("scrollDirection", value);
+			}
+		},
 
 		// selectionMode: String
 		//		The selection mode for list items (see delite/Selection).
@@ -448,18 +456,6 @@ define(["dcl/dcl",
 				}));
 				if (sup) {
 					sup.call(this, arguments);
-				}
-			};
-		}),
-
-		refreshRendering: dcl.superCall(function (sup) {
-			return function (props) {
-				if (props.scrollDirection && this.scrollDirection === "horizontal") {
-					this.scrollDirection = "none";
-					throw new Error(messages["horizontal-scroll-not-supported"]);
-				}
-				if (sup) {
-					sup.apply(this, arguments);
 				}
 			};
 		}),
