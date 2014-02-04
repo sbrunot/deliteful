@@ -27,7 +27,7 @@ define(["intern!object",
 	};
 
 	registerSuite({
-		name: "StarRating tests",
+		name: "ListGallery tests",
 		"ListGallery.html / list-prog-1": function () {
 			return basicTest(this.remote, "./ListGallery.html", "list-prog-1", 100, 0);
 		},
@@ -64,6 +64,7 @@ define(["intern!object",
 			.then(function () {
 				remote
 				.execute("document.getElementById('" + listId + "').scrollIntoView();")
+				.wait(500)
 				.elementByXPath("//*[@id='" + listId + "']//d-list-item[3]")
 					.getAttribute("className")
 					.then(function (className) {
@@ -86,25 +87,23 @@ define(["intern!object",
 			.then(function () {
 				remote
 				.execute("document.getElementById('" + listId + "').scrollIntoView();")
+				.wait(500)
 				.elementByXPath("//*[@id='" + listId + "']//d-list-item[3]")
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
@@ -116,7 +115,6 @@ define(["intern!object",
 						assert.equal(className, "d-list-item");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
@@ -139,25 +137,23 @@ define(["intern!object",
 			.then(function () {
 				remote
 				.execute("document.getElementById('" + listId + "').scrollIntoView();")
+				.wait(500)
 				.elementByXPath("//*[@id='" + listId + "']//d-list-item[3]")
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item");
 					})
 					.click()
-					.wait(100)
 					.getAttribute("className")
 					.then(function (className) {
 						assert.equal(className, "d-list-item d-selected");
