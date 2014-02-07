@@ -1,0 +1,136 @@
+<html>
+	<head>
+		<script src="../requirejs/require.js"></script>
+		<script>
+			require.config({
+				baseUrl: ".."
+			});
+			require([
+				"delite/register", "delite/KeyNav", "dojo/query", "dojo/domReady!"
+			], function(register, KeyNav){
+				register("my-list", [HTMLElement, KeyNav], {
+					buildRendering: function(){
+						// This is a behavioral widget so we'll just use the existing DOM.
+						// Alternately we could have a template.
+
+						// Set containerNode.   Usually this is set in the template.
+						this.containerNode = this;
+					},
+
+					enteredViewCallback: function () {
+						// TODO: THIS IS A WORKAROUND FOR https://github.com/ibm-js/delite/issues/62
+						// Remove it when the issue is fixed.
+						this._enteredView = true;
+						this.tabIndex = "0";
+					},
+
+					// Specifies which descendants can be navigated to
+					childSelector: "span",
+
+					// Home/End key support
+					_getFirst: function(){
+						// first item in first list widget
+						return this.firstElementChild._getFirst();
+					},
+					_getLast: function(){
+						// last item in last list widget
+						return this.lastElementChild._getLast();
+					},
+
+					// Simple arrow key support.
+					_onLeftArrow: function(){
+						var listItem = this.focusedChild.parentNode;
+						this.focusChild(listItem._getPrev(this.focusedChild) ||listItem._getLast());
+					},
+					_onRightArrow: function(){
+						var listItem = this.focusedChild.parentNode;
+						this.focusChild(listItem._getNext(this.focusedChild) ||listItem._getFirst());
+					},
+					_onDownArrow: function(){
+						// For simplicity I'll just go to the first field in the next list-item
+						var listItem = this.focusedChild.parentNode;
+						this.focusChild(listItem.nextElementSibling ? listItem.nextElementSibling._getFirst() :
+								this.firstElementChild._getFirst());
+					},
+					_onUpArrow: function(){
+						// For simplicity I'll just go to the first field in the previous list-item
+						var listItem = this.focusedChild.parentNode;
+						this.focusChild(listItem.previousElementSibling ? listItem.previousElementSibling._getFirst() :
+								this.lastElementChild._getFirst());
+					},
+
+					// Letter key navigation support, loops through all fields of all list-items.
+					_getNext: function(child){
+						// Return either:
+						//		1. next field in current list item (if there is one)
+						//		2. first field in next list item (if there is one)
+						var listItem = child.parentNode;
+						return listItem._getNext(child) ||
+								(listItem.nextElementSibling && listItem.nextElementSibling._getFirst());
+					}
+				});
+
+				register("my-list-item", [HTMLElement], {
+					// Interface from List to ListItem to navigate fields
+					_getFirst: function(){
+						// first field
+						return this.firstElementChild;
+					},
+					_getLast: function(){
+						// last field
+						return this.lastElementChild;
+					},
+					_getNext: function(child){
+						// field after child
+						return child.nextElementSibling;
+					},
+					_getPrev: function(child){
+						// field before child
+						return child.previousElementSibling;
+					}
+				});
+
+				register.parse();
+			});
+		</script>
+		<style>
+			my-list {
+				border: 1px solid black;
+				padding: 2px;
+				display: block;
+			}
+			my-list-item {
+				border: 1px solid gray;
+				padding: 2px;
+				margin: 3px;
+				display: block;
+			}
+			span:focus {
+				background-color: yellow;
+			}
+		</style>
+	</head>
+	<body>
+		<p>
+			Demo of "two-layer" use of KeyNav, where a &lt;my-list&gt; widget extends KeyNav, and then it contains
+			&lt;my-list-item&gt; widgets, and they contain navigable nodes.
+		</p>
+		<input value="for focus test"/>
+		<my-list tabindex="0">
+			<my-list-item>
+				<span tabindex="-1">apple</span>
+				<span tabindex="-1">banana</span>
+				<span tabindex="-1">orange</span>
+			</my-list-item>
+			<my-list-item>
+				<span tabindex="-1">pear</span>
+				<span tabindex="-1">grapes</span>
+				<span tabindex="-1">strawberry</span>
+			</my-list-item>
+			<my-list-item>
+				<span tabindex="-1">blueberry</span>
+				<span tabindex="-1">raspberry</span>
+			</my-list-item>
+		</my-list>
+	</body>
+</html>
