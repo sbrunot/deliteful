@@ -4,22 +4,46 @@ define(["dcl/dcl",
 	// module:
 	//		deliteful/list/_DefaultStore
 
+	var CollectionMixin = {
+
+		filter: function () {
+			var	result = this.slice();
+			result.total = this.length;
+			dcl.mix(result, CollectionMixin);
+			return result; // dstore/api/Store.Collection
+		},
+
+		range: function (start, end) {
+			var result = this.slice(start, end || Infinity);
+			result.total = this.length;
+			result.ranged = {start: start, end: end};
+			dcl.mix(result, CollectionMixin);
+			return result; // dstore/api/Store.Collection
+		}
+
+	};
+
 	return dcl(null, {
 		// summary:
 		//		Default store implementation that a List widget uses as its model.
 		// description:
 		//		This is a simple memory store implementation that supports the before
 		//		option when adding / putting an item.
-		
+		//		This implementation does not supports the following optional attributes
+		//		and methods defined by the store api:
+		//		- model
+		//		- sort(...) methods
+		//		- range(...) method (but it is supported by the collection returned by the filter method)
+
 		// data: Array
 		//		The array into which all items are stored
 		data: null,
-		
+
 		// _ids: Array
 		//		The internal array that stores all the items ids, in the
 		//		same order than the items are store in the data array.
 		_ids: null,
-		
+
 		// idProperty: String
 		//		Name of the item attribute that contains the item's id
 		idProperty: "id",
@@ -43,6 +67,7 @@ define(["dcl/dcl",
 			//		the list that uses the default store instance.
 			this.list = list;
 			this.data = [];
+			dcl.mix(this.data, CollectionMixin);
 			this._ids = [];
 		},
 
@@ -57,25 +82,12 @@ define(["dcl/dcl",
 			}
 		},
 
-		query: function (query, options) {
+		filter: function () {
 			// summary:
-			//		Retrieve items from the store.
-			// query: Object
-			//		The query to run to retrieve item. This
-			//		argument is ignored by this implementation.
-			// options: dojo/store/api/Store.QueryOptions?
-			//		Optional query options. Only start and count are
-			//		supported by this implementation.
-			var results;
-			if (options && (options.start || options.count)) {
-				results = this.data.slice(options.start || 0,
-						(options.start || 0) + (options.count || Infinity));
-			} else {
-				results = this.data.slice();
-			}
-			results.total = this.data.length;
+			//		Retrieve all items from the store, ignoring any input parameter.
+			var result = this.data.filter();
 			this._queried = true;
-			return results; // Array
+			return result; // dstore/api/Store.Collection
 		},
 
 		getIdentity: function (item) {
@@ -90,11 +102,10 @@ define(["dcl/dcl",
 			//		Stores an item.
 			// item: Object
 			//		The item to store.
-			// options: dojo/store/api/Store.PutDirectives?
+			// options: dstore/api/Store.PutDirectives?
 			//		Additional metadata for storing the object. Supported
 			//		options are id, overwrite and before.
 			var beforeIndex = -1;
-			var itemBeforeUpdate;
 			var id = item[this.idProperty] = (options && "id" in options)
 				? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
 			var existingIndex = this._ids.indexOf(id);
@@ -107,20 +118,17 @@ define(["dcl/dcl",
 					throw new Error("Item already exists");
 				}
 				// update the item
-				itemBeforeUpdate = this.data[existingIndex];
 				this.data[existingIndex] = item;
 				if (beforeIndex >= 0 && beforeIndex !== existingIndex) {
 					// move the item
 					this.data.splice(beforeIndex, 0, this.data.splice(existingIndex, 1)[0]);
 					this._ids.splice(beforeIndex, 0, this._ids.splice(existingIndex, 1)[0]);
 					if (this._queried) {
-						this.list.removeItem(existingIndex,
-								this.list.itemToRenderItem(itemBeforeUpdate), null, true);
-						this.list.addItem(beforeIndex, this.list.itemToRenderItem(item), null);
+						this.list.itemMoved(existingIndex, beforeIndex, this.list.itemToRenderItem(item), null);
 					}
 				} else {
 					if (this._queried) {
-						this.list.putItem(existingIndex, this.list.itemToRenderItem(item), null);
+						this.list.itemUpdated(existingIndex, this.list.itemToRenderItem(item), null);
 					}
 				}
 			} else {
@@ -133,7 +141,7 @@ define(["dcl/dcl",
 					this._ids.push(id);
 				}
 				if (this._queried) {
-					this.list.addItem(beforeIndex >= 0 ? beforeIndex : this.data.length - 1,
+					this.list.itemAdded(beforeIndex >= 0 ? beforeIndex : this.data.length - 1,
 							this.list.itemToRenderItem(item), null);
 				}
 			}
@@ -158,12 +166,12 @@ define(["dcl/dcl",
 			//		Remove an item from the store
 			// id: Object
 			//		The item id.
-			var index = this._ids.indexOf(id), item;
+			var index = this._ids.indexOf(id);
 			if (index >= 0 && index < this.data.length) {
-				item = this.data.splice(index, 1)[0];
+				this.data.splice(index, 1)[0];
 				this._ids.splice(index, 1);
 				if (this._queried) {
-					this.list.removeItem(index, this.list.itemToRenderItem(item), null, false);
+					this.list.itemRemoved(index, null, false);
 				}
 				return true;
 			}
