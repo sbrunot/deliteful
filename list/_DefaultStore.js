@@ -4,12 +4,12 @@ define(["dcl/dcl",
 	// module:
 	//		deliteful/list/_DefaultStore
 
-	var CollectionMixin = {
+	var FilterAndRange = {
 
 		filter: function () {
 			var	result = this.slice();
 			result.total = this.length;
-			dcl.mix(result, CollectionMixin);
+			dcl.mix(result, FilterAndRange);
 			return result; // dstore/api/Store.Collection
 		},
 
@@ -17,7 +17,7 @@ define(["dcl/dcl",
 			var result = this.slice(start, end || Infinity);
 			result.total = this.length;
 			result.ranged = {start: start, end: end};
-			dcl.mix(result, CollectionMixin);
+			dcl.mix(result, FilterAndRange);
 			return result; // dstore/api/Store.Collection
 		}
 
@@ -67,7 +67,7 @@ define(["dcl/dcl",
 			//		the list that uses the default store instance.
 			this.list = list;
 			this.data = [];
-			dcl.mix(this.data, CollectionMixin);
+			dcl.mix(this.data, FilterAndRange);
 			this._ids = [];
 		},
 
@@ -97,24 +97,24 @@ define(["dcl/dcl",
 		},
 
 		/*jshint maxcomplexity:12*/
-		put: function (item, options) {
+		put: function (item, directives) {
 			// summary:
 			//		Stores an item.
 			// item: Object
 			//		The item to store.
-			// options: dstore/api/Store.PutDirectives?
+			// directives: dstore/api/Store.PutDirectives?
 			//		Additional metadata for storing the object. Supported
-			//		options are id, overwrite and before.
+			//		directives are id, overwrite and before.
 			var beforeIndex = -1;
-			var id = item[this.idProperty] = (options && "id" in options)
-				? options.id : this.idProperty in item ? item[this.idProperty] : Math.random();
+			var id = item[this.idProperty] = (directives && "id" in directives)
+				? directives.id : this.idProperty in item ? item[this.idProperty] : Math.random();
 			var existingIndex = this._ids.indexOf(id);
-			if (options && options.before) {
-				beforeIndex = this._ids.indexOf(options.before[this.idProperty]);
+			if (directives && directives.before) {
+				beforeIndex = this._ids.indexOf(directives.before[this.idProperty]);
 			}
 			if (existingIndex >= 0) {
 				// item exists in store
-				if (options && options.overwrite === false) {
+				if (directives && directives.overwrite === false) {
 					throw new Error("Item already exists");
 				}
 				// update the item
@@ -148,15 +148,15 @@ define(["dcl/dcl",
 			return id;
 		},
 
-		add: function (item, options) {
+		add: function (item, directives) {
 			// summary:
 			//		Add an item to the store.
 			// item: Object
 			//		The item to ass to the store.
-			// options: dojo/store/api/Store.PutDirectives?
+			// directives: dojo/store/api/Store.PutDirectives?
 			//		Additional metadata for adding the object. Supported
-			//		options are id and before.
-			var opts = options || {};
+			//		directives are id and before.
+			var opts = directives || {};
 			opts.overwrite = false;
 			return this.put(item, opts);
 		},
