@@ -355,6 +355,13 @@ define(["dcl/dcl",
 			};
 		}),
 
+		fetch: dcl.superCall(function (sup) {
+			return function (collection) {
+				var page = collection.range(this._rangeSpec.start, this._rangeSpec.start + this._rangeSpec.count);
+				return sup.call(this, page);
+			};
+		}),
+
 		initItems: function (page) {
 			if (this._rangeSpec.forward) {
 				if (page.length) {
@@ -417,11 +424,6 @@ define(["dcl/dcl",
 			}
 		},
 
-		_postProcessStore: function (collection) {
-			var data = this.postProcessStore ? this.postProcessStore(collection) : collection;
-			return data.range(this._rangeSpec.start, this._rangeSpec.start + this._rangeSpec.count);
-		},
-
 		/**
 		 * Loads the next page of items if available.
 		 * @private
@@ -440,7 +442,7 @@ define(["dcl/dcl",
 				this._rangeSpec.count = this.pageLength;
 			}
 			this._rangeSpec.forward = true;
-			return this.queryStoreAndInitItems(this.preProcessStore, this._postProcessStore);
+			return this.queryStoreAndInitItems(this.processStore);
 		},
 
 		/**
@@ -455,7 +457,7 @@ define(["dcl/dcl",
 				this._rangeSpec.start = 0;
 			}
 			this._rangeSpec.forward = false;
-			return this.queryStoreAndInitItems(this.preProcessStore, this._postProcessStore);
+			return this.queryStoreAndInitItems(this.processStore);
 		},
 
 		/**
