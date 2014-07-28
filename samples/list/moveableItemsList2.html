@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+	<title>deliteful/list/List samples.</title>
+
+	<script type="text/javascript" src="../../../requirejs/require.js"></script>
+
+	<script type="text/javascript">
+		require.config({
+			baseUrl: "../../../"
+		});
+	</script>
+
+	<script type="text/javascript">
+		require([
+		    "delite/register",
+			"deliteful/list/List",
+			"deliteful/list/MoveableItems",
+			"delite/theme!delite/themes/{{theme}}/global.css",	// page level CSS
+			"requirejs-domready/domReady!"
+		], function (register, List, MoveableItems) {
+			var EditableList = register("d-editable-list", [HTMLElement, List, MoveableItems], {});
+			var list = new EditableList();
+			list.setAttribute("aria-label", "Sample editable list");
+			list.style.height = "200px";
+			list.moveHandleClass = "move-handle";
+			list.moveOnLongPress = false;
+//			list.categoryAttr = "category";
+			for (var i = 0; i < 100; i++) {
+				var category = i < 50 ? "A" : "B";
+				list.store.add({label: "Item " + i, category: "Category " + category, righticonclass: "move-handle"});
+			}
+			document.body.appendChild(list);
+			list.startup();
+			document.getElementById("moveableSelect").onchange = function () {
+				list.moveable = this.value === "true";
+			};
+		});
+	</script>
+	
+	<style type="text/css">
+		.d-moveable-items .move-handle:after {
+			content: "\2630";
+			color: #808080;
+			font-size: 160%;
+		}
+	</style>
+</head>
+<body role="application">
+	This sample demonstrate a list with moveable items. Click on the right icon of an item to start moving it.
+	<select id="moveableSelect">
+		<option value="true" selected>moveable items</option>
+		<option value="false">non moveable items</option>
+	</select>
+</body>
+</html>
