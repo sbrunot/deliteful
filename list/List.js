@@ -932,22 +932,26 @@ define([
 			}
 		},
 
-		itemMoved: function (previousIndex, newIndex, renderItem, renderItems) {
-			// summary:
-			//		Function to call when an item is moved in the store, to update
-			//		the content of the list widget accordingly.
-			// previousIndex: Number
-			//		The previous index of the render item.
-			// newIndex: Number
-			//		The new index of the render item.
-			// renderItem: Object
-			//		The render item to be moved.
-			// renderItems: Array
-			//		Ignored by this implementation.
-			// tags:
-			//		protected
-			this.itemRemoved(previousIndex, renderItems, true);
-			this.itemAdded(newIndex - (previousIndex < newIndex ? 1 : 0), renderItem, renderItems);
+		/**
+		 *	Function to call when an item is moved in the store, to update
+		 * the content of the list widget accordingly.
+		 * @param {number} previousIndex the previous index of the render item.
+		 * @param {number} newIndex the new index of the render item.
+		 * @param {Object} renderItem the render item to be moved.
+		 * @param {Object[]} renderItems ignored by this implementation.
+		 * @protected
+		 */
+		itemMoved: function (previousIndex, newIndex, renderItem, /*jshint unused:vars*/renderItems) {
+			var renderer = this.getItemRendererByIndex(previousIndex);
+			var keepFocused = this._getFocusedRenderer() === renderer;
+			if (renderer) {
+				this._removeRenderer(renderer, true);
+			}
+			var newRenderer = this._createItemRenderer(renderItem);
+			this._addItemRenderer(newRenderer, newIndex - (previousIndex < newIndex ? 1 : 0));
+			if (keepFocused) {
+				this.focusChild(newRenderer.renderNode);
+			}
 		},
 
 		//////////// delite/Scrollable extension ///////////////////////////////////////

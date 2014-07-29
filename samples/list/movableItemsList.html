@@ -20,11 +20,11 @@
 		require([
 		    "delite/register",
 			"deliteful/list/List",
-			"deliteful/list/MoveableItems",
+			"deliteful/list/MovableItems",
 			"delite/theme!delite/themes/{{theme}}/global.css",	// page level CSS
 			"requirejs-domready/domReady!"
-		], function (register, List, MoveableItems) {
-			var EditableList = register("d-editable-list", [HTMLElement, List, MoveableItems], {});
+		], function (register, List, MovableItems) {
+			var EditableList = register("d-editable-list", [HTMLElement, List, MovableItems], {});
 			var list = new EditableList();
 			list.setAttribute("aria-label", "Sample editable list");
 			list.style.height = "200px";
@@ -33,12 +33,28 @@
 				var category = i < 50 ? "A" : "B";
 				list.store.add({label: "Item " + i, category: "Category " + category});
 			}
+			list.on("item-moved", function (event) {
+				if (event.beforeId) {
+					list.store.put(list.store.get(event.item.id), {before: list.store.get(event.beforeId)});
+				} else {
+					alert("TODO: MOVING AN ITEM TO THE END OF THE LIST... (put with beforeId = null ?)");
+					list.store.put(list.store.get(event.item.id)); // HOW TO MOVE IT TO THE END ??? DELETE AND THEN MOVE ?
+				}
+			});
 			document.body.appendChild(list);
 			list.startup();
+			document.getElementById("movableSelect").onchange = function () {
+				list.movable = this.value === "true";
+			};
 		});
 	</script>
 </head>
 <body role="application">
-	This sample demonstrate a list with moveable items. Click and hold on one item to start moving it.
+	This sample demonstrate a list with movable items. Click and hold on one item to start moving it.
+	<select id="movableSelect">
+		<option value="true" selected>movable items</option>
+		<option value="false">non movable items</option>
+	</select>
+	<span style="color: red;">TODO: CHECK THAT AN ITEM CAN BE MOVED TO THE END OF THE LIST</span>
 </body>
 </html>

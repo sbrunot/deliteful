@@ -1,15 +1,11 @@
 define(["dcl/dcl",
-        "dojo/_base/lang",
-        "dojo/_base/array",
         "dojo/on",
-        "dojo/keys",
-        "dojo/dom",
         "dojo/dom-class",
         "dojo/dom-style",
         "dojo/dom-geometry",
         "dpointer/events",
-        "delite/theme!./List/themes/{{theme}}/Editable.css"
-], function (dcl, lang, array, on, keys, dom, domClass, domStyle, domGeometry, pointer) {
+        "delite/theme!./List/themes/{{theme}}/Editable.css" // FIXME: USES MOVABLE.css INSTEAD OF EDITABLE.css ?
+], function (dcl, on, domClass, domStyle, domGeometry, pointer) {
 
 	return dcl(null, {
 
@@ -17,17 +13,18 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		moveable: true, // Should be a statefull property
+		movable: true, // Should be a statefull property
 		
-		moveHandleClass: "", // ONE COULD ADD THE CLASS OF THE HANDLE HERE
+		grabHandleClass: "", // ONE COULD ADD THE CLASS OF THE HANDLE HERE
 
-		moveOnLongPress: true,
+		grabPressDuration: 1000,
 
 		/////////////////////////////////
 		// Private attributes
 		/////////////////////////////////
 
-		_indexOfDeletableItem: -1,
+		_editableAutoScrollRef: null,
+		_pointerdownHandlerRef: null,
 		_touchHandlersRefs: null,
 		_placeHolder: null,
 		_placeHolderClientRect: null,
@@ -62,18 +59,24 @@ define(["dcl/dcl",
 		attachedCallback: dcl.after(function () {
 			if (this._isCategorized() || (this.pageLength && this.autoLoad)) {
 				// moving items not yet supported on categorized lists or on paginated lists with auto loading
-				this.moveable = false;
+				this.movable = false;
 			}
-			if (this.moveable) {
-				this.on("pointerdown", lang.hitch(this, "_pointerdownHandler"));
-			}
-			domClass.toggle(this, "d-moveable-items", this.moveable);
+			this.notifyCurrentValue("movable");
 		}),
 
 		refreshRendering: function (props) {
-			if ("moveable" in props) {
-				domClass.toggle(this, "d-moveable-items", this.moveable);
-				// TODO: SET / REMOVE EVENT HANDLERS
+			if ("movable" in props) {
+				domClass.toggle(this, "d-movable-items", this.movable);
+				if (this.movable) {
+					this._pointerdownHandlerRef = this.on("pointerdown", this._pointerdownHandler.bind(this));
+				} else {
+					if (this._pointerdownHandlerRef) {
+						this._pointerdownHandlerRef.remove();
+						this._pointerdownHandlerRef = null;
+						this._removeTouchHandlers();
+						this._stopEditableAutoScroll();
+					}
+				}
 			}
 		},
 
@@ -83,12 +86,12 @@ define(["dcl/dcl",
 
 		/**
 		 * This method is called when a pointerdown event is received on an item renderer.
-		 * If it returns true, the corresponding item becomes moveable.
+		 * If it returns true, the corresponding item becomes movable.
 		 * @param {Event} event the pointerdown event
 		 */
-		shouldStartDragging: function (event) {
-			if (this.moveHandleClass) {
-				return domClass.contains(event.target, this.moveHandleClass);
+		isGrabEvent: function (event) {
+			if (this.grabHandleClass) {
+				return domClass.contains(event.target, this.grabHandleClass);
 			}
 			return false;
 		},
@@ -100,27 +103,27 @@ define(["dcl/dcl",
 		///////////////////////////////
 		// Pointer events handlers (private)
 		///////////////////////////////
-		
+
 		_pointerdownHandler: function (event) {
 			if (this._draggedRenderer) {
 				return;
 			}
 			var renderer = this.getEnclosingRenderer(event.target);
 			if (renderer) {
-				if (this.shouldStartDragging(event)) {
-					this._startDraggingItem(renderer, event);
-				} else if (this.moveOnLongPress) {
+				if (this.isGrabEvent(event)) {
+					this._grabItem(renderer, event);
+				} else if (this.grabPressDuration) {
 					this._timeoutHandle = this.defer(function () {
 						this._timeoutHandle = null;
-						this._startDraggingItem(renderer, event);
-					}, 1000); // TODO: SHOULD THE DURATION BE A PROPERTY OF THE MIXIN ?
+						this._grabItem(renderer, event);
+					}, this.grabPressDuration);
 				} else {
 					return;
 				}
 				this._touchHandlersRefs.push(this.own(on(document, "pointerup",
-						lang.hitch(this, "_pointerupHandler")))[0]);
+						this._pointerupHandler.bind(this)))[0]);
 				this._touchHandlersRefs.push(this.own(on(document, "pointermove",
-						lang.hitch(this, "_pointermoveHandler")))[0]);
+						this._pointermoveHandler.bind(this)))[0]);
 			}
 		},
 
@@ -133,8 +136,19 @@ define(["dcl/dcl",
 			if (this._draggedRenderer) {
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._draggedItemIndex) {
-						// TODO: ADD A HANDLER THAT IS ABLE TO CANCEL THE MOVE !!!
-						console.log("TODO: MOVE ITEM IN THE STORE (from index " + this._draggedItemIndex + " to " + this._dropPosition + ")");
+						// TODO: EMIT THE EVENT AFTER THE LIST HAS BEEN CLEANED UP FROM PLACEHOLDER
+						var next = this._placeHolder.nextElementSibling;
+						var beforeId = null;
+						if (next && next.item) {
+							beforeId = next.item.id;
+						}
+						var eventToEmit = {
+							item: this._draggedRenderer.item,
+							fromIndex: this._draggedItemIndex,
+							toIndex: this._dropPosition,
+							beforeId: beforeId
+						};
+//						console.log("TODO: MOVE ITEM IN THE STORE (from index " + this._draggedItemIndex + " to " + this._dropPosition + ")");
 					}
 					this._draggedItemIndex = null;
 					this._dropPosition = -1;
@@ -150,12 +164,17 @@ define(["dcl/dcl",
 				}
 				event.preventDefault();
 				event.stopPropagation();
+				// Emit the event AT THE END, to make sure that the list is clean
+				// when accessed from an handler of the event (no placeholder, ...)
+				if (eventToEmit) {
+					this.emit("item-moved", eventToEmit);
+				}
 			}
 		},
 
 		_pointermoveHandler: function (event) {
 			///////////////////////////////////////////////////////////
-			// TODO: CATEGORIZED LISTS SUPPORT
+			// TODO: CATEGORIZED LISTS SUPPORT ?
 			///////////////////////////////////////////////////////////
 			if (this._timeoutHandle) {
 				this._timeoutHandle.remove();
@@ -178,13 +197,13 @@ define(["dcl/dcl",
 		// Other private methods
 		///////////////////////////////
 
-		_startDraggingItem: function (renderer, event) {
+		_grabItem: function (renderer, event) {
 			var rendererItemIndex = this.getItemRendererIndex(renderer);
 			this._draggedRenderer = renderer;
 			this._draggedItemIndex = rendererItemIndex;
 			this._dropPosition = rendererItemIndex;
 			this._placeHolder = this.ownerDocument.createElement("div");
-			this._placeHolder.className = this._cssClasses.item;
+			this._placeHolder.className = this._cssClasses.item; // FIXME: BECAUSE OF THAT, THE LIST QUERY SELECTOR WILL RETURN THIS ITEM AS A TRUE ONE... IS THIS A BAD IDEA ?
 			this._placeHolder.style.height = this._draggedRenderer.offsetHeight + "px";
 			this._placePlaceHolder(this._draggedRenderer, "after");
 			this._setDraggable(this._draggedRenderer, true);
@@ -231,10 +250,10 @@ define(["dcl/dcl",
 		},
 
 		_editableAutoScroll: function (rate, clientY) {
-			this._editableAutoScrollID = setTimeout(lang.hitch(this, function () {
+			this._editableAutoScrollRef = this.defer(function () {
 				var oldScroll = this.getCurrentScroll().y;
 				this.scrollBy({y: rate});
-				setTimeout(lang.hitch(this, function () {
+				this.defer(function () {
 					var realRate = this.getCurrentScroll().y - oldScroll;
 					if (realRate !== 0) {
 						if (this._placeHolder) {
@@ -245,19 +264,19 @@ define(["dcl/dcl",
 							this._updatePlaceholderPosition(clientY);
 						}
 					}
-				}));
-			}), 50);
+				});
+			}, 50);
 		},
 
 		_stopEditableAutoScroll: function () {
-			if (this._editableAutoScrollID) {
-				clearTimeout(this._editableAutoScrollID);
-				this._editableAutoScrollID = null;
+			if (this._editableAutoScrollRef) {
+				this._editableAutoScrollRef.remove();
+				this._editableAutoScrollRef = null;
 			}
 		},
 
 		_removeTouchHandlers: function () {
-			array.forEach(this._touchHandlersRefs, function (handlerRef) {
+			this._touchHandlersRefs.forEach(function (handlerRef) {
 				handlerRef.remove();
 			});
 			this._touchHandlersRefs = [];
@@ -279,7 +298,7 @@ define(["dcl/dcl",
 			}
 			this.disableTouchScroll = draggable;
 		},
-		
+
 		_placePlaceHolder: function (refNode, pos) {
 			if (pos === "after") {
 				var next = refNode.nextSibling;

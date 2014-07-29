@@ -18,7 +18,7 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		moveable: true, // Should be a statefull property
+		movable: true, // Should be a statefull property
 
 		deletable: true,  // Should be a statefull property
 		
@@ -66,16 +66,16 @@ define(["dcl/dcl",
 		attachedCallback: dcl.after(function () {
 			if (this._isCategorized() || (this.pageLength && this.autoLoad)) {
 				// moving items not yet supported on categorized lists or on paginated lists with auto loading
-				this.moveable = false;
+				this.movable = false;
 			}
 			if (this.deletable) {
 				this._onRendererEvent("click", lang.hitch(this, "_rendererClickHandler"));
 			}
-			if (this.moveable) {
+			if (this.movable) {
 				this.on("pointerdown", lang.hitch(this, "_editableTouchPressHandler"));
 			}
 			this._onRendererEvent("keydown", lang.hitch(this, "_rendererKeydownHandler"));
-			domClass.toggle(this, "d-moveable-items", this.moveable);
+			domClass.toggle(this, "d-movable-items", this.movable);
 			domClass.toggle(this, "d-deletable-items", this.deletable);
 		}),
 
@@ -108,7 +108,7 @@ define(["dcl/dcl",
 			return function (item) {
 				var renderer = sup.apply(this, arguments);
 				// This is a new renderer
-				if (this.deletable || this.moveable) {
+				if (this.deletable || this.movable) {
 					// TODO: EXTERNALIZE IN A PROTECTED METHOD THAT IS EASY TO OVERRIDE
 					var rightEditNode = this.ownerDocument.createElement("div");
 					domClass.add(rightEditNode, "d-list-item-right-edit");
@@ -259,7 +259,7 @@ define(["dcl/dcl",
 		},
 
 		///////////////////////////////
-		// Moveable implementation
+		// Movable implementation
 		///////////////////////////////
 		
 		_editableTouchPressHandler: function (event) {

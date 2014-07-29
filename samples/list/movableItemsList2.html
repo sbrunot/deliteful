@@ -20,16 +20,16 @@
 		require([
 		    "delite/register",
 			"deliteful/list/List",
-			"deliteful/list/MoveableItems",
+			"deliteful/list/MovableItems",
 			"delite/theme!delite/themes/{{theme}}/global.css",	// page level CSS
 			"requirejs-domready/domReady!"
-		], function (register, List, MoveableItems) {
-			var EditableList = register("d-editable-list", [HTMLElement, List, MoveableItems], {});
+		], function (register, List, MovableItems) {
+			var EditableList = register("d-editable-list", [HTMLElement, List, MovableItems], {});
 			var list = new EditableList();
 			list.setAttribute("aria-label", "Sample editable list");
 			list.style.height = "200px";
-			list.moveHandleClass = "move-handle";
-			list.moveOnLongPress = false;
+			list.grabHandleClass = "move-handle";
+			list.grabPressDuration = 0;
 //			list.categoryAttr = "category";
 			for (var i = 0; i < 100; i++) {
 				var category = i < 50 ? "A" : "B";
@@ -37,14 +37,14 @@
 			}
 			document.body.appendChild(list);
 			list.startup();
-			document.getElementById("moveableSelect").onchange = function () {
-				list.moveable = this.value === "true";
+			document.getElementById("movableSelect").onchange = function () {
+				list.movable = this.value === "true";
 			};
 		});
 	</script>
 	
 	<style type="text/css">
-		.d-moveable-items .move-handle:after {
+		.d-movable-items .move-handle:after {
 			content: "\2630";
 			color: #808080;
 			font-size: 160%;
@@ -52,10 +52,10 @@
 	</style>
 </head>
 <body role="application">
-	This sample demonstrate a list with moveable items. Click on the right icon of an item to start moving it.
-	<select id="moveableSelect">
-		<option value="true" selected>moveable items</option>
-		<option value="false">non moveable items</option>
+	This sample demonstrate a list with movable items. Click on the right icon of an item to start moving it.
+	<select id="movableSelect">
+		<option value="true" selected>movable items</option>
+		<option value="false">non movable items</option>
 	</select>
 </body>
 </html>
