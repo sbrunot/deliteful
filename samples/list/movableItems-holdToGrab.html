@@ -28,13 +28,18 @@
 			var list = new EditableList();
 			list.setAttribute("aria-label", "Sample editable list");
 			list.style.height = "200px";
-			list.grabHandleClass = "move-handle";
-			list.grabPressDuration = 0;
 //			list.categoryAttr = "category";
 			for (var i = 0; i < 100; i++) {
 				var category = i < 50 ? "A" : "B";
-				list.store.add({label: "Item " + i, category: "Category " + category, righticonclass: "move-handle"});
+				list.store.add({label: "Item " + i, category: "Category " + category});
 			}
+			list.on("item-moved", function (event) {
+				if (event.beforeId !== null) {
+					list.store.put(list.store.get(event.item.id), {before: list.store.get(event.beforeId)});
+				} else {
+					list.store.put(list.store.get(event.item.id), {before: null});
+				}
+			});
 			document.body.appendChild(list);
 			list.startup();
 			document.getElementById("movableSelect").onchange = function () {
@@ -42,17 +47,9 @@
 			};
 		});
 	</script>
-	
-	<style type="text/css">
-		.d-movable-items .move-handle:after {
-			content: "\2630";
-			color: #808080;
-			font-size: 160%;
-		}
-	</style>
 </head>
 <body role="application">
-	This sample demonstrate a list with movable items. Click on the right icon of an item to start moving it.
+	This sample demonstrate a list with movable items. Click and hold on one item to start moving it.
 	<select id="movableSelect">
 		<option value="true" selected>movable items</option>
 		<option value="false">non movable items</option>

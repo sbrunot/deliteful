@@ -10,10 +10,12 @@ define([
 		put: null,
 		added: null,
 		removed: null,
+		moved: null,
 		cleanupMock: function () {
 			this.put = [];
 			this.added = [];
 			this.removed = [];
+			this.moved = [];
 		},
 		initMock: function () {
 			this.cleanupMock();
@@ -27,6 +29,9 @@ define([
 		},
 		itemRemoved: function (index, items, keepSelection) {
 			this.removed.push({index: index, items: items, keepSelection: keepSelection});
+		},
+		itemMoved: function (previousIndex, newIndex, item, items) {
+			this.moved.push({previousIndex: previousIndex, newIndex: newIndex, item: item, items: items});
 		}
 	});
 
@@ -82,6 +87,7 @@ define([
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			var result = list.store.filter();
 			checkArray(result, 1, [0], [item], "query result");
 		},
@@ -102,6 +108,7 @@ define([
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			var result = list.store.filter();
 			checkArray(result, 1, [0], [item], "query result");
 		},
@@ -122,6 +129,7 @@ define([
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			var result = list.store.filter();
 			checkArray(result, 1, [0], [item], "query result");
 		},
@@ -159,6 +167,7 @@ define([
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			var result = list.store.filter();
 			checkArray(result, 3, [0, 1, 2], [item1, item2, item3], "query result");
 		},
@@ -196,6 +205,7 @@ define([
 						"added");
 			checkArray(list.put, 0, null, null, "put");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			var result = list.store.filter();
 			checkArray(result, 3, [0, 1, 2], [item1, item2, item3], "query result");
 		},
@@ -273,6 +283,7 @@ define([
 						  items: null,
 						  keepSelection: false}],
 						"removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			result = list.store.filter();
 			checkArray(result, 0, null, null, "query result");
 		},
@@ -300,6 +311,7 @@ define([
 					"put");
 			checkArray(list.added, 0, null, null, "added");
 			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.moved, 0, null, null, "moved");
 			result = list.store.filter();
 			checkArray(result, 1, [0], [item2], "query result");
 		},
@@ -317,7 +329,7 @@ define([
 					[item1, item2, item3],
 					"query result");
 		},
-		"move with put" : function () {
+		"move back with put" : function () {
 			var item1 = {id: 1, label: "first"};
 			var item2 = {id: 2, label: "second"};
 			var item3 = {id: 3, label: "third"};
@@ -327,26 +339,85 @@ define([
 			list.cleanupMock();
 			list.store.put(item3, {before: item2});
 			checkArray(list.put, 0, null, null, "put");
-			checkArray(list.removed,
+			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.added, 0, null, null, "added");
+			checkArray(list.moved,
 						1,
 						[0],
-						[{index: 2,
-						  items: null,
-						  keepSelection: true}],
-						"removed");
-			checkArray(list.added,
-						1,
-						[0],
-						[{index: 1, item: {id: 3,
-							category: undefined,
-							label: "third",
-							iconclass: undefined,
-							righticonclass: undefined,
-							righttext: undefined
-							}, items: null}],
-						"added");
+						[{previousIndex: 2,
+						  newIndex: 1,
+						  item: {category: undefined,
+							  iconclass: undefined,
+							  id: 3,
+							  label: "third",
+							  righticonclass: undefined,
+							  righttext: undefined
+						  },
+						  items: null}],
+						"moved");
 			var result = list.store.filter();
 			checkArray(result, 3, [0, 1, 2], [item1, item3, item2], "query result after move");
+			assert.deepEqual({1: 0, 2: 2, 3: 1}, list.store._index, "index");
+		},
+		"move up with put" : function () {
+			var item1 = {id: 1, label: "first"};
+			var item2 = {id: 2, label: "second"};
+			var item3 = {id: 3, label: "third"};
+			list.store.add(item1);
+			list.store.add(item2);
+			list.store.add(item3);
+			list.cleanupMock();
+			list.store.put(item1, {before: item3});
+			checkArray(list.put, 0, null, null, "put");
+			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.added, 0, null, null, "added");
+			checkArray(list.moved,
+						1,
+						[0],
+						[{previousIndex: 0,
+						  newIndex: 1,
+						  item: {category: undefined,
+							  iconclass: undefined,
+							  id: 1,
+							  label: "first",
+							  righticonclass: undefined,
+							  righttext: undefined
+						  },
+						  items: null}],
+						"moved");
+			var result = list.store.filter();
+			checkArray(result, 3, [0, 1, 2], [item2, item1, item3], "query result after move");
+			assert.deepEqual({1: 1, 2: 0, 3: 2}, list.store._index, "index");
+		},
+		"move at the end with put" : function () {
+			var item1 = {id: 1, label: "first"};
+			var item2 = {id: 2, label: "second"};
+			var item3 = {id: 3, label: "third"};
+			list.store.add(item1);
+			list.store.add(item2);
+			list.store.add(item3);
+			list.cleanupMock();
+			list.store.put(item2, {before: null});
+			checkArray(list.put, 0, null, null, "put");
+			checkArray(list.removed, 0, null, null, "removed");
+			checkArray(list.added, 0, null, null, "added");
+			checkArray(list.moved,
+						1,
+						[0],
+						[{previousIndex: 1,
+						  newIndex: 2,
+						  item: {category: undefined,
+							  iconclass: undefined,
+							  id: 2,
+							  label: "second",
+							  righticonclass: undefined,
+							  righttext: undefined
+						  },
+						  items: null}],
+						"moved");
+			var result = list.store.filter();
+			checkArray(result, 3, [0, 1, 2], [item1, item3, item2], "query result after move");
+			assert.deepEqual({1: 0, 2: 2, 3: 1}, list.store._index, "index");
 		},
 		"move and update with put" : function () {
 			var item1 = {id: 1, label: "first"};
@@ -359,24 +430,22 @@ define([
 			list.cleanupMock();
 			list.store.put(item3updated, {id: 3, before: item2});
 			checkArray(list.put, 0, null, null, "put");
-			checkArray(list.removed,
-						1,
-						[0],
-						[{index: 2,
-						  items: null,
-						  keepSelection: true}],
-						"removed");
-			checkArray(list.added,
-						1,
-						[0],
-						[{index: 1, item: {id: 3,
-							category: undefined,
-							label: "fourth",
-							iconclass: undefined,
-							righticonclass: undefined,
-							righttext: undefined
-							}, items: null}],
-						"added");
+			checkArray(list.removed, 0, null, null, "put");
+			checkArray(list.added, 0, null, null, "put");
+			checkArray(list.moved,
+					1,
+					[0],
+					[{previousIndex: 2,
+					  newIndex: 1,
+					  item: {category: undefined,
+						  iconclass: undefined,
+						  id: 3,
+						  label: "fourth",
+						  righticonclass: undefined,
+						  righttext: undefined
+					  },
+					  items: null}],
+					"moved");
 			var result = list.store.filter();
 			checkArray(result, 3, [0, 1, 2], [item1, item3updated, item2], "query result after move");
 		},
@@ -455,6 +524,7 @@ define([
 					put: [],
 					added: [],
 					removed: [],
+					moved: [],
 					itemUpdated: function (event, keepSelection) {
 						this.put.push({event: event, keepSelection: keepSelection});
 					},
@@ -463,6 +533,9 @@ define([
 					},
 					itemRemoved: function (event, keepSelection) {
 						this.removed.push({event: event, keepSelection: keepSelection});
+					},
+					itemMoved: function (previousIndex, newIndex, item, items) {
+						this.moved.push({previousIndex: previousIndex, newIndex: newIndex, item: item, items: items});
 					}
 				};
 			var store = new DefaultStore(mock);
@@ -471,23 +544,27 @@ define([
 			assert.strictEqual(0, mock.put.length, "put length after first put");
 			assert.strictEqual(0, mock.added.length, "added length after first put");
 			assert.strictEqual(0, mock.removed.length, "removed");
+			assert.strictEqual(0, mock.moved.length, "moved");
 			assert.strictEqual(1, store.data.length, "number of items in store after first put");
 			// move item
 			var id = store.put({label: "item 1"});
 			assert.strictEqual(0, mock.put.length, "put length after second put");
 			assert.strictEqual(0, mock.added.length, "added length after second put");
 			assert.strictEqual(0, mock.removed.length, "removed length after second put");
+			assert.strictEqual(0, mock.moved.length, "moved");
 			assert.strictEqual(2, store.data.length, "number of items in store after second put");
 			store.put({label: "item 1"}, {id: id, before: store.data[0]});
 			assert.strictEqual(0, mock.put.length, "put length after put 3");
 			assert.strictEqual(0, mock.added.length, "added length after put 3");
 			assert.strictEqual(0, mock.removed.length, "removed length after put 3");
+			assert.strictEqual(0, mock.moved.length, "moved");
 			assert.strictEqual(2, store.data.length, "number of items in store after put 3");
 			// update item
 			store.put({label: "item -1"}, {id: id});
 			assert.strictEqual(0, mock.put.length, "put length after put 4");
 			assert.strictEqual(0, mock.added.length, "added length after put 4");
 			assert.strictEqual(0, mock.removed.length, "removed length after put 4");
+			assert.strictEqual(0, mock.moved.length, "moved");
 			assert.strictEqual(2, store.data.length, "number of items in store after put 4");
 		},
 		"remove items on a non queried store": function () {
@@ -495,6 +572,7 @@ define([
 					put: [],
 					added: [],
 					removed: [],
+					moved: [],
 					putItem: function (index, item, items) {
 						this.put.push({index: index, item: item, items: items});
 					},
@@ -503,6 +581,9 @@ define([
 					},
 					removeItem: function (index, item, items, keepSelection) {
 						this.removed.push({index: index, item: item, items: items, keepSelection: keepSelection});
+					},
+					itemMoved: function (previousIndex, newIndex, item, items) {
+						this.moved.push({previousIndex: previousIndex, newIndex: newIndex, item: item, items: items});
 					}
 				};
 			var store = new DefaultStore(mock);
@@ -513,6 +594,7 @@ define([
 			assert.strictEqual(0, mock.put.length, "put length");
 			assert.strictEqual(0, mock.added.length, "added length");
 			assert.strictEqual(0, mock.removed.length, "removed length");
+			assert.strictEqual(0, mock.moved.length, "moved length");
 			assert.strictEqual(0, store.data.length, "number of items in store");
 		},
 		"item indexes" : function () {

@@ -116,7 +116,7 @@ define([
 			return item[this.idProperty];
 		},
 
-		/*jshint maxcomplexity:13*/
+		/*jshint maxcomplexity:15*/
 		/**
 		 * Stores an item.
 		 * @param {Object} item The item to store.
@@ -127,8 +127,12 @@ define([
 		put: function (item, directives) {
 			var id = item[this.idProperty] = (directives && "id" in directives)
 				? directives.id : this.idProperty in item ? item[this.idProperty] : Math.random();
-			if (directives && directives.before) {
-				var beforeIndex = this._index[this.getIdentity(directives.before)];
+			if (directives && directives.before !== undefined) {
+				if (directives.before) {
+					var beforeIndex = this._index[this.getIdentity(directives.before)];
+				} else {
+					beforeIndex = null;
+				}
 			}
 			if (id in this._index) {
 				// item exists in store
@@ -140,11 +144,19 @@ define([
 				this.data[existingIndex] = item;
 				if (beforeIndex !== undefined && beforeIndex !== existingIndex) {
 					// move the item
-					this.data.splice(beforeIndex - (existingIndex < beforeIndex ? 1 : 0),
-							0, this.data.splice(existingIndex, 1)[0]);
-					this._reindex(Math.min(beforeIndex, existingIndex), Math.max(beforeIndex, existingIndex));
+					if (beforeIndex === null) {
+						// move to the end
+						this.data.push(this.data.splice(existingIndex, 1)[0]);
+						var newIndex = this.data.length - 1;
+					} else {
+						// move to beforeIndex
+						newIndex = beforeIndex - (existingIndex < beforeIndex ? 1 : 0);
+						this.data.splice(newIndex,
+								0, this.data.splice(existingIndex, 1)[0]);
+					}
+					this._reindex(Math.min(newIndex, existingIndex), Math.max(newIndex, existingIndex));
 					if (this._queried) {
-						this.list.itemMoved(existingIndex, beforeIndex, this.list.itemToRenderItem(item), null);
+						this.list.itemMoved(existingIndex, newIndex, this.list.itemToRenderItem(item), null);
 					}
 				} else {
 					if (this._queried) {

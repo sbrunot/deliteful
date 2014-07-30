@@ -948,7 +948,7 @@ define([
 				this._removeRenderer(renderer, true);
 			}
 			var newRenderer = this._createItemRenderer(renderItem);
-			this._addItemRenderer(newRenderer, newIndex - (previousIndex < newIndex ? 1 : 0));
+			this._addItemRenderer(newRenderer, newIndex);
 			if (keepFocused) {
 				this.focusChild(newRenderer.renderNode);
 			}

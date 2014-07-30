@@ -180,6 +180,7 @@ define([
 				list._spaceKeydownHandler(event);
 				assert(list.isSelected(firstItem.item), "item selected before move");
 				list.store.put(firstItem.item, {before: thirdItem.item});
+				list.deliver();
 				var secondItem = list.getChildren()[1];
 				assert(list.isSelected(secondItem.item), "item selected after move");
 				assert(secondItem.renderNode.getAttribute("aria-selected"),

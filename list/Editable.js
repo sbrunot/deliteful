@@ -367,7 +367,10 @@ define(["dcl/dcl",
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._draggedItemIndex) {
 						// TODO: ADD A HANDLER THAT IS ABLE TO CANCEL THE MOVE !!!
-						console.log("TODO: MOVE ITEM IN THE STORE (from index " + this._draggedItemIndex + " to " + this._dropPosition + ")");
+						console.log("TODO: MOVE ITEM IN THE STORE (from index "
+								+ this._draggedItemIndex
+								+ " to "
+								+ this._dropPosition + ")");
 					}
 					this._draggedItemIndex = null;
 					this._dropPosition = -1;

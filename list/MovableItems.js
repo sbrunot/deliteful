@@ -13,9 +13,9 @@ define(["dcl/dcl",
 		// Public attributes
 		/////////////////////////////////
 
-		movable: true, // Should be a statefull property
+		movable: true,
 		
-		grabHandleClass: "", // ONE COULD ADD THE CLASS OF THE HANDLE HERE
+		grabHandleClass: "",
 
 		grabPressDuration: 1000,
 
@@ -136,7 +136,6 @@ define(["dcl/dcl",
 			if (this._draggedRenderer) {
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._draggedItemIndex) {
-						// TODO: EMIT THE EVENT AFTER THE LIST HAS BEEN CLEANED UP FROM PLACEHOLDER
 						var next = this._placeHolder.nextElementSibling;
 						var beforeId = null;
 						if (next && next.item) {
@@ -148,7 +147,6 @@ define(["dcl/dcl",
 							toIndex: this._dropPosition,
 							beforeId: beforeId
 						};
-//						console.log("TODO: MOVE ITEM IN THE STORE (from index " + this._draggedItemIndex + " to " + this._dropPosition + ")");
 					}
 					this._draggedItemIndex = null;
 					this._dropPosition = -1;
@@ -203,7 +201,7 @@ define(["dcl/dcl",
 			this._draggedItemIndex = rendererItemIndex;
 			this._dropPosition = rendererItemIndex;
 			this._placeHolder = this.ownerDocument.createElement("div");
-			this._placeHolder.className = this._cssClasses.item; // FIXME: BECAUSE OF THAT, THE LIST QUERY SELECTOR WILL RETURN THIS ITEM AS A TRUE ONE... IS THIS A BAD IDEA ?
+			this._placeHolder.className = this._cssClasses.item;
 			this._placeHolder.style.height = this._draggedRenderer.offsetHeight + "px";
 			this._placePlaceHolder(this._draggedRenderer, "after");
 			this._setDraggable(this._draggedRenderer, true);
