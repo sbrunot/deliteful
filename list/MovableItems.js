@@ -23,7 +23,7 @@ define(["dcl/dcl",
 		// Private attributes
 		/////////////////////////////////
 
-		_editableAutoScrollRef: null,
+		_movableAutoScrollRef: null,
 		_pointerdownHandlerRef: null,
 		_touchHandlersRefs: null,
 		_placeHolder: null,
@@ -74,7 +74,7 @@ define(["dcl/dcl",
 						this._pointerdownHandlerRef.remove();
 						this._pointerdownHandlerRef = null;
 						this._removeTouchHandlers();
-						this._stopEditableAutoScroll();
+						this._cancelMovableAutoScroll();
 					}
 				}
 			}
@@ -113,8 +113,8 @@ define(["dcl/dcl",
 				if (this.isGrabEvent(event)) {
 					this._grabItem(renderer, event);
 				} else if (this.grabPressDuration) {
-					this._timeoutHandle = this.defer(function () {
-						this._timeoutHandle = null;
+					this._grabTimeoutHandle = this.defer(function () {
+						this._grabTimeoutHandle = null;
 						this._grabItem(renderer, event);
 					}, this.grabPressDuration);
 				} else {
@@ -124,15 +124,21 @@ define(["dcl/dcl",
 						this._pointerupHandler.bind(this)))[0]);
 				this._touchHandlersRefs.push(this.own(on(document, "pointermove",
 						this._pointermoveHandler.bind(this)))[0]);
+				this._touchHandlersRefs.push(this.own(on(document, "pointercancel",
+						this._pointercancelHandler.bind(this)))[0]);
 			}
+			// Needed on webkit to avoid the default scroll behavior (click and move to the top or bottom => scroll)
+			event.preventDefault();
+		},
+
+		_pointercancelHandler: function (event) {
+			this._clearGrabTimeout();
+			this._removeTouchHandlers();
 		},
 
 		_pointerupHandler: function (event) {
-			if (this._timeoutHandle) {
-				this._timeoutHandle.remove();
-				this._timeoutHandle = null;
-				this._removeTouchHandlers();
-			}
+			this._clearGrabTimeout();
+			this._removeTouchHandlers();
 			if (this._draggedRenderer) {
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._draggedItemIndex) {
@@ -160,8 +166,6 @@ define(["dcl/dcl",
 					this._placeHolder.parentNode.removeChild(this._placeHolder);
 					this._placeHolder = null;
 				}
-				event.preventDefault();
-				event.stopPropagation();
 				// Emit the event AT THE END, to make sure that the list is clean
 				// when accessed from an handler of the event (no placeholder, ...)
 				if (eventToEmit) {
@@ -174,20 +178,16 @@ define(["dcl/dcl",
 			///////////////////////////////////////////////////////////
 			// TODO: CATEGORIZED LISTS SUPPORT ?
 			///////////////////////////////////////////////////////////
-			if (this._timeoutHandle) {
-				this._timeoutHandle.remove();
-				this._timeoutHandle = null;
-				this._removeTouchHandlers();
-			}
+			this._clearGrabTimeout();
 			if (this._draggedRenderer) {
 				var	pageY = event.touches ? event.touches[0].pageY : event.pageY,
 						clientY = event.touches ? event.touches[0].clientY : event.clientY;
 				this._draggedRendererTop = this._startTop + (pageY - this._touchStartY);
-				this._stopEditableAutoScroll();
+				this._cancelMovableAutoScroll();
 				this._draggedRenderer.style.top = this._draggedRendererTop + "px";
 				this._updatePlaceholderPosition(clientY);
+				// Needed on webkit to avoid the default scroll behavior (click and move to the top or bottom => scroll)
 				event.preventDefault();
-				event.stopPropagation();
 			}
 		},
 
@@ -195,20 +195,31 @@ define(["dcl/dcl",
 		// Other private methods
 		///////////////////////////////
 
+		_clearGrabTimeout: function () {
+			if (this._grabTimeoutHandle) {
+				this._grabTimeoutHandle.remove();
+				this._grabTimeoutHandle = null;
+			}
+		},
+
 		_grabItem: function (renderer, event) {
+			// FIXME: THIS SHOULD BE A FEATURE OF pointer: set default action to none when the item is grabbed
+			var touchId = event.pointerId - 2;
+			if (pointer.touchTracker[touchId]) {
+				pointer.touchTracker[touchId]._touchAction = 3; // Action: none
+			}
+			// ENDOF FIXME
 			var rendererItemIndex = this.getItemRendererIndex(renderer);
 			this._draggedRenderer = renderer;
 			this._draggedItemIndex = rendererItemIndex;
 			this._dropPosition = rendererItemIndex;
+			this._setDraggable(this._draggedRenderer, true);
 			this._placeHolder = this.ownerDocument.createElement("div");
 			this._placeHolder.className = this._cssClasses.item;
 			this._placeHolder.style.height = this._draggedRenderer.offsetHeight + "px";
 			this._placePlaceHolder(this._draggedRenderer, "after");
-			this._setDraggable(this._draggedRenderer, true);
 			this._touchStartY = event.touches ? event.touches[0].pageY : event.pageY;
 			this._startTop = domGeometry.getMarginBox(this._draggedRenderer).t;
-			event.preventDefault();
-			event.stopPropagation();
 		},
 
 		_updatePlaceholderPosition: function (clientY) {
@@ -234,21 +245,21 @@ define(["dcl/dcl",
 			}
 			var clientRect = this.getBoundingClientRect();
 			if (clientY < clientRect.top + 15) {
-				this._editableAutoScroll(-15, clientY);
+				this._movableAutoScroll(-15, clientY);
 			} else if (clientY > clientRect.top + clientRect.height - 15) {
 				if (this.getBottomDistance(this._placeHolder) <= 0) {
 					// Place holder is at the bottom of the list, stop scrolling
-					this._stopEditableAutoScroll();
+					this._cancelMovableAutoScroll();
 				} else {
-					this._editableAutoScroll(15, clientY);
+					this._movableAutoScroll(15, clientY);
 				}
 			} else {
-				this._stopEditableAutoScroll();
+				this._cancelMovableAutoScroll();
 			}
 		},
 
-		_editableAutoScroll: function (rate, clientY) {
-			this._editableAutoScrollRef = this.defer(function () {
+		_movableAutoScroll: function (rate, clientY) {
+			this._movableAutoScrollRef = this.defer(function () {
 				var oldScroll = this.getCurrentScroll().y;
 				this.scrollBy({y: rate});
 				this.defer(function () {
@@ -266,10 +277,10 @@ define(["dcl/dcl",
 			}, 50);
 		},
 
-		_stopEditableAutoScroll: function () {
-			if (this._editableAutoScrollRef) {
-				this._editableAutoScrollRef.remove();
-				this._editableAutoScrollRef = null;
+		_cancelMovableAutoScroll: function () {
+			if (this._movableAutoScrollRef) {
+				this._movableAutoScrollRef.remove();
+				this._movableAutoScrollRef = null;
 			}
 		},
 
