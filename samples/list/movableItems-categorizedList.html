@@ -28,8 +28,10 @@
 			var list = new EditableList();
 			list.setAttribute("aria-label", "Sample editable list");
 			list.style.height = "200px";
+			list.categoryAttr = "category";
 			for (var i = 0; i < 100; i++) {
-				list.store.add({label: "Item " + i});
+				var category = i < 50 ? "A" : "B";
+				list.store.add({label: "Item " + i, category: "Category " + category});
 			}
 			list.on("item-moved", function (event) {
 				if (event.beforeId !== null) {
@@ -47,7 +49,7 @@
 	</script>
 </head>
 <body role="application">
-	This sample demonstrate a list with movable items. Click and hold on one item to start moving it.
+	This sample demonstrate a categorized list with the MovableItems mixin applied. Items are not movable.
 	<select id="movableSelect">
 		<option value="true" selected>movable items</option>
 		<option value="false">non movable items</option>

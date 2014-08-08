@@ -16,7 +16,15 @@ define(["dcl/dcl",
 		/////////////////////////////////
 
 		movable: true,
-		
+
+		_setMovableAttr: function (value) {
+			if (value && (this._isCategorized()  || (this.pageLength && this.autoLoad))) {
+				throw new Error("items of a categorized list or of a pageable list with autoLoad cannot be moved.");
+			} else {
+				this._set("movable", value);
+			}
+		},
+
 		grabHandleClass: "",
 
 		grabPressDuration: 1000,
@@ -25,7 +33,8 @@ define(["dcl/dcl",
 		// Private attributes
 		/////////////////////////////////
 
-		_movableAutoScrollRef: null,
+		/*
+		_autoScrollRef: null,
 		_pointerdownHandlerRef: null,
 		_touchHandlersRefs: null,
 		_placeHolder: null,
@@ -35,21 +44,9 @@ define(["dcl/dcl",
 		_startTop: null,
 		_grabbedRendererTop: null,
 		_grabbedItemIndex: null,
+		*/
 		_dropPosition: -1,
 		_initialPosition: -1,
-
-		/////////////////////////////////
-		// Public methods
-		/////////////////////////////////
-
-		// Called before an item is moved through the UI move action.
-		// If it returns false, the item is not moved. The item is moved
-		// if it returns any other value.
-		// TODO: RENAME "beforeItemMove" or "beforeItemMoved" ?
-		/*jshint unused:false */
-		onItemMove: function (item, originalIndex, newIndex) {
-			// to be immplemented
-		},
 
 		/////////////////////////////////
 		// Widget lifecycle
@@ -63,6 +60,7 @@ define(["dcl/dcl",
 			if (this._isCategorized() || (this.pageLength && this.autoLoad)) {
 				// moving items not yet supported on categorized lists or on paginated lists with auto loading
 				this.movable = false;
+				// TODO: LOG AN ERROR MESSAGE ?
 			}
 			this.notifyCurrentValue("movable");
 		}),
@@ -77,9 +75,10 @@ define(["dcl/dcl",
 						this._pointerdownHandlerRef.remove();
 						this._pointerdownHandlerRef = null;
 						this._removeTouchHandlers();
-						this._cancelMovableAutoScroll();
+						this._cancelAutoScroll();
 					}
 				}
+				this._refreshAriaGrabbed();
 			}
 		},
 
@@ -130,7 +129,7 @@ define(["dcl/dcl",
 			event.preventDefault();
 		},
 
-		_pointercancelHandler: function (event) {
+		_pointercancelHandler: function () {
 			this._clearGrabTimeout();
 			this._removeTouchHandlers();
 		},
@@ -148,7 +147,7 @@ define(["dcl/dcl",
 				var	pageY = event.touches ? event.touches[0].pageY : event.pageY,
 						clientY = event.touches ? event.touches[0].clientY : event.clientY;
 				this._grabbedRendererTop = this._startTop + (pageY - this._touchStartY);
-				this._cancelMovableAutoScroll();
+				this._cancelAutoScroll();
 				this._grabbedRenderer.style.top = this._grabbedRendererTop + "px";
 				this._updatePlaceholderPosition(clientY, true);
 				// Needed on webkit to avoid the default scroll behavior (click and move to the top or bottom => scroll)
@@ -162,7 +161,6 @@ define(["dcl/dcl",
 
 		_onContainerKeydown: dcl.superCall(function (sup) {
 			return function (event) {
-				console.log(event);
 				if (this.movable) {
 					if (event.keyCode !== keys.TAB) {
 						// To avoid the default List keydown handler behaviour
@@ -188,18 +186,8 @@ define(["dcl/dcl",
 			};
 		}),
 
-		_onBlur: dcl.superCall(function (sup) {
-			// Issue on Firefox: is grabbed renderer and pressing SHIFT + TAB, no _onBlur event received... And the focus is given to the previous renderer (the one before the grabbed renderer)
-			return function () {
-				if (this._grabbedRenderer) {
-					this._dropItem(true);
-				}
-				sup.apply(this, arguments);
-			};
-		}),
-
 		_onDownArrow: dcl.superCall(function (sup) {
-			return function (event) {
+			return function () {
 				if (this._grabbedRenderer) {
 					this._updatePlaceholderPosition(this._placeHolderClientRect.bottom + 1);
 					this._grabbedRenderer.style.top = this._placeHolder.offsetTop + "px";
@@ -213,7 +201,7 @@ define(["dcl/dcl",
 		}),
 
 		_onUpArrow: dcl.superCall(function (sup) {
-			return function (event) {
+			return function () {
 				if (this._grabbedRenderer) {
 					this._updatePlaceholderPosition(this._placeHolderClientRect.top - 1);
 					this._grabbedRenderer.style.top = this._placeHolder.offsetTop + "px";
@@ -226,9 +214,29 @@ define(["dcl/dcl",
 			};
 		}),
 
+		_onBlur: dcl.superCall(function (sup) {
+			return function () {
+				if (this._grabbedRenderer) {
+					this._dropItem(true);
+				}
+				sup.apply(this, arguments);
+			};
+		}),
+
 		///////////////////////////////
 		// Other private methods
 		///////////////////////////////
+
+		_refreshAriaGrabbed: function () {
+			var renderers = this.containerNode.querySelectorAll("." + this._cssClasses.item);
+			for (var i = 0; i < renderers.length; i++) {
+				if (this.movable) {
+					renderers[i].renderNode.setAttribute("aria-grabbed", false);
+				} else {
+					renderers[i].renderNode.removeAttribute("aria-grabbed");
+				}
+			}
+		},
 
 		_clearGrabTimeout: function () {
 			if (this._grabTimeoutHandle) {
@@ -248,8 +256,9 @@ define(["dcl/dcl",
 			this._grabbedRenderer = renderer;
 			this._grabbedItemIndex = rendererItemIndex;
 			this._dropPosition = this._initialPosition = rendererItemIndex;
-			this._setDraggable(this._grabbedRenderer, true);
+			this._setGrabbed(this._grabbedRenderer, true);
 			this._placeHolder = this.ownerDocument.createElement("div");
+			this._placeHolder.setAttribute("aria-dropeffect", "move");
 			this._placeHolder.className = this._cssClasses.item;
 			this._placeHolder.style.height = this._grabbedRenderer.offsetHeight + "px";
 			this._placePlaceHolder(this._grabbedRenderer, "after");
@@ -282,7 +291,7 @@ define(["dcl/dcl",
 					this._dropPosition = -1;
 				}
 				this.defer(function () { // iPhone needs setTimeout (via defer)
-					this._setDraggable(this._grabbedRenderer, false);
+					this._setGrabbed(this._grabbedRenderer, false);
 					if (cancelMove) {
 						this._grabbedRenderer.scrollIntoView();
 					}
@@ -301,7 +310,8 @@ define(["dcl/dcl",
 			}
 		},
 
-		_updatePlaceholderPosition: function (clientY, 	autoScrollEnabled) {
+		/* jshint maxcomplexity: 11*/
+		_updatePlaceholderPosition: function (clientY, autoScrollEnabled) {
 			var nextRenderer, previousRenderer;
 			if (clientY < this._placeHolderClientRect.top) {
 				previousRenderer = this._getNextRenderer(this._placeHolder, -1);
@@ -325,22 +335,23 @@ define(["dcl/dcl",
 			if (autoScrollEnabled) {
 				var clientRect = this.getBoundingClientRect();
 				if (clientY < clientRect.top + 15) {
-					this._movableAutoScroll(-15, clientY);
+					this._autoScroll(-15, clientY);
 				} else if (clientY > clientRect.top + clientRect.height - 15) {
 					if (this.getBottomDistance(this._placeHolder) <= 0) {
 						// Place holder is at the bottom of the list, stop scrolling
-						this._cancelMovableAutoScroll();
+						this._cancelAutoScroll();
 					} else {
-						this._movableAutoScroll(15, clientY);
+						this._autoScroll(15, clientY);
 					}
 				} else {
-					this._cancelMovableAutoScroll();
+					this._cancelAutoScroll();
 				}
 			}
 		},
+		/* jshint maxcomplexity: 10*/
 
-		_movableAutoScroll: function (rate, clientY) {
-			this._movableAutoScrollRef = this.defer(function () {
+		_autoScroll: function (rate, clientY) {
+			this._autoScrollRef = this.defer(function () {
 				var oldScroll = this.getCurrentScroll().y;
 				this.scrollBy({y: rate});
 				this.defer(function () {
@@ -358,10 +369,10 @@ define(["dcl/dcl",
 			}, 50);
 		},
 
-		_cancelMovableAutoScroll: function () {
-			if (this._movableAutoScrollRef) {
-				this._movableAutoScrollRef.remove();
-				this._movableAutoScrollRef = null;
+		_cancelAutoScroll: function () {
+			if (this._autoScrollRef) {
+				this._autoScrollRef.remove();
+				this._autoScrollRef = null;
 			}
 		},
 
@@ -372,19 +383,21 @@ define(["dcl/dcl",
 			this._touchHandlersRefs = [];
 		},
 
-		_setDraggable: function (node, draggable) {
+		_setGrabbed: function (renderer, draggable) {
 			if (draggable) {
-				domStyle.set(node, {
-					width: domGeometry.getContentBox(node).w + "px",
-					top: node.offsetTop + "px"
+				domStyle.set(renderer, {
+					width: domGeometry.getContentBox(renderer).w + "px",
+					top: renderer.offsetTop + "px"
 				});
-				domClass.add(node, "d-list-item-dragged");
+				domClass.add(renderer, "d-list-item-dragged");
+				renderer.renderNode.setAttribute("aria-grabbed", "true");
 			} else {
-				domClass.remove(node, "d-list-item-dragged");
-				domStyle.set(node, {
+				domClass.remove(renderer, "d-list-item-dragged");
+				domStyle.set(renderer, {
 					width: "",
 					top: ""
 				});
+				renderer.renderNode.setAttribute("aria-grabbed", "false");
 			}
 			this.disableTouchScroll = draggable;
 		},
@@ -401,7 +414,20 @@ define(["dcl/dcl",
 				refNode.parentElement.insertBefore(this._placeHolder, refNode);
 			}
 			this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
-		}
+		},
 
+		///////////////////////////////
+		// List methods
+		///////////////////////////////
+
+		_createItemRenderer: dcl.superCall(function (sup) {
+			return function () {
+				var renderer = sup.apply(this, arguments);
+				if (this.movable) {
+					renderer.renderNode.setAttribute("aria-grabbed", "false");
+				}
+				return renderer;
+			};
+		})
 	});
 });

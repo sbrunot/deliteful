@@ -30,10 +30,8 @@
 			list.style.height = "200px";
 			list.grabHandleClass = "move-handle";
 			list.grabPressDuration = 0;
-//			list.categoryAttr = "category";
 			for (var i = 0; i < 100; i++) {
-				var category = i < 50 ? "A" : "B";
-				list.store.add({label: "Item " + i, category: "Category " + category, righticonclass: "move-handle"});
+				list.store.add({label: "Item " + i, righticonclass: "move-handle"});
 			}
 			list.on("item-moved", function (event) {
 				if (event.beforeId !== null) {
