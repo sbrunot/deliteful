@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+	<title>deliteful/list/List samples.</title>
+
+	<script type="text/javascript" src="../../../requirejs/require.js"></script>
+
+	<script type="text/javascript">
+		require.config({
+			baseUrl: "../../../"
+		});
+	</script>
+
+	<script type="text/javascript">
+		require([
+			"delite/register",
+			"deliteful/list/ItemRenderer",
+			"deliteful/list/List",
+			"deliteful/list/MovableItems",
+			"delite/handlebars!deliteful/samples/list/templates/CustomItemRenderer.html",
+			"delite/theme!delite/themes/{{theme}}/global.css",	// page level CSS
+			"requirejs-domready/domReady!"
+		], function (register, ItemRenderer, List, MovableItems, template) {
+			var MyCustomRenderer = register("d-book-item", [HTMLElement, ItemRenderer], {
+				template: template
+			});
+			var EditableList = register("d-editable-list", [HTMLElement, List, MovableItems], {});
+			var list = new EditableList();
+			list.setAttribute("aria-label", "Sample list with custom item renderer");
+			list.itemRenderer = MyCustomRenderer;
+			list.copyAllItemProps = true;
+			list.store.add({title: "Dojo: The Definitive Guide", isbn: "0596516487"});
+			list.store.add({title: "Dojo: Using the Dojo JavaScript Library to Build Ajax Applications", isbn: "0132358042"});
+			list.store.add({title: "Practical Dojo Projects (Expert's Voice in Web Development)", isbn: "1430210664"});
+			list.store.add({title: "The Dojo Toolkit: Visual QuickStart Guide", isbn: "0321605128"});
+			list.store.add({title: "Mastering Dojo: JavaScript and Ajax Tools for Great Web Experiences", isbn: "1934356115"});
+			list.on("item-moved", function (event) {
+				if (event.beforeId !== null) {
+					list.store.put(list.store.get(event.item.id), {before: list.store.get(event.beforeId)});
+				} else {
+					list.store.put(list.store.get(event.item.id), {before: null});
+				}
+			});
+			document.body.appendChild(list);
+			list.startup();
+			document.getElementById("movableSelect").onchange = function () {
+				list.movable = this.value === "true";
+			};
+		});
+	</script>
+</head>
+<body role="application">
+	This sample demonstrate a list with movable items. Click and hold on one item to start moving it.
+	<select id="movableSelect">
+		<option value="true" selected>movable items</option>
+		<option value="false">non movable items</option>
+	</select>
+</body>
+</html>

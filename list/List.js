@@ -1003,16 +1003,19 @@ define([
 		 * Handle keydown events
 		 * @private
 		 */
-		_onContainerKeydown: dcl.before(function (evt) {
-			if (!evt.defaultPrevented) {
-				if ((evt.keyCode === keys.SPACE && !this._searchTimer)) {
-					this._spaceKeydownHandler(evt);
-				} else {
-					if (!this.isAriaListbox) {
-						this._gridKeydownHandler(evt);
+		_onContainerKeydown: dcl.superCall(function (sup) {
+			return function (evt) {
+				if (!evt.defaultPrevented) {
+					if ((evt.keyCode === keys.SPACE && !this._searchTimer)) {
+						this._spaceKeydownHandler(evt);
+					} else {
+						if (!this.isAriaListbox) {
+							this._gridKeydownHandler(evt);
+						}
 					}
 				}
-			}
+				sup.apply(this, arguments);
+			};
 		}),
 
 		focus: function () {
