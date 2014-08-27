@@ -1,32 +1,63 @@
+/** @module deliteful/list/MovableItems */
 define(["dcl/dcl",
-    "dojo/on",
-    "dojo/keys",
+    "decor/sniff",
+    "delite/keys",
     "dojo/dom-class",
-    "dojo/dom-style",
-    "dojo/dom-geometry",
     "dpointer/events",
+    "./List",
     "delite/theme!./List/themes/{{theme}}/Editable.css" // FIXME: USES MOVABLE.css INSTEAD OF EDITABLE.css ?
-], function (dcl, on, keys, domClass, domStyle, domGeometry, pointer) {
+], function (dcl, has, keys, domClass, pointer, List) {
 
 	// TODO: HOW TO CANCEL A MOVE WHEN USING A TOUCH DEVICE (EQUIVALENT TO KEYBOARD ESC) ?
-	return dcl(null, {
+	/**
+	 * A mixin for {@link module:deliteful/List} that allows user interactions to move items from within the list.
+	 * Note that this mixin doesn't allows moving items in a categorized list, and does not apply
+	 * to {@link module:deliteful/PageableList}. 
+	 * 
+	 * When items are movable, this mixin support two different user interactions to grab an item:
+	 * 1. the user can grab an item by clicking on a move handle on the item renderer. Each time
+	 * a pointer down event is received on an item renderer, the method {@link #isGrabEvent} returns
+	 * a boolean value that indicates if the item should be grabbed as a result of the event. The default
+	 * implementation checks if the target of the event has the css class defined by property
+	 * {@link #grabHandleClass};
+	 * 2. the user can grab an item by doing a long press on it. The duration of the press is defined
+	 * by property {@linkl #grabPressDuration}
+	 * 
+	 * @class module:deliteful/list/MovableItems
+	 * @augments module:deliteful/list/List
+	 */
+	return dcl(List, {
 
-		/////////////////////////////////
-		// Public attributes
-		/////////////////////////////////
-
+		/**
+		 * Indicates whether items can me moved around in the list or not.
+		 * Allows to switch between a mode where items cannot be moved and
+		 * a mode where items can be moved.
+		 * @member {boolean}
+		 * @default true
+		 */
 		movable: true,
 
 		_setMovableAttr: function (value) {
-			if (value && (this._isCategorized()  || (this.pageLength && this.autoLoad))) {
-				throw new Error("items of a categorized list or of a pageable list with autoLoad cannot be moved.");
+			if (value && (this._isCategorized())) {
+				throw new Error("items of a categorized list cannot be moved.");
 			} else {
 				this._set("movable", value);
 			}
 		},
 
+		/**
+		 * CSS class of item renderer elements that can be clicked to grab the item.
+		 * @member {string}
+		 * @default ""
+		 */
 		grabHandleClass: "",
 
+		/**
+		 * Duration of a long press on an item renderer to grab the item. A value
+		 * of 0 means that an item cannot be grabbed with a long press on the renderer.
+		 * @member {number}
+		 * @default 1000
+		 */
 		grabPressDuration: 1000,
 
 		/////////////////////////////////
@@ -37,8 +68,8 @@ define(["dcl/dcl",
 		_autoScrollRef: null,
 		_pointerdownHandlerRef: null,
 		_touchHandlersRefs: null,
-		_placeHolder: null,
-		_placeHolderClientRect: null,
+		_dropZone: null,
+		_dropZoneClientRect: null,
 		_grabbedRenderer: null,
 		_touchStartY: null,
 		_startTop: null,
@@ -52,13 +83,9 @@ define(["dcl/dcl",
 		// Widget lifecycle
 		/////////////////////////////////
 
-		preCreate: dcl.after(function () {
-			this._touchHandlersRefs = [];
-		}),
-
 		attachedCallback: dcl.after(function () {
-			if (this._isCategorized() || (this.pageLength && this.autoLoad)) {
-				// moving items not yet supported on categorized lists or on paginated lists with auto loading
+			if (this._isCategorized()) {
+				// moving items not yet supported on categorized lists
 				this.movable = false;
 				// TODO: LOG AN ERROR MESSAGE ?
 			}
@@ -82,14 +109,13 @@ define(["dcl/dcl",
 			}
 		},
 
-		/////////////////////////////////
-		// Public methods
-		/////////////////////////////////
+		//////////// Public methods ///////////////////////////////////////
 
 		/**
 		 * This method is called when a pointerdown event is received on an item renderer.
 		 * If it returns true, the corresponding item becomes movable.
 		 * @param {Event} event the pointerdown event
+		 * @returns {boolean}
 		 */
 		isGrabEvent: function (event) {
 			if (this.grabHandleClass) {
@@ -98,9 +124,7 @@ define(["dcl/dcl",
 			return false;
 		},
 
-		///////////////////////////////
-		// Pointer events handlers (private)
-		///////////////////////////////
+		//////////// Pointer events handlers (private) ///////////////////////////////////////
 
 		_pointerdownHandler: function (event) {
 			if (this._grabbedRenderer) {
@@ -111,26 +135,31 @@ define(["dcl/dcl",
 				if (this.isGrabEvent(event)) {
 					this._grabItem(renderer, event);
 				} else if (this.grabPressDuration) {
-					this._grabTimeoutHandle = this.defer(function () {
-						this._grabTimeoutHandle = null;
+					this._grabTimer = this.defer(function () {
+						this._grabTimer = null;
 						this._grabItem(renderer, event);
 					}, this.grabPressDuration);
 				} else {
 					return;
 				}
-				this._touchHandlersRefs.push(this.own(on(document, "pointerup",
-						this._pointerupHandler.bind(this)))[0]);
-				this._touchHandlersRefs.push(this.own(on(document, "pointermove",
-						this._pointermoveHandler.bind(this)))[0]);
-				this._touchHandlersRefs.push(this.own(on(document, "pointercancel",
-						this._pointercancelHandler.bind(this)))[0]);
+				this._touchHandlersRefs = [
+				    this.on("pointerup", this._pointerupHandler.bind(this), document),
+                    this.on("pointermove", this._pointermoveHandler.bind(this), document),
+                    this.on("pointercancel", this._pointercancelHandler.bind(this), document)
+                ];
 			}
-			// Needed on webkit to avoid the default scroll behavior (click and move to the top or bottom => scroll)
-			event.preventDefault();
+			// On safari desktop, avoid the default scroll behavior (click and move to the top or bottom => scroll)
+			// that causes auto scroll issues.
+			// FIXME: THEY ARE STILL AUTO SCROLL ISSUES ON ANDROID 4.4.2 stock browser
+			if (has("safari") && !has("ios")) {
+				// FIXME: THIS IS TRIGGERED ON ANDROID PLATFORM
+				// Issue created: https://github.com/ibm-js/decor/issues/24
+				event.preventDefault();
+			}
 		},
 
 		_pointercancelHandler: function () {
-			this._clearGrabTimeout();
+			this._clearGrabTimer();
 			this._removeTouchHandlers();
 		},
 
@@ -139,25 +168,19 @@ define(["dcl/dcl",
 		},
 
 		_pointermoveHandler: function (event) {
-			///////////////////////////////////////////////////////////
-			// TODO: CATEGORIZED LISTS SUPPORT ?
-			///////////////////////////////////////////////////////////
-			this._clearGrabTimeout();
+			this._clearGrabTimer();
 			if (this._grabbedRenderer) {
-				var	pageY = event.touches ? event.touches[0].pageY : event.pageY,
-						clientY = event.touches ? event.touches[0].clientY : event.clientY;
-				this._grabbedRendererTop = this._startTop + (pageY - this._touchStartY);
+				this._grabbedRendererTop = this._startTop + (event.pageY - this._touchStartY);
 				this._cancelAutoScroll();
 				this._grabbedRenderer.style.top = this._grabbedRendererTop + "px";
-				this._updatePlaceholderPosition(clientY, true);
-				// Needed on webkit to avoid the default scroll behavior (click and move to the top or bottom => scroll)
+				this._updateDropZonePosition(event.clientY, true);
+				// Needed to avoid the default scroll behavior (click and move to the top or bottom => scroll)
+				// on some browsers
 				event.preventDefault();
 			}
 		},
 
-		////////////////////////////////////
-		// Keyboard navigation
-		////////////////////////////////////
+		//////////// Keyboard navigation ///////////////////////////////////////
 
 		_onContainerKeydown: dcl.superCall(function (sup) {
 			return function (event) {
@@ -189,8 +212,8 @@ define(["dcl/dcl",
 		_onDownArrow: dcl.superCall(function (sup) {
 			return function () {
 				if (this._grabbedRenderer) {
-					this._updatePlaceholderPosition(this._placeHolderClientRect.bottom + 1);
-					this._grabbedRenderer.style.top = this._placeHolder.offsetTop + "px";
+					this._updateDropZonePosition(this._dropZoneClientRect.bottom + 1);
+					this._grabbedRenderer.style.top = this._dropZone.offsetTop + "px";
 					if (this.getBottomDistance(this._grabbedRenderer) > 0) {
 						this._grabbedRenderer.scrollIntoView(false);
 					}
@@ -203,8 +226,8 @@ define(["dcl/dcl",
 		_onUpArrow: dcl.superCall(function (sup) {
 			return function () {
 				if (this._grabbedRenderer) {
-					this._updatePlaceholderPosition(this._placeHolderClientRect.top - 1);
-					this._grabbedRenderer.style.top = this._placeHolder.offsetTop + "px";
+					this._updateDropZonePosition(this._dropZoneClientRect.top - 1);
+					this._grabbedRenderer.style.top = this._dropZone.offsetTop + "px";
 					if (this.getTopDistance(this._grabbedRenderer) < 0) {
 						this._grabbedRenderer.scrollIntoView();
 					}
@@ -223,9 +246,9 @@ define(["dcl/dcl",
 			};
 		}),
 
-		///////////////////////////////
-		// Other private methods
-		///////////////////////////////
+		//////////// Other private methods ///////////////////////////////////////
+
+		// TODO: some of these methods should be protected to allow custom implementations ?
 
 		_refreshAriaGrabbed: function () {
 			var renderers = this.containerNode.querySelectorAll("." + this._cssClasses.item);
@@ -238,10 +261,10 @@ define(["dcl/dcl",
 			}
 		},
 
-		_clearGrabTimeout: function () {
-			if (this._grabTimeoutHandle) {
-				this._grabTimeoutHandle.remove();
-				this._grabTimeoutHandle = null;
+		_clearGrabTimer: function () {
+			if (this._grabTimer) {
+				this._grabTimer.remove();
+				this._grabTimer = null;
 			}
 		},
 
@@ -257,25 +280,25 @@ define(["dcl/dcl",
 			this._grabbedItemIndex = rendererItemIndex;
 			this._dropPosition = this._initialPosition = rendererItemIndex;
 			this._setGrabbed(this._grabbedRenderer, true);
-			this._placeHolder = this.ownerDocument.createElement("div");
-			this._placeHolder.setAttribute("aria-dropeffect", "move");
-			this._placeHolder.className = this._cssClasses.item;
-			this._placeHolder.style.height = this._grabbedRenderer.offsetHeight + "px";
-			this._placePlaceHolder(this._grabbedRenderer, "after");
-			this._touchStartY = event.touches ? event.touches[0].pageY : event.pageY;
-			this._startTop = domGeometry.getMarginBox(this._grabbedRenderer).t;
+			this._dropZone = this.ownerDocument.createElement("div");
+			this._dropZone.setAttribute("aria-dropeffect", "move");
+			this._dropZone.className = this._cssClasses.item;
+			this._dropZone.style.height = this._grabbedRenderer.offsetHeight + "px";
+			this._placeDropZone(this._grabbedRenderer, "after");
+			this._touchStartY = event.pageY;
+			this._startTop = this._grabbedRenderer.offsetTop;
 		},
 
 		_dropItem: function (cancelMove) {
 			if (cancelMove) {
 				this._dropPosition = this._initialPosition;
 			}
-			this._clearGrabTimeout();
+			this._clearGrabTimer();
 			this._removeTouchHandlers();
 			if (this._grabbedRenderer) {
 				if (this._dropPosition >= 0) {
 					if (this._dropPosition !== this._grabbedItemIndex) {
-						var next = this._placeHolder.nextElementSibling;
+						var next = this._dropZone.nextElementSibling;
 						var beforeId = null;
 						if (next && next.item) {
 							beforeId = next.item.id;
@@ -298,12 +321,12 @@ define(["dcl/dcl",
 					this._grabbedRenderer = null;
 				});
 				this._removeTouchHandlers();
-				if (this._placeHolder) {
-					this._placeHolder.parentNode.removeChild(this._placeHolder);
-					this._placeHolder = null;
+				if (this._dropZone) {
+					this._dropZone.parentNode.removeChild(this._dropZone);
+					this._dropZone = null;
 				}
 				// Emit the event AT THE END, to make sure that the list is clean
-				// when accessed from an handler of the event (no placeholder, ...)
+				// when accessed from an handler of the event (no drop zone, ...)
 				if (eventToEmit) {
 					this.emit("item-moved", eventToEmit);
 				}
@@ -311,34 +334,36 @@ define(["dcl/dcl",
 		},
 
 		/* jshint maxcomplexity: 11*/
-		_updatePlaceholderPosition: function (clientY, autoScrollEnabled) {
+		_updateDropZonePosition: function (clientY, autoScrollEnabled) {
 			var nextRenderer, previousRenderer;
-			if (clientY < this._placeHolderClientRect.top) {
-				previousRenderer = this._getNextRenderer(this._placeHolder, -1);
+			if (clientY < this._dropZoneClientRect.top) {
+				previousRenderer = this._getNextRenderer(this._dropZone, -1);
 				if (previousRenderer === this._grabbedRenderer) {
 					previousRenderer = this._getNextRenderer(previousRenderer, -1);
 				}
 				if (previousRenderer) {
-					this._placePlaceHolder(previousRenderer, "before");
+					this._placeDropZone(previousRenderer, "before");
 					this._dropPosition--;
 				}
-			} else if (clientY > this._placeHolderClientRect.bottom) {
-				nextRenderer = this._getNextRenderer(this._placeHolder, 1);
+			} else if (clientY > this._dropZoneClientRect.bottom) {
+				nextRenderer = this._getNextRenderer(this._dropZone, 1);
 				if (nextRenderer === this._grabbedRenderer) {
 					nextRenderer = this._getNextRenderer(nextRenderer, 1);
 				}
 				if (nextRenderer) {
-					this._placePlaceHolder(nextRenderer, "after");
+					this._placeDropZone(nextRenderer, "after");
 					this._dropPosition++;
 				}
 			}
 			if (autoScrollEnabled) {
+				// TODO: maybe we should have variable autoscroll speed,
+				// depending on how far from edges the pointer is ?
 				var clientRect = this.getBoundingClientRect();
 				if (clientY < clientRect.top + 15) {
 					this._autoScroll(-15, clientY);
 				} else if (clientY > clientRect.top + clientRect.height - 15) {
-					if (this.getBottomDistance(this._placeHolder) <= 0) {
-						// Place holder is at the bottom of the list, stop scrolling
+					if (this.getBottomDistance(this._dropZone) <= 0) {
+						// Drop zone is at the bottom of the list, stop scrolling
 						this._cancelAutoScroll();
 					} else {
 						this._autoScroll(15, clientY);
@@ -351,18 +376,19 @@ define(["dcl/dcl",
 		/* jshint maxcomplexity: 10*/
 
 		_autoScroll: function (rate, clientY) {
+			this._cancelAutoScroll();
 			this._autoScrollRef = this.defer(function () {
 				var oldScroll = this.getCurrentScroll().y;
 				this.scrollBy({y: rate});
 				this.defer(function () {
 					var realRate = this.getCurrentScroll().y - oldScroll;
 					if (realRate !== 0) {
-						if (this._placeHolder) {
-							this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
+						if (this._dropZone) {
+							this._dropZoneClientRect = this._dropZone.getBoundingClientRect();
 							this._startTop += realRate;
 							this._grabbedRendererTop += realRate;
 							this._grabbedRenderer.style.top = this._grabbedRendererTop + "px";
-							this._updatePlaceholderPosition(clientY, true);
+							this._updateDropZonePosition(clientY, true);
 						}
 					}
 				});
@@ -377,23 +403,25 @@ define(["dcl/dcl",
 		},
 
 		_removeTouchHandlers: function () {
-			this._touchHandlersRefs.forEach(function (handlerRef) {
-				handlerRef.remove();
-			});
-			this._touchHandlersRefs = [];
+			if (this._touchHandlersRefs) {
+				this._touchHandlersRefs.forEach(function (handlerRef) {
+					handlerRef.remove();
+				});
+				this._touchHandlersRefs = null;
+			}
 		},
 
 		_setGrabbed: function (renderer, draggable) {
 			if (draggable) {
-				domStyle.set(renderer, {
-					width: domGeometry.getContentBox(renderer).w + "px",
+				dcl.mix(renderer.style, {
+					width: renderer.offsetWidth + "px",
 					top: renderer.offsetTop + "px"
 				});
 				domClass.add(renderer, "d-list-item-dragged");
 				renderer.renderNode.setAttribute("aria-grabbed", "true");
 			} else {
 				domClass.remove(renderer, "d-list-item-dragged");
-				domStyle.set(renderer, {
+				dcl.mix(renderer.style, {
 					width: "",
 					top: ""
 				});
@@ -402,23 +430,12 @@ define(["dcl/dcl",
 			this.disableTouchScroll = draggable;
 		},
 
-		_placePlaceHolder: function (refNode, pos) {
-			if (pos === "after") {
-				var next = refNode.nextSibling;
-				if (next) {
-					return this._placePlaceHolder(next, "before");
-				} else {
-					refNode.parentElement.appendChild(this._placeHolder);
-				}
-			} else {
-				refNode.parentElement.insertBefore(this._placeHolder, refNode);
-			}
-			this._placeHolderClientRect = this._placeHolder.getBoundingClientRect();
+		_placeDropZone: function (refNode, pos) {
+			refNode.parentElement.insertBefore(this._dropZone, pos === "before" ? refNode : refNode.nextSibling);
+			this._dropZoneClientRect = this._dropZone.getBoundingClientRect();
 		},
 
-		///////////////////////////////
-		// List methods
-		///////////////////////////////
+		//////////// List methods ///////////////////////////////////////
 
 		_createItemRenderer: dcl.superCall(function (sup) {
 			return function () {
