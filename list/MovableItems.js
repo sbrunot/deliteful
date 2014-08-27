@@ -279,13 +279,13 @@ define(["dcl/dcl",
 			this._grabbedRenderer = renderer;
 			this._grabbedItemIndex = rendererItemIndex;
 			this._dropPosition = this._initialPosition = rendererItemIndex;
-			this._setGrabbed(this._grabbedRenderer, true);
 			this._dropZone = this.ownerDocument.createElement("div");
 			this._dropZone.setAttribute("aria-dropeffect", "move");
 			this._dropZone.className = this._cssClasses.item;
 			this._dropZone.style.height = this._grabbedRenderer.offsetHeight + "px";
 			this._placeDropZone(this._grabbedRenderer, "after");
 			this._touchStartY = event.pageY;
+			this._setGrabbed(this._grabbedRenderer, true);
 			this._startTop = this._grabbedRenderer.offsetTop;
 		},
 
