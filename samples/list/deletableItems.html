@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-type" content="text/html; charset=utf-8"/>
+	<meta name="viewport"
+		  content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no"/>
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+
+	<title>deliteful/list/List samples.</title>
+
+	<script type="text/javascript" src="../../../requirejs/require.js"></script>
+
+	<script type="text/javascript">
+		require.config({
+			baseUrl: "../../../"
+		});
+	</script>
+
+	<script type="text/javascript">
+		require([
+		    "delite/register",
+			"deliteful/list/List",
+			"deliteful/Button",
+			"delite/theme!delite/themes/{{theme}}/global.css",	// page level CSS
+			"requirejs-domready/domReady!"
+		], function (register, List) {
+			register.parse();
+			resizeList = function () {
+				list.style.height = (document.body.offsetHeight - header.offsetHeight - footer.offsetHeight) + "px";
+			};
+			window.addEventListener("resize", resizeList);
+			list.setAttribute("aria-label", "Sample editable list");
+			resizeList();
+			for (var i=1; i <= 100; i++) {
+				list.store.add({id: i, label: "Item " + i})
+			}
+			selectionChanged = function () {
+				deleteButton.disabled = !(list.selectedItems && list.selectedItems.length);
+			}
+			editButton.on("click", function (evt) {
+				if (this.label === "Edit") {
+					this.label = "Cancel";
+					list.selectionMode = "multiple";
+					deleteButton.style.display = "";
+				} else {
+					this.label = "Edit";
+					list.selectionMode = "none";
+					selectionChanged();
+					deleteButton.style.display = "none";
+				}
+			});
+			deleteButton.on("click", function (evt) {
+				if (confirm("Do you want to delete the selected items ?")) {
+					list.selectedItems.forEach(function (item) {
+						list.store.remove(item.id);
+					})
+				}
+			});
+			list.on("selection-change", selectionChanged);
+		});
+	</script>
+	<style>
+		html, body {
+			height: 100%;
+			padding: 0;
+			margin: 0;
+		}
+
+		.banner {
+			height: 41px;
+			line-height: 41px;
+			margin: 0px;
+			background-color: #EFEFEF;
+			text-align: left;
+			padding-left: 12px;
+			font-size: 1.1em;
+			font-weight: bold;
+		}
+		
+		.header button {
+			height: 25px;
+		}
+		
+		#editButton {
+			float: right;
+		}
+		
+		#deleteButton {
+			float: right;
+		}
+
+		.d-multiselectable .d-list-item-icon::before {
+			content: "\25CB";
+			padding-left: 3px;
+			padding-right: 5px;
+			font-size: 2.5em;
+			color: grey;
+		}
+		
+		.d-multiselectable .d-selected .d-list-item-icon::before {
+			content: "\25C9";
+			font-size: 1.5em;
+			color: #428bca;
+		}
+		
+		.d-multiselectable .d-list-item.d-selected .d-list-cell {
+			color: #333333;
+			background-color: white;
+			border-bottom: 1px solid #dddddd;
+			font-weight: normal;
+		}
+
+	</style>
+</head>
+<body role="application">
+	<header id="header" class="banner"><span>Editable List</span><button id="editButton" is="d-button" label="Edit"></button></header>
+	<d-list id="list"></d-list>
+	<footer id="footer" class="banner"><button id="deleteButton" is="d-button" style="display: none;" disabled>Delete</button></footer>
+</body>
+</html>
